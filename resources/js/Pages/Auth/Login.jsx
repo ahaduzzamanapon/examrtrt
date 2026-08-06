@@ -51,14 +51,8 @@ export default function Login({ status, canResetPassword }) {
                     <div style={{ position: 'relative', zIndex: 1, maxWidth: 420, width: '100%' }}>
                         {/* Logo */}
                         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }}
-                            style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 28 }}>
-                            <div style={{ width: 44, height: 44, borderRadius: 13, background: 'linear-gradient(135deg,#4d6fff,#7c3aed)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 6px 24px rgba(77,111,255,0.45)' }}>
-                                <Zap size={22} color="white" fill="white" />
-                            </div>
-                            <div>
-                                <div style={{ fontWeight: 800, fontSize: 20, color: 'white' }}>Exam Arena</div>
-                                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>by NXLY</div>
-                            </div>
+                            style={{ marginBottom: 28 }}>
+                            <img src="/logo.png" alt="Exam Arena" style={{ height: 48, width: 'auto', objectFit: 'contain' }} />
                         </motion.div>
 
                         <motion.h2 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}

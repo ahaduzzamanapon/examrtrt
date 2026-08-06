@@ -12,19 +12,23 @@ export default function BattleRoom({ invite: initialInvite, session: initialSess
 
     const [index, setIndex]             = useState(0);
     const [selectedOpt, setSelectedOpt] = useState(null);
-    const [myScore, setMyScore]         = useState(0);
-    const [opponentScore, setOpponentScore] = useState(0);
+    const isSender     = userId === invite.sender_id;
+    const isWaiting    = invite.status === 'PENDING' || !invite.receiver_id;
+    const opponentName = isSender ? (invite.receiver?.name || 'প্রতিপক্ষ') : (invite.sender?.name || 'প্রতিপক্ষ');
+
+    const [myScore, setMyScore]         = useState(
+        initialSession ? (isSender ? (initialSession.sender_score || 0) : (initialSession.receiver_score || 0)) : 0
+    );
+    const [opponentScore, setOpponentScore] = useState(
+        initialSession ? (isSender ? (initialSession.receiver_score || 0) : (initialSession.sender_score || 0)) : 0
+    );
     const [timeLeft, setTimeLeft]       = useState(10);
-    const [isCompleted, setIsCompleted] = useState(false);
-    const [winner, setWinner]           = useState(null);
+    const [isCompleted, setIsCompleted] = useState(initialSession?.status === 'COMPLETED');
+    const [winner, setWinner]           = useState(initialSession?.winner_id || null);
 
     const timerRef = useRef(null);
     const pollRef  = useRef(null);
     const currentQ = questions[index];
-
-    const isSender     = userId === invite.sender_id;
-    const isWaiting    = invite.status === 'PENDING' || !invite.receiver_id;
-    const opponentName = isSender ? (invite.receiver?.name || 'প্রতিপক্ষ') : (invite.sender?.name || 'প্রতিপক্ষ');
 
     // Share link for host
     const shareUrl = typeof window !== 'undefined' ? window.location.href : '';
@@ -321,13 +325,53 @@ export default function BattleRoom({ invite: initialInvite, session: initialSess
                             <Link
                                 href={route('battle.index')}
                                 style={{
-                                    display: 'inline-block', marginTop: 24, padding: '14px 24px', borderRadius: 14,
+                                    display: 'inline-block', marginTop: 20, padding: '14px 24px', borderRadius: 14,
                                     background: 'linear-gradient(135deg,#f59e0b,#d97706)', color: 'white',
-                                    fontWeight: 800, fontSize: 15, textDecoration: 'none',
+                                    fontWeight: 800, fontSize: 15, textDecoration: 'none', marginBottom: 28,
                                 }}
                             >
                                 ← লবিতে ফিরে যান
                             </Link>
+
+                            {/* Question Answers Review */}
+                            <div style={{ textAlign: 'left', marginTop: 10 }}>
+                                <h3 style={{ color: 'white', fontWeight: 800, fontSize: 16, marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+                                    🔍 প্রশ্নের উত্তরসমূহ পর্যালোচনা ({questions.length} টি)
+                                </h3>
+
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                                    {questions.map((q, qIdx) => (
+                                        <div key={qIdx} style={{
+                                            padding: '14px 16px', borderRadius: 14,
+                                            background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
+                                        }}>
+                                            <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, fontWeight: 700, marginBottom: 4 }}>
+                                                প্রশ্ন {qIdx + 1}
+                                            </div>
+                                            <div style={{ color: 'white', fontWeight: 700, fontSize: 14, marginBottom: 10, lineHeight: 1.5 }}>
+                                                {q.question_text}
+                                            </div>
+
+                                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 6 }}>
+                                                {Object.entries(q.options || {}).map(([optKey, optVal]) => {
+                                                    const isCorrect = optKey.toLowerCase() === q.correct_answer?.toLowerCase();
+                                                    return (
+                                                        <div key={optKey} style={{
+                                                            padding: '8px 10px', borderRadius: 8, fontSize: 12,
+                                                            background: isCorrect ? 'rgba(52,211,153,0.15)' : 'rgba(255,255,255,0.03)',
+                                                            border: isCorrect ? '1px solid rgba(52,211,153,0.4)' : '1px solid rgba(255,255,255,0.06)',
+                                                            color: isCorrect ? '#34d399' : 'rgba(255,255,255,0.7)',
+                                                            fontWeight: isCorrect ? 700 : 400,
+                                                        }}>
+                                                            {optKey.toUpperCase()}) {optVal} {isCorrect && '✓'}
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
                         </motion.div>
                     )}
                 </AnimatePresence>

@@ -76,7 +76,7 @@ class GenerateQuestions extends Command
             return 1;
         }
 
-        $model      = AppSetting::get('gemini_model', 'gemini-2.0-flash');
+        $model      = AppSetting::get('gemini_model', 'gemini-3.6-flash');
         $count      = (int) $this->option('count');
         $difficulty = strtoupper($this->option('difficulty'));
         $force      = $this->option('force');

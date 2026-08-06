@@ -56,17 +56,25 @@ jobs:
             echo "📦 Installing PHP dependencies..."
             $PHP $COMPOSER install --no-dev --optimize-autoloader --no-interaction
 
-            # ── Node.js via NVM or direct binary ─────────────────────────────
-            export PATH="$HOME/bin:$PATH"
-            export NVM_DIR="$HOME/.nvm"
-            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-            [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+            # ── Node.js (persistent install in $HOME/node-bin) ───────────────
+            NODE_BIN="$HOME/node-bin"
+            if [ ! -f "$NODE_BIN/bin/node" ]; then
+              echo "⬇️  Node.js not found — downloading v20.19.4..."
+              mkdir -p "$HOME/tmp-node"
+              curl -fsSL https://nodejs.org/dist/v20.19.4/node-v20.19.4-linux-x64.tar.gz \
+                | tar -xz -C "$HOME/tmp-node" --strip-components=1
+              mv "$HOME/tmp-node" "$NODE_BIN"
+              echo "✅ Node.js installed at $NODE_BIN"
+            fi
+            export PATH="$NODE_BIN/bin:$PATH"
+            echo "📦 Node $(node -v) | npm $(npm -v)"
 
             echo "📦 Installing frontend dependencies..."
             npm ci --prefer-offline 2>/dev/null || npm install
 
             echo "🎨 Building frontend assets..."
             npm run build
+
 
             # ── Database ──────────────────────────────────────────────────────
             echo "🗄️  Running migrations..."

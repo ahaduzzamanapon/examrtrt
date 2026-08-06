@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\ConfirmablePasswordController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
 use App\Http\Controllers\Auth\EmailVerificationPromptController;
 use App\Http\Controllers\Auth\NewPasswordController;
+use App\Http\Controllers\Auth\OtpController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\RegisteredUserController;
@@ -16,6 +17,12 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('guest')->group(function () {
     Route::get('auth/google',          [SocialAuthController::class, 'redirectToGoogle'])->name('auth.google');
     Route::get('auth/google/callback', [SocialAuthController::class, 'handleGoogleCallback'])->name('auth.google.callback');
+});
+
+// ── Email OTP (for registration verification) ─────────────────────────────────
+Route::middleware('guest')->group(function () {
+    Route::post('auth/send-otp',   [OtpController::class, 'send'])->name('otp.send');
+    Route::post('auth/verify-otp', [OtpController::class, 'verify'])->name('otp.verify');
 });
 
 Route::middleware('guest')->group(function () {

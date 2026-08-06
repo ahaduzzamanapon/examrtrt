@@ -65,17 +65,28 @@ class NotificationController extends Controller
                         $resp = Http::withToken($accessToken)
                             ->post("https://fcm.googleapis.com/v1/projects/{$this->projectId}/messages:send", [
                                 'message' => [
-                                    'token'        => $pu->fcm_token,
-                                    'notification' => ['title' => $data['title'], 'body' => $data['body']],
-                                    'webpush'      => [
+                                    'token'   => $pu->fcm_token,
+                                    // NO top-level 'notification' → prevents browser auto-showing
+                                    // Service worker onBackgroundMessage handles it exactly once
+                                    'webpush' => [
                                         'notification' => array_filter([
-                                            'title' => $data['title'], 'body'  => $data['body'],
-                                            'icon'  => '/favicon.png', 'image' => $data['image_url'] ?? null,
-                                            'badge' => '/favicon.png', 'requireInteraction' => true,
+                                            'title' => $data['title'],
+                                            'body'  => $data['body'],
+                                            'icon'  => '/favicon.png',
+                                            'image' => $data['image_url'] ?? null,
+                                            'badge' => '/favicon.png',
+                                            'requireInteraction' => true,
+                                            'tag'   => 'exam-arena-broadcast',
+                                            'renotify' => true,
                                         ]),
                                         'fcm_options' => ['link' => $data['click_url'] ?? '/'],
                                     ],
-                                    'data' => ['url' => $data['click_url'] ?? '/', 'type' => 'broadcast'],
+                                    'data' => [
+                                        'title' => $data['title'],
+                                        'body'  => $data['body'],
+                                        'url'   => $data['click_url'] ?? '/',
+                                        'type'  => 'broadcast',
+                                    ],
                                 ],
                             ]);
 

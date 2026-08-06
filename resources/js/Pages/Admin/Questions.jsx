@@ -16,6 +16,76 @@ const DIFFICULTIES = ['LOW', 'MEDIUM', 'HIGH'];
 const INP = { width: '100%', padding: '9px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontSize: 13, outline: 'none' };
 const SEL = { ...INP, cursor: 'pointer' };
 
+// ── Pagination Component ───────────────────────────────────────────────────────
+function Paginator({ meta, filters }) {
+    if (!meta || meta.last_page <= 1) return null;
+
+    const { current_page, last_page, from, to, total, links } = meta;
+
+    const goTo = (url) => {
+        if (!url) return;
+        router.visit(url, { preserveScroll: true });
+    };
+
+    // Build page window: always show first, last, current±2, with '...' gaps
+    const pages = [];
+    const addPage = (n) => { if (!pages.includes(n) && n >= 1 && n <= last_page) pages.push(n); };
+    addPage(1); addPage(2);
+    for (let i = current_page - 2; i <= current_page + 2; i++) addPage(i);
+    addPage(last_page - 1); addPage(last_page);
+    pages.sort((a, b) => a - b);
+
+    const btnBase = { minWidth: 34, height: 34, borderRadius: 9, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s' };
+    const btnActive = { ...btnBase, background: 'linear-gradient(135deg,#4d6fff,#7c3aed)', color: 'white', boxShadow: '0 2px 12px rgba(77,111,255,0.35)' };
+    const btnNormal = { ...btnBase, background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.55)', border: '1px solid rgba(255,255,255,0.08)' };
+    const btnDisabled = { ...btnBase, background: 'rgba(255,255,255,0.02)', color: 'rgba(255,255,255,0.15)', cursor: 'not-allowed', border: '1px solid rgba(255,255,255,0.04)' };
+    const btnNav = (enabled) => enabled ? { ...btnNormal, padding: '0 12px' } : { ...btnDisabled, padding: '0 12px' };
+
+    const rendered = [];
+    for (let i = 0; i < pages.length; i++) {
+        if (i > 0 && pages[i] - pages[i - 1] > 1) {
+            rendered.push(<span key={`dots-${i}`} style={{ color: 'rgba(255,255,255,0.2)', alignSelf: 'center', padding: '0 4px', fontSize: 14 }}>•••</span>);
+        }
+        const p = pages[i];
+        const isCurrent = p === current_page;
+        const pageLink = links?.find(l => l.label == p)?.url;
+        rendered.push(
+            <motion.button key={p} whileHover={!isCurrent ? { scale: 1.08 } : {}} whileTap={{ scale: 0.95 }}
+                onClick={() => goTo(pageLink)} disabled={isCurrent} style={isCurrent ? btnActive : btnNormal}>
+                {p}
+            </motion.button>
+        );
+    }
+
+    return (
+        <div style={{ marginTop: 24 }}>
+            {/* Info row */}
+            <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.25)', fontSize: 11, marginBottom: 12 }}>
+                মোট <strong style={{ color: 'rgba(255,255,255,0.45)' }}>{total}</strong> টি প্রশ্ন · দেখাচ্ছে <strong style={{ color: 'rgba(255,255,255,0.45)' }}>{from}–{to}</strong>
+            </div>
+            {/* Page buttons */}
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                {/* Prev */}
+                <motion.button whileHover={meta.prev_page_url ? { scale: 1.05 } : {}} whileTap={meta.prev_page_url ? { scale: 0.95 } : {}}
+                    onClick={() => goTo(meta.prev_page_url)} disabled={!meta.prev_page_url}
+                    style={btnNav(!!meta.prev_page_url)}>
+                    <ChevronLeft size={14} style={{ marginRight: 2 }} /> আগে
+                </motion.button>
+
+                {rendered}
+
+                {/* Next */}
+                <motion.button whileHover={meta.next_page_url ? { scale: 1.05 } : {}} whileTap={meta.next_page_url ? { scale: 0.95 } : {}}
+                    onClick={() => goTo(meta.next_page_url)} disabled={!meta.next_page_url}
+                    style={btnNav(!!meta.next_page_url)}>
+                    পরে <ChevronRight size={14} style={{ marginLeft: 2 }} />
+                </motion.button>
+            </div>
+        </div>
+    );
+}
+
+
 function DiffBadge({ level }) {
     const colors = { LOW: '#34d399', MEDIUM: '#fbbf24', HIGH: '#f87171' };
     return <span style={{ padding: '2px 8px', borderRadius: 10, fontSize: 10, fontWeight: 700, background: `${colors[level] ?? '#94a3b8'}22`, color: colors[level] ?? '#94a3b8', border: `1px solid ${colors[level] ?? '#94a3b8'}44` }}>{level}</span>;
@@ -286,13 +356,7 @@ export default function AdminQuestions({ questions, filters, stats }) {
                         ))}
                         {questions.data.length === 0 && <div style={{ padding: '40px', textAlign: 'center', color: 'rgba(255,255,255,0.2)', fontSize: 14 }}>কোনো প্রশ্ন পাওয়া যায়নি।</div>}
                     </div>
-                    {questions.last_page > 1 && (
-                        <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 20 }}>
-                            {questions.prev_page_url && <Link href={questions.prev_page_url} style={{ padding: '7px 14px', borderRadius: 9, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.6)', textDecoration: 'none', fontSize: 13, display: 'flex', alignItems: 'center', gap: 4 }}><ChevronLeft size={14} /> আগে</Link>}
-                            <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: 12, display: 'flex', alignItems: 'center' }}>{questions.current_page}/{questions.last_page}</span>
-                            {questions.next_page_url && <Link href={questions.next_page_url} style={{ padding: '7px 14px', borderRadius: 9, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.6)', textDecoration: 'none', fontSize: 13, display: 'flex', alignItems: 'center', gap: 4 }}>পরে <ChevronRight size={14} /></Link>}
-                        </div>
-                    )}
+                    <Paginator meta={questions} filters={filters} />
                 </div>
             )}
 

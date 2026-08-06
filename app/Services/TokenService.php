@@ -4,7 +4,7 @@ namespace App\Services;
 
 use App\Models\AdView;
 use App\Models\DailyTokenClaim;
-use App\Models\SystemSetting;
+use App\Models\AppSetting;
 use App\Models\TokenPackage;
 use App\Models\TokenTransaction;
 use App\Models\User;
@@ -13,11 +13,11 @@ use Illuminate\Support\Facades\DB;
 
 class TokenService
 {
-    // ── Rate helpers — reads from system_settings (admin configurable) ────────
+    // ── Rate helpers — reads from app_settings (admin configurable) ────────
 
     private function rate(string $key, int $default): int
     {
-        return (int) (SystemSetting::get($key, $default) ?? $default);
+        return (int) (AppSetting::get($key, $default) ?? $default);
     }
 
     public function dailyBonusAmount(): int  { return $this->rate('token_daily_bonus', 10); }

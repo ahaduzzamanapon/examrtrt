@@ -356,4 +356,76 @@ PROMPT;
             return response()->json(['error' => 'Error: ' . $e->getMessage()], 500);
         }
     }
+
+    // ── AI Background Job Status & Execution ─────────────────────────────────
+    public function aiJobStatus()
+    {
+        $status = AppSetting::get('ai_job_status', [
+            'state'   => 'idle',
+            'total'   => 0,
+            'done'    => 0,
+            'current' => '',
+            'saved'   => 0,
+            'skipped' => 0,
+            'failed'  => 0,
+            'logs'    => [],
+            'updated_at' => null,
+        ]);
+
+        return response()->json($status);
+    }
+
+    public function runAiCommand(Request $request)
+    {
+        $goal       = $request->get('exam_goal', '');
+        $subject    = $request->get('subject', '');
+        $count      = (int) $request->get('count', 3);
+        $difficulty = $request->get('difficulty', 'MIXED');
+        $force      = $request->boolean('force', false);
+
+        $cmdString = "questions:generate";
+        if ($goal) $cmdString .= " --goal={$goal}";
+        if ($subject) $cmdString .= " --subject=" . escapeshellarg($subject);
+        $cmdString .= " --count={$count} --difficulty={$difficulty}";
+        if ($force) $cmdString .= " --force";
+
+        // Initialize job status
+        AppSetting::set('ai_job_status', [
+            'state'      => 'running',
+            'total'      => 1,
+            'done'       => 0,
+            'current'    => 'Starting background command...',
+            'saved'      => 0,
+            'skipped'    => 0,
+            'failed'     => 0,
+            'logs'       => ["🚀 Launching: php artisan {$cmdString}"],
+            'updated_at' => now()->toIso8601String(),
+        ]);
+
+        // Launch in background
+        if (str_starts_with(PHP_OS, 'WIN')) {
+            pclose(popen("start /B php artisan {$cmdString} > NUL 2>&1", "r"));
+        } else {
+            exec("/usr/local/bin/php artisan {$cmdString} > /dev/null 2>&1 &");
+        }
+
+        return response()->json(['message' => 'Background generation command started!']);
+    }
+
+    public function clearAiJob()
+    {
+        AppSetting::set('ai_job_status', [
+            'state'   => 'idle',
+            'total'   => 0,
+            'done'    => 0,
+            'current' => '',
+            'saved'   => 0,
+            'skipped' => 0,
+            'failed'  => 0,
+            'logs'    => [],
+            'updated_at' => null,
+        ]);
+
+        return response()->json(['message' => 'Job status cleared']);
+    }
 }

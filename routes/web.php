@@ -89,6 +89,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/questions/ai-generate',   [AdminQuestionController::class, 'aiGenerate'])->name('questions.ai');
         Route::post('/questions/bulk-save',     [AdminQuestionController::class, 'bulkSave'])->name('questions.bulk');
         Route::post('/questions/image',         [AdminQuestionController::class, 'extractFromImage'])->name('questions.image');
+        Route::get('/questions/ai-status',      [AdminQuestionController::class, 'aiJobStatus'])->name('questions.ai-status');
+        Route::post('/questions/ai-run',        [AdminQuestionController::class, 'runAiCommand'])->name('questions.ai-run');
+        Route::post('/questions/ai-clear',      [AdminQuestionController::class, 'clearAiJob'])->name('questions.ai-clear');
 
         // Settings
         Route::get('/settings',  [AdminSettingsController::class, 'index'])->name('settings');

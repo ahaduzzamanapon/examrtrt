@@ -201,6 +201,63 @@ export default function AdminQuestions({ questions, filters, stats }) {
     const qStop = useRef(false);
     const Q_KEY = 'exam_ai_queue_progress';
 
+    // Server Job Monitor
+    const [serverJob, setServerJob] = useState(null);
+    const logConsoleRef = useRef(null);
+
+    useEffect(() => {
+        let timer;
+        const pollJob = async () => {
+            try {
+                const res = await fetch(route('admin.questions.ai-status'));
+                if (res.ok) {
+                    const data = await res.json();
+                    setServerJob(data);
+                }
+            } catch {}
+        };
+
+        if (tab === 'ai') {
+            pollJob();
+            timer = setInterval(pollJob, 2000);
+        }
+        return () => clearInterval(timer);
+    }, [tab]);
+
+    useEffect(() => {
+        if (logConsoleRef.current) {
+            logConsoleRef.current.scrollTop = logConsoleRef.current.scrollHeight;
+        }
+    }, [serverJob?.logs]);
+
+    const runServerCommand = async () => {
+        const csrf = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+        await fetch(route('admin.questions.ai-run'), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf },
+            body: JSON.stringify({
+                exam_goal: aiForm.exam_goal,
+                subject: aiForm.subject,
+                count: aiForm.count || 3,
+                difficulty: aiForm.difficulty || 'MIXED',
+                force: true,
+            })
+        });
+        setTimeout(async () => {
+            const res = await fetch(route('admin.questions.ai-status'));
+            if (res.ok) setServerJob(await res.json());
+        }, 600);
+    };
+
+    const clearServerConsole = async () => {
+        const csrf = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+        await fetch(route('admin.questions.ai-clear'), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf }
+        });
+        setServerJob(null);
+    };
+
     // On mount: check if there's a saved/interrupted queue
     useEffect(() => {
         try {
@@ -473,7 +530,7 @@ export default function AdminQuestions({ questions, filters, stats }) {
 
                         <div style={{ display: 'flex', gap: 8, marginTop: 14, flexWrap: 'wrap' }}>
                             {aiForm.exam_goal && aiForm.subject && (
-                                <button onClick={doGenerate} disabled={generating || qRunning} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '10px 18px', borderRadius: 11, background: generating ? 'rgba(124,58,237,0.3)' : 'linear-gradient(135deg,#7c3aed,#4d6fff)', color: 'white', border: 'none', cursor: generating ? 'not-allowed' : 'pointer', fontWeight: 700, fontSize: 13 }}>
+                                <button onClick={doGenerate} disabled={generating || qRunning || serverJob?.state === 'running'} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '10px 18px', borderRadius: 11, background: generating ? 'rgba(124,58,237,0.3)' : 'linear-gradient(135deg,#7c3aed,#4d6fff)', color: 'white', border: 'none', cursor: generating ? 'not-allowed' : 'pointer', fontWeight: 700, fontSize: 13 }}>
                                     <Sparkles size={14} /> {generating ? 'Gemini চিন্তা করছে...' : 'Generate (Review সহ)'}
                                 </button>
                             )}
@@ -485,11 +542,75 @@ export default function AdminQuestions({ questions, filters, stats }) {
                                     for (const sub of subs) items.push({ exam_goal: goal, subject: sub });
                                 }
                                 startQueue(items);
-                            }} disabled={qRunning || generating} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '10px 18px', borderRadius: 11, background: qRunning ? 'rgba(245,158,11,0.2)' : 'linear-gradient(135deg,#f59e0b,#ef4444)', color: 'white', border: 'none', cursor: qRunning ? 'not-allowed' : 'pointer', fontWeight: 700, fontSize: 13 }}>
-                                ⚡ Queue চালু (Auto-save)
+                            }} disabled={qRunning || generating || serverJob?.state === 'running'} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '10px 18px', borderRadius: 11, background: qRunning ? 'rgba(245,158,11,0.2)' : 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.3)', color: '#fbbf24', cursor: qRunning ? 'not-allowed' : 'pointer', fontWeight: 700, fontSize: 13 }}>
+                                ⚡ Browser Queue (Auto-save)
+                            </button>
+                            <button onClick={runServerCommand} disabled={serverJob?.state === 'running'} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '10px 18px', borderRadius: 11, background: serverJob?.state === 'running' ? 'rgba(52,211,153,0.2)' : 'linear-gradient(135deg,#10b981,#059669)', color: 'white', border: 'none', cursor: serverJob?.state === 'running' ? 'not-allowed' : 'pointer', fontWeight: 700, fontSize: 13, boxShadow: '0 2px 10px rgba(16,185,129,0.25)' }}>
+                                🚀 Server Background (Key Rotation + Cron Log)
                             </button>
                         </div>
                     </div>
+
+                    {/* ── Server Background Command Monitor & Console ── */}
+                    {serverJob && (
+                        <div style={{ padding: '18px 20px', borderRadius: 16, background: '#090d20', border: '1px solid rgba(77,111,255,0.2)', marginBottom: 20 }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                    <span style={{
+                                        display: 'inline-block', width: 10, height: 10, borderRadius: '50%',
+                                        background: serverJob.state === 'running' ? '#34d399' : (serverJob.state === 'completed' ? '#93b4ff' : '#f87171'),
+                                        boxShadow: serverJob.state === 'running' ? '0 0 10px #34d399' : 'none'
+                                    }} />
+                                    <span style={{ color: 'white', fontWeight: 700, fontSize: 13 }}>
+                                        Server Job Status: <span style={{ color: serverJob.state === 'running' ? '#34d399' : '#93b4ff' }}>{serverJob.state?.toUpperCase()}</span>
+                                    </span>
+                                    {serverJob.state === 'running' && (
+                                        <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11 }}>
+                                            • {serverJob.current}
+                                        </span>
+                                    )}
+                                </div>
+                                <button onClick={clearServerConsole} style={{ padding: '4px 10px', borderRadius: 6, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)', fontSize: 11, cursor: 'pointer' }}>
+                                    Clear Console
+                                </button>
+                            </div>
+
+                            {/* Progress bar */}
+                            <div style={{ marginBottom: 12 }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', color: 'rgba(255,255,255,0.45)', fontSize: 11, marginBottom: 4 }}>
+                                    <span>Progress: {serverJob.done} / {serverJob.total}</span>
+                                    <span>Saved: {serverJob.saved} | Skipped: {serverJob.skipped} | Failed: {serverJob.failed}</span>
+                                </div>
+                                <div style={{ height: 6, borderRadius: 3, background: 'rgba(255,255,255,0.08)', overflow: 'hidden' }}>
+                                    <div style={{
+                                        height: '100%', borderRadius: 3,
+                                        width: `${serverJob.total > 0 ? (serverJob.done / serverJob.total * 100) : 0}%`,
+                                        background: 'linear-gradient(90deg,#4d6fff,#34d399)',
+                                        transition: 'width 0.4s ease'
+                                    }} />
+                                </div>
+                            </div>
+
+                            {/* Terminal Log Box */}
+                            <div
+                                ref={logConsoleRef}
+                                style={{
+                                    height: 180, overflowY: 'auto', background: '#04060f', borderRadius: 10,
+                                    padding: '12px 14px', border: '1px solid rgba(255,255,255,0.05)',
+                                    fontFamily: 'monospace', fontSize: 11, color: '#34d399', lineHeight: 1.6
+                                }}
+                            >
+                                {(serverJob.logs ?? []).map((logLine, idx) => (
+                                    <div key={idx} style={{ color: logLine.includes('❌') ? '#f87171' : (logLine.includes('⚠️') ? '#fbbf24' : '#34d399') }}>
+                                        {logLine}
+                                    </div>
+                                ))}
+                                {(!serverJob.logs || serverJob.logs.length === 0) && (
+                                    <span style={{ color: 'rgba(255,255,255,0.2)' }}>[No log output yet...]</span>
+                                )}
+                            </div>
+                        </div>
+                    )}
 
                     {aiError && <div style={{ padding: '12px 16px', borderRadius: 12, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', color: '#f87171', fontSize: 13, marginBottom: 16 }}>❌ {aiError}</div>}
 

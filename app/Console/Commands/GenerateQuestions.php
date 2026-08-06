@@ -70,32 +70,28 @@ class GenerateQuestions extends Command
 
     public function handle(): int
     {
-        $apiKey = AppSetting::nextGeminiKey();
-        if (!$apiKey) {
-            $this->error('❌ কোনো Gemini API key নেই। Admin → Settings এ key যোগ করো।');
-            return 1;
-        }
-
         $model      = AppSetting::get('gemini_model', 'gemini-3.6-flash');
         $count      = (int) $this->option('count');
         $difficulty = strtoupper($this->option('difficulty'));
         $force      = $this->option('force');
 
-        // Build job list: [['goal' => 'bcs', 'subject' => '...']]
         $jobs = $this->buildJobs();
-
         $total   = count($jobs);
         $skipped = 0;
         $saved   = 0;
         $failed  = 0;
 
+        $logs = ["📋 Total {$total} combinations scheduled..."];
+        $this->updateStatus('running', $total, 0, 'Starting...', $saved, $skipped, $failed, $logs);
+
         $this->info("📋 মোট {$total}টি combination চেক করা হবে...");
         $bar = $this->output->createProgressBar($total);
         $bar->start();
 
-        foreach ($jobs as $job) {
+        foreach ($jobs as $index => $job) {
             $goal    = $job['goal'];
             $subject = $job['subject'];
+            $currentLabel = strtoupper($goal) . " → {$subject}";
 
             // Skip if questions already exist (unless --force)
             if (!$force) {
@@ -105,23 +101,45 @@ class GenerateQuestions extends Command
                 if ($existing > 0) {
                     $skipped++;
                     $bar->advance();
+                    $logs[] = "⏭️ [{$index}/{$total}] {$currentLabel}: Skipped (already has {$existing} questions)";
+                    $this->updateStatus('running', $total, $index + 1, $currentLabel, $saved, $skipped, $failed, $logs);
                     continue;
                 }
             }
 
-            // Generate via Gemini
-            $questions = $this->callGemini($apiKey, $model, $goal, $subject, $count, $difficulty);
+            // Key rotation per request
+            $apiKey = AppSetting::nextGeminiKey();
+            if (!$apiKey) {
+                $failed++;
+                $bar->advance();
+                $logs[] = "❌ [{$index}/{$total}] {$currentLabel}: No Gemini API Key available!";
+                $this->updateStatus('running', $total, $index + 1, $currentLabel, $saved, $skipped, $failed, $logs);
+                continue;
+            }
+
+            // Generate via Gemini with retries
+            $questions = null;
+            for ($attempt = 1; $attempt <= 3; $attempt++) {
+                $questions = $this->callGemini($apiKey, $model, $goal, $subject, $count, $difficulty);
+                if ($questions !== null) {
+                    break;
+                }
+                // Rotate key on failure and retry after delay
+                $apiKey = AppSetting::nextGeminiKey() ?? $apiKey;
+                $logs[] = "⚠️ [{$index}/{$total}] {$currentLabel}: Retry {$attempt}/3 with rotated key...";
+                sleep(2);
+            }
 
             if ($questions === null) {
                 $failed++;
                 $bar->advance();
-                // Rotate key on failure
-                $apiKey = AppSetting::nextGeminiKey() ?? $apiKey;
-                sleep(2);
+                $logs[] = "❌ [{$index}/{$total}] {$currentLabel}: Generation failed after retries.";
+                $this->updateStatus('running', $total, $index + 1, $currentLabel, $saved, $skipped, $failed, $logs);
                 continue;
             }
 
             // Save
+            $itemSaved = 0;
             foreach ($questions as $q) {
                 try {
                     $by = !empty($q['board_year']) && strtolower(trim($q['board_year'])) !== 'null' ? trim($q['board_year']) : 'NEW';
@@ -140,22 +158,45 @@ class GenerateQuestions extends Command
                         'is_active'        => true,
                     ]);
                     $saved++;
+                    $itemSaved++;
                 } catch (\Throwable $e) {
                     Log::warning("[GenerateQuestions] save failed: {$e->getMessage()}");
                 }
             }
 
+            $logs[] = "✅ [{$index + 1}/{$total}] {$currentLabel}: Saved {$itemSaved} questions.";
             $bar->advance();
+            $this->updateStatus('running', $total, $index + 1, $currentLabel, $saved, $skipped, $failed, $logs);
 
-            // Small delay between requests to respect rate limits
-            usleep(800_000); // 0.8 seconds
+            // Delay 2 seconds between batch calls for rate-limit protection
+            sleep(2);
         }
 
         $bar->finish();
         $this->newLine(2);
-        $this->info("✅ Done! Saved: {$saved} | Skipped (existed): {$skipped} | Failed: {$failed}");
+        $summary = "Completed! Saved: {$saved} | Skipped: {$skipped} | Failed: {$failed}";
+        $logs[] = "🎉 {$summary}";
+        $this->info("✅ {$summary}");
+        $this->updateStatus('completed', $total, $total, 'Done', $saved, $skipped, $failed, $logs);
 
         return 0;
+    }
+
+    private function updateStatus(string $state, int $total, int $done, string $current, int $saved, int $skipped, int $failed, array $logs): void
+    {
+        // Keep last 30 log lines
+        $recentLogs = array_slice($logs, -30);
+        AppSetting::set('ai_job_status', [
+            'state'      => $state,
+            'total'      => $total,
+            'done'       => $done,
+            'current'    => $current,
+            'saved'      => $saved,
+            'skipped'    => $skipped,
+            'failed'     => $failed,
+            'logs'       => $recentLogs,
+            'updated_at' => now()->toIso8601String(),
+        ]);
     }
 
     private function buildJobs(): array

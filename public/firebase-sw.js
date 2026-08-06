@@ -1,13 +1,10 @@
 // Firebase Service Worker for NXLY Exam Arena
 // Handles background push notifications from Firebase Cloud Messaging (FCM).
-// This works for BOTH web browsers AND Android WebView (future mobile app).
-// File must be at: /public/firebase-sw.js (root of site)
+// DATA-ONLY messages: service worker shows notification exactly once.
 
 importScripts('https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js');
 
-// Firebase config — these must match your project
-// NOTE: These are public values, safe to include in service worker
 firebase.initializeApp({
     apiKey:            'AIzaSyDp_Af0POFa-EekqDEFdgLzVLNSAtYbU10',
     authDomain:        'exam-arena-6148c.firebaseapp.com',
@@ -20,22 +17,27 @@ firebase.initializeApp({
 const messaging = firebase.messaging();
 
 // ── Background message handler ────────────────────────────────────────────────
+// Only fires for DATA-ONLY messages (no 'notification' field in payload).
+// We read from payload.data — this shows the notification EXACTLY ONCE.
 messaging.onBackgroundMessage((payload) => {
-    const notification = payload.notification ?? {};
-    const data         = payload.data         ?? {};
+    const d = payload.data ?? {};
 
-    const title = notification.title || 'NXLY Exam Arena';
-    const body  = notification.body  || '';
-    const url   = data.url           || '/';
+    const title = d.title || 'Exam Arena';
+    const body  = d.body  || '';
+    const url   = d.url   || '/';
+    const icon  = d.icon  || '/favicon.png';
+    const image = d.image || undefined;
 
     const options = {
-        body:    body,
-        icon:    notification.icon  || '/icons/icon-192.png',
-        badge:   notification.badge || '/icons/badge-72.png',
-        tag:     data.tag           || 'arena-notification',
+        body,
+        icon,
+        badge:    '/favicon.png',
+        image:    image || undefined,
+        tag:      'exam-arena-broadcast',
         renotify: true,
-        vibrate: [200, 100, 200],
-        data:    { url },
+        vibrate:  [200, 100, 200],
+        requireInteraction: false,
+        data: { url },
         actions: [
             { action: 'open',    title: 'খুলুন' },
             { action: 'dismiss', title: 'বাতিল' },
@@ -67,11 +69,4 @@ self.addEventListener('notificationclick', (event) => {
             }
         })
     );
-});
-
-// ── Config injection (posted from main thread) ────────────────────────────────
-self.addEventListener('message', (event) => {
-    if (event.data?.type === 'FIREBASE_CONFIG') {
-        self.FIREBASE_CONFIG = event.data.config;
-    }
 });

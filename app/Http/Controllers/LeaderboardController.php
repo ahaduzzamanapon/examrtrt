@@ -18,7 +18,7 @@ class LeaderboardController extends Controller
             $leaders = ExamSubmission::with('user:id,name,avatar,phone')
                 ->where('is_disqualified', false)
                 ->orderByDesc('score')
-                ->orderBy('time_taken_seconds')
+                ->orderBy('time_taken_sec')
                 ->limit(50)
                 ->get();
         } else {

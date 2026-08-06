@@ -72,7 +72,6 @@ export default function BattleIndex({ invites = [], mySessions = [], wallet = 0 
                     </div>
 
                     <button
-                        onClick={() => setShowCreate}
                         onClick={() => setShowCreate(true)}
                         style={{
                             width: '100%', marginTop: 14, padding: '14px', borderRadius: 14, border: 'none',

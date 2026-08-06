@@ -3,10 +3,11 @@ import { Head, Link } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     CheckCircle2, XCircle, Bot, ArrowRight, RefreshCw,
-    Trophy, ChevronRight, HelpCircle, Sparkles, Send
+    Trophy, ChevronRight, HelpCircle, Sparkles, Send, Flag,
 } from 'lucide-react';
 import axios from 'axios';
 import MobileLayout from '@/Layouts/MobileLayout';
+import ReportQuestionModal from '@/Components/ReportQuestionModal';
 
 export default function PracticeSession({ questions = [], goal = '' }) {
     const [index, setIndex]             = useState(0);
@@ -20,6 +21,9 @@ export default function PracticeSession({ questions = [], goal = '' }) {
     const [aiQuery, setAiQuery]         = useState('');
     const [aiAnswer, setAiAnswer]       = useState('');
     const [aiLoading, setAiLoading]     = useState(false);
+
+    // Report Modal state
+    const [reportOpen, setReportOpen]   = useState(false);
 
     const currentQ = questions[index];
 
@@ -243,9 +247,23 @@ export default function PracticeSession({ questions = [], goal = '' }) {
                                             border: '1px solid rgba(124,58,237,0.4)',
                                             color: '#c084fc', fontWeight: 700, fontSize: 13, cursor: 'pointer',
                                             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                                            marginBottom: 8,
                                         }}
                                     >
                                         <Bot size={18} /> Ask AI Teacher — বিস্তারিত শিক্ষক থেকে শোনো
+                                    </button>
+
+                                    {/* Report Question Button */}
+                                    <button
+                                        onClick={() => setReportOpen(true)}
+                                        style={{
+                                            width: '100%', padding: '10px 14px', borderRadius: 12,
+                                            background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)',
+                                            color: '#f87171', fontWeight: 700, fontSize: 12, cursor: 'pointer',
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                                        }}
+                                    >
+                                        <Flag size={15} /> প্রশ্নে কোনো ভুল আছে? রিপোর্ট করুন 🚩
                                     </button>
                                 </motion.div>
                             )}
@@ -346,6 +364,14 @@ export default function PracticeSession({ questions = [], goal = '' }) {
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            {/* Question Report Modal */}
+            <ReportQuestionModal
+                questionId={currentQ?.id}
+                questionText={currentQ?.question_text}
+                isOpen={reportOpen}
+                onClose={() => setReportOpen(false)}
+            />
 
         </MobileLayout>
     );

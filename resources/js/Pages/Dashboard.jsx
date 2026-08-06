@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { Link, usePage } from '@inertiajs/react';
 import {
     Zap, Sword, BookOpen, Brain, Trophy, TrendingUp,
-    ChevronRight, Clock, Star, Flame,
+    ChevronRight, Clock, Star, Flame, FileText,
 } from 'lucide-react';
 import ProfileSetupModal from '@/Components/ProfileSetupModal';
 
@@ -18,10 +18,11 @@ const item = {
 };
 
 const quickActions = [
-    { icon: Zap,      label: 'লাইভ কনটেস্ট', href: 'exams.index',    color: '#4d6fff', bg: 'rgba(77,111,255,0.18)'  },
-    { icon: Sword,    label: '১v১ ব্যাটেল',   href: 'battle.index',   color: '#f59e0b', bg: 'rgba(245,158,11,0.18)'  },
-    { icon: BookOpen, label: 'প্র্যাকটিস',     href: 'practice.index', color: '#10b981', bg: 'rgba(16,185,129,0.18)'  },
-    { icon: Brain,    label: 'সারভাইভাল',      href: 'survival.index', color: '#ef4444', bg: 'rgba(239,68,68,0.18)'   },
+    { icon: Zap,      label: 'লাইভ কনটেস্ট', href: 'exams.index',      color: '#4d6fff', bg: 'rgba(77,111,255,0.18)'  },
+    { icon: FileText, label: 'মডেল টেস্ট',   href: 'model-test.index', color: '#a78bfa', bg: 'rgba(167,139,250,0.18)' },
+    { icon: Sword,    label: '১v১ ব্যাটেল',   href: 'battle.index',     color: '#f59e0b', bg: 'rgba(245,158,11,0.18)'  },
+    { icon: BookOpen, label: 'প্র্যাকটিস',     href: 'practice.index',   color: '#10b981', bg: 'rgba(16,185,129,0.18)'  },
+    { icon: Brain,    label: 'সারভাইভাল',      href: 'survival.index',   color: '#ef4444', bg: 'rgba(239,68,68,0.18)'   },
 ];
 
 export default function Dashboard({ auth, upcomingExams = [] }) {

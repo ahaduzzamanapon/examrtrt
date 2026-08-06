@@ -3,7 +3,7 @@ import { Link, usePage } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Menu, X, Home, Zap, BookOpen, Wallet, User,
-    Trophy, Sword, Brain, Settings, LogOut, Film,
+    Trophy, Sword, Brain, Settings, LogOut, Film, FileText, Sparkles,
 } from 'lucide-react';
 import BottomNav from './BottomNav';
 import ChatbotWidget from './ChatbotWidget';
@@ -14,10 +14,12 @@ const NAV_ITEMS = [
     { href: 'dashboard',         icon: Home,     label: 'হোম' },
     { href: 'exams.index',       icon: Zap,      label: 'লাইভ কনটেস্ট' },
     { href: 'reel.index',        icon: Film,     label: 'রিল প্রাকটিস' },
+    { href: 'model-test.index',  icon: FileText, label: 'মডেল টেস্ট' },
     { href: 'battle.index',      icon: Sword,    label: '1v1 ব্যাটেল' },
     { href: 'practice.index',    icon: BookOpen, label: 'প্রাকটিস' },
     { href: 'survival.index',    icon: Brain,    label: 'সারভাইভাল' },
     { href: 'leaderboard.index', icon: Trophy,   label: 'লিডারবোর্ড' },
+    { href: 'tokens.index',      icon: Sparkles, label: 'টোকেন স্টোর' },
     { href: 'wallet.index',      icon: Wallet,   label: 'ওয়ালেট' },
     { href: 'profile.show',      icon: User,     label: 'প্রোফাইল' },
 ];

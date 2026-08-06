@@ -8,6 +8,9 @@ use App\Http\Controllers\WalletController;
 use App\Http\Controllers\PracticeController;
 use App\Http\Controllers\SurvivalController;
 use App\Http\Controllers\LeaderboardController;
+use App\Http\Controllers\ModelTestController;
+use App\Http\Controllers\BattleController;
+use App\Http\Controllers\TokenController;
 use App\Http\Controllers\Admin\NotificationController as AdminNotification;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Admin\QuestionController as AdminQuestionController;
@@ -138,13 +141,33 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('/reel',                [\App\Http\Controllers\ReelController::class, 'index'])->name('reel.index');
     Route::get('/api/reel/questions',  [\App\Http\Controllers\ReelController::class, 'fetchQuestions'])->name('reel.api');
-    Route::get('/battle',              fn () => Inertia::render('Battle/Index'))->name('battle.index');
+    // ── 1v1 Battle ─────────────────────────────────────────────────────────────
+    Route::get('/battle',                     [BattleController::class, 'index'])->name('battle.index');
+    Route::post('/battle/create-invite',      [BattleController::class, 'createInvite'])->name('battle.create-invite');
+    Route::post('/battle/accept/{id}',        [BattleController::class, 'acceptInvite'])->name('battle.accept');
+    Route::get('/battle/room/{id}',           [BattleController::class, 'room'])->name('battle.room');
+    Route::post('/battle/room/{id}/submit',    [BattleController::class, 'submitAnswer'])->name('battle.submit-answer');
+
+    // ── Practice & Survival ───────────────────────────────────────────────────
     Route::get('/practice',            [PracticeController::class, 'index'])->name('practice.index');
     Route::post('/practice/start',     [PracticeController::class, 'start'])->name('practice.start');
     Route::post('/practice/ask-ai',    [PracticeController::class, 'askAi'])->name('practice.ask-ai');
     Route::get('/survival',            [SurvivalController::class, 'index'])->name('survival.index');
     Route::get('/api/survival/q',      [SurvivalController::class, 'fetchQuestions'])->name('survival.questions');
+    Route::post('/api/survival/loss',   [SurvivalController::class, 'recordLoss'])->name('survival.loss');
     Route::get('/leaderboard',         [LeaderboardController::class, 'index'])->name('leaderboard.index');
+
+    // ── Model Test ─────────────────────────────────────────────────────────────
+    Route::get('/model-test',                 [ModelTestController::class, 'index'])->name('model-test.index');
+    Route::post('/model-test/store',          [ModelTestController::class, 'store'])->name('model-test.store');
+    Route::get('/model-test/{id}/room',       [ModelTestController::class, 'room'])->name('model-test.room');
+    Route::post('/model-test/{id}/submit',    [ModelTestController::class, 'submit'])->name('model-test.submit');
+    Route::get('/model-test/{id}/result',     [ModelTestController::class, 'result'])->name('model-test.result');
+
+    // ── Token Store ────────────────────────────────────────────────────────────
+    Route::get('/tokens',                     [TokenController::class, 'index'])->name('tokens.index');
+    Route::post('/tokens/buy',                [TokenController::class, 'buyPackage'])->name('tokens.buy');
+    Route::post('/tokens/daily-claim',        [TokenController::class, 'claimDailyBonus'])->name('tokens.daily-claim');
 
     // ── Wallet ─────────────────────────────────────────────────────────────────
     Route::get('/wallet',              [WalletController::class, 'index'])->name('wallet.index');

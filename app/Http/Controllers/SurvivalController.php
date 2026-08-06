@@ -48,4 +48,26 @@ class SurvivalController extends Controller
             'questions' => $questions,
         ]);
     }
+
+    public function recordLoss(Request $request)
+    {
+        $user = auth()->user();
+
+        if ($user->token_balance >= 1) {
+            $user->decrement('token_balance', 1);
+
+            \App\Models\TokenTransaction::create([
+                'user_id'       => $user->id,
+                'type'          => 'PRACTICE_SPEND',
+                'amount'        => -1,
+                'balance_after' => $user->token_balance,
+                'description'   => 'Survival Deathmatch Loss (-1 Token)',
+            ]);
+        }
+
+        return response()->json([
+            'success'       => true,
+            'token_balance' => (int) $user->token_balance,
+        ]);
+    }
 }

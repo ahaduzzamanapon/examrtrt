@@ -92,6 +92,7 @@ export default function SurvivalIndex({ topPlayers = [] }) {
     };
 
     const handleGameOver = (reason) => {
+        axios.post(route('survival.loss')).catch(() => {});
         setGameState('gameover');
     };
 
@@ -168,6 +169,7 @@ export default function SurvivalIndex({ topPlayers = [] }) {
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 13, color: 'rgba(255,255,255,0.7)' }}>
                                     <div>⚡ প্রতিটি প্রশ্নের জন্য মাত্র ১২ সেকেন্ড বরাদ্দ।</div>
                                     <div>❌ ১টি ভুল উত্তর দিলেই গেম ওভার!</div>
+                                    <div>🪙 প্রতিবার হারার পর ১টি টোকেন কাটা যাবে।</div>
                                     <div>🏆 পয়েন্ট প্রতি সঠিক উত্তরে +১ করে বাড়বে।</div>
                                 </div>
                             </div>

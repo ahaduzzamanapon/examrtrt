@@ -43,7 +43,12 @@ function Sidebar({ mobile = false, onClose }) {
                     Main
                 </div>
                 {ADMIN_NAV.map(({ href, icon: Icon, label }) => {
-                    const isActive = url.startsWith('/' + href.replace('admin.', 'admin/').replace('dashboard', '').replace(/\/$/, '')) || url === '/admin' && href === 'admin.dashboard';
+                    const routeUrl = route(href);
+                    const path = new URL(routeUrl, window.location.origin).pathname;
+                    const isActive = href === 'admin.dashboard'
+                        ? (url === path || url === '/admin' || url === '/admin/')
+                        : url.startsWith(path);
+
                     return (
                         <Link key={href} href={route(href)} onClick={onClose}
                             style={{

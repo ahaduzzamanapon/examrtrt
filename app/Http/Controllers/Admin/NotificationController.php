@@ -44,41 +44,47 @@ class NotificationController extends Controller
         $emailSent = 0;
         $failed    = 0;
 
+        // exam_goal is now stored as JSON array — use JSON_CONTAINS for filtering
         $baseQuery = $data['target'] === 'all'
             ? User::query()
-            : User::where('exam_goal', $data['target']);
+            : User::whereRaw("JSON_CONTAINS(exam_goal, ?)", [json_encode($data['target'])]);
 
         // ── Push ──────────────────────────────────────────────────────────────
         if (in_array($channel, ['push', 'both'])) {
             $tokens = (clone $baseQuery)->whereNotNull('fcm_token')
                 ->pluck('fcm_token')->filter()->unique()->values()->toArray();
 
-            if (!empty($tokens) && $accessToken = $this->getAccessToken()) {
-                foreach ($tokens as $token) {
-                    $resp = Http::withToken($accessToken)
-                        ->post("https://fcm.googleapis.com/v1/projects/{$this->projectId}/messages:send", [
-                            'message' => [
-                                'token'        => $token,
-                                'notification' => ['title' => $data['title'], 'body' => $data['body']],
-                                'webpush'      => [
-                                    'notification' => array_filter([
-                                        'title' => $data['title'], 'body'  => $data['body'],
-                                        'icon'  => '/favicon.png', 'image' => $data['image_url'] ?? null,
-                                        'badge' => '/favicon.png', 'requireInteraction' => true,
-                                    ]),
-                                    'fcm_options' => ['link' => $data['click_url'] ?? '/'],
+            if (!empty($tokens)) {
+                $accessToken = $this->getAccessToken();
+                if (!$accessToken) {
+                    $failed += count($tokens);
+                } else {
+                    foreach ($tokens as $token) {
+                        $resp = Http::withToken($accessToken)
+                            ->post("https://fcm.googleapis.com/v1/projects/{$this->projectId}/messages:send", [
+                                'message' => [
+                                    'token'        => $token,
+                                    'notification' => ['title' => $data['title'], 'body' => $data['body']],
+                                    'webpush'      => [
+                                        'notification' => array_filter([
+                                            'title' => $data['title'], 'body'  => $data['body'],
+                                            'icon'  => '/favicon.png', 'image' => $data['image_url'] ?? null,
+                                            'badge' => '/favicon.png', 'requireInteraction' => true,
+                                        ]),
+                                        'fcm_options' => ['link' => $data['click_url'] ?? '/'],
+                                    ],
+                                    'data' => ['url' => $data['click_url'] ?? '/', 'type' => 'broadcast'],
                                 ],
-                                'data' => ['url' => $data['click_url'] ?? '/', 'type' => 'broadcast'],
-                            ],
-                        ]);
+                            ]);
 
-                    if ($resp->successful()) {
-                        $pushSent++;
-                    } else {
-                        $failed++;
-                        $err = $resp->json('error.details.0.errorCode') ?? '';
-                        if (in_array($err, ['UNREGISTERED', 'INVALID_ARGUMENT'])) {
-                            User::where('fcm_token', $token)->update(['fcm_token' => null]);
+                        if ($resp->successful()) {
+                            $pushSent++;
+                        } else {
+                            $failed++;
+                            $err = $resp->json('error.details.0.errorCode') ?? '';
+                            if (in_array($err, ['UNREGISTERED', 'INVALID_ARGUMENT'])) {
+                                User::where('fcm_token', $token)->update(['fcm_token' => null]);
+                            }
                         }
                     }
                 }
@@ -107,9 +113,9 @@ class NotificationController extends Controller
         }
 
         $parts = [];
-        if ($pushSent > 0)  $parts[] = "\xf0\x9f\x93\xb2 {$pushSent} \xe0\xa6\x9c\xe0\xa6\xa8\xe0\xa6\x95\xe0\xa7\x87 push \xe0\xa6\xaa\xe0\xa6\xbe\xe0\xa6\xa0\xe0\xa6\xbe\xe0\xa6\xa8\xe0\xa7\x8b \xe0\xa6\xb9\xe0\xa6\xaf\xe0\xa6\xbc\xe0\xa7\x87\xe0\xa6\x9b\xe0\xa7\x87";
-        if ($emailSent > 0) $parts[] = "\xf0\x9f\x93\xa7 {$emailSent} \xe0\xa6\x9c\xe0\xa6\xa8\xe0\xa6\x95\xe0\xa7\x87 email \xe0\xa6\xaa\xe0\xa6\xbe\xe0\xa6\xa0\xe0\xa6\xbe\xe0\xa6\xa8\xe0\xa7\x8b \xe0\xa6\xb9\xe0\xa6\xaf\xe0\xa6\xbc\xe0\xa7\x87\xe0\xa6\x9b\xe0\xa7\x87";
-        if ($failed > 0)    $parts[] = "\xe2\x9d\x8c {$failed}\xe0\xa6\x9f\xe0\xa6\xbf \xe0\xa6\xac\xe0\xa7\x8d\xe0\xa6\xaf\xe0\xa6\xb0\xe0\xa7\x8d\xe0\xa6\xa5";
+        if ($pushSent > 0)  $parts[] = "📲 {$pushSent} জনকে push পাঠানো হয়েছে";
+        if ($emailSent > 0) $parts[] = "📧 {$emailSent} জনকে email পাঠানো হয়েছে";
+        if ($failed > 0)    $parts[] = "❌ {$failed}টি ব্যর্থ";
 
         return back()->with('success', $parts ? implode(' | ', $parts) : 'কোনো recipient পাওয়া যায়নি।');
     }

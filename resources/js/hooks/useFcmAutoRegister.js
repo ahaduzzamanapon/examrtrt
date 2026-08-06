@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { usePage } from '@inertiajs/react';
 
 const FIREBASE_CONFIG = {
     apiKey:            'AIzaSyDp_Af0POFa-EekqDEFdgLzVLNSAtYbU10',
@@ -9,23 +10,37 @@ const FIREBASE_CONFIG = {
     appId:             '1:165082016850:web:9fb8f973b6e20743b4038b',
 };
 
+const VAPID = 'BKPEwvQSYwZhDuz0M3Bxodhf4Um980h5IvJJrIWcERJopbvV6JabGrSyk69lre_cOpqfRIAPsrhpMwVNvAjmWfc';
+
 /**
- * Silently registers FCM token in the background after login/registration.
- * Runs once per browser session (tracked via sessionStorage).
+ * Silently registers FCM token in the background.
+ * - If user has no fcm_token on server → always try (bypass sessionStorage).
+ * - If user already has a token → run only once per session.
  */
 export function useFcmAutoRegister() {
+    const { auth } = usePage().props;
+    const serverHasToken = !!(auth?.user?.fcm_token);
+
     useEffect(() => {
         if (typeof window === 'undefined') return;
         if (!('Notification' in window)) return;
-        if (sessionStorage.getItem('fcm_registered')) return;
+        if (!('serviceWorker' in navigator)) return;
+
+        // If server already has a token → only run once per session
+        if (serverHasToken && sessionStorage.getItem('fcm_registered')) return;
 
         const register = async () => {
             try {
-                // Read VAPID key from DOM (set in app.blade.php)
-                const vapidKey = document.getElementById('vapid-key')?.textContent?.trim()
-                    ?? 'BKPEwvQSYwZhDuz0M3Bxodhf4Um980h5IvJJrIWcERJopbvV6JabGrSyk69lre_cOpqfRIAPsrhpMwVNvAjmWfc';
+                // Only ask for permission if not already granted
+                if (Notification.permission === 'default') {
+                    const perm = await Notification.requestPermission();
+                    if (perm !== 'granted') return;
+                } else if (Notification.permission === 'denied') {
+                    return;
+                }
 
-                // Read firebase config from DOM or use default
+                const vapidKey = document.getElementById('vapid-key')?.textContent?.trim() ?? VAPID;
+
                 let firebaseConfig = FIREBASE_CONFIG;
                 try {
                     const raw = document.getElementById('firebase-config')?.textContent;
@@ -37,13 +52,7 @@ export function useFcmAutoRegister() {
 
                 const app       = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
                 const messaging = getMessaging(app);
-
-                // Register the service worker
-                const swReg = await navigator.serviceWorker.register('/firebase-sw.js');
-
-                // Request notification permission
-                const permission = await Notification.requestPermission();
-                if (permission !== 'granted') return;
+                const swReg     = await navigator.serviceWorker.register('/firebase-sw.js');
 
                 const token = await getToken(messaging, {
                     vapidKey,
@@ -52,7 +61,6 @@ export function useFcmAutoRegister() {
 
                 if (!token) return;
 
-                // Save to server
                 const csrf = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
                 const res = await fetch('/fcm-token', {
                     method:  'POST',
@@ -68,12 +76,12 @@ export function useFcmAutoRegister() {
                     sessionStorage.setItem('fcm_registered', '1');
                 }
             } catch (err) {
-                console.debug('[FCM Auto-Register]', err?.message ?? err);
+                console.debug('[FCM]', err?.message ?? err);
             }
         };
 
-        // 3-second delay so the page renders first
-        const t = setTimeout(register, 3000);
+        // 2s delay so page renders first
+        const t = setTimeout(register, 2000);
         return () => clearTimeout(t);
-    }, []);
+    }, [serverHasToken]);
 }

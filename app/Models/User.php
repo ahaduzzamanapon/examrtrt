@@ -30,8 +30,20 @@ class User extends Authenticatable
         'streak_count',
         'last_login_date',
         'theme_preference',
+        'referral_code',
+        'referred_by',
         'password',
     ];
+
+    public function referrals()
+    {
+        return $this->hasMany(User::class, 'referred_by');
+    }
+
+    public function referrer()
+    {
+        return $this->belongsTo(User::class, 'referred_by');
+    }
 
     protected $hidden = [
         'password',

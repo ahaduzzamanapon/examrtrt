@@ -93,10 +93,10 @@ export default function TokenStoreIndex({
                         </div>
                         <div>
                             <h3 style={{ color: 'white', fontWeight: 800, fontSize: 15, margin: 0 }}>
-                                ফ্রিতে ৫০টি টোকেন ইনভাইট করো!
+                                রেফার করে ফ্রিতে টোকেন আয় করুন!
                             </h3>
                             <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11, margin: 0 }}>
-                                বন্ধুদের রেফার করলে তারা একাউন্ট খুললেই পাবে ফ্রিতে ৫০ টোকেন
+                                প্রতিটি সফল রেফারে আপনি এবং আপনার বন্ধু দুজনেই পাবেন +১০টি টোকেন ⚡
                             </p>
                         </div>
                     </div>

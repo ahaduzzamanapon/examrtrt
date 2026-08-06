@@ -52,9 +52,10 @@ function DesktopSidebar({ auth }) {
                     const isDash     = href === 'dashboard' && current === '/dashboard';
                     const isActive   = isDash || (href !== 'dashboard' && current.startsWith('/' + href.split('.')[0]));
                     const showBadge  = href === 'exams.index' && !!usePage().props.hasActiveContest;
+                    const safeUrl    = (() => { try { return route(href); } catch { return '/' + href.replace('.index', '').replace('.show', ''); } })();
 
                     return (
-                        <Link key={href} href={route(href)} style={{
+                        <Link key={href} href={safeUrl} style={{
                             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                             padding: '10px 14px', borderRadius: 12,
                             background: isActive ? 'rgba(77,111,255,0.18)' : 'transparent',
@@ -221,8 +222,10 @@ export default function MobileLayout({ children, title = '' }) {
                                             const isExamLink = href === 'exams.index';
                                             const showBadge  = isExamLink && !!usePage().props.hasActiveContest;
 
+                                            const safeUrl    = (() => { try { return route(href); } catch { return '/' + href.replace('.index', '').replace('.show', ''); } })();
+
                                             return (
-                                                <Link key={href} href={route(href)} onClick={() => setDrawerOpen(false)}
+                                                <Link key={href} href={safeUrl} onClick={() => setDrawerOpen(false)}
                                                     className="block rounded-xl"
                                                     style={{ minHeight: '44px' }}>
                                                     <div className="flex items-center justify-between w-full px-4 py-3 rounded-xl text-sm font-medium"

@@ -19,6 +19,15 @@ export default function BottomNav() {
         return '/' + routeName;
     };
 
+    const getSafeHref = (href) => {
+        try {
+            return route(href);
+        } catch {
+            const path = href.replace('.index', '').replace('.show', '');
+            return '/' + path;
+        }
+    };
+
     return (
         <nav className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around px-2 py-2 safe-area-pb"
             style={{
@@ -33,7 +42,7 @@ export default function BottomNav() {
 
                 return (
                     <Link key={tab.href}
-                        href={route(tab.href)}
+                        href={getSafeHref(tab.href)}
                         className="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all min-w-[50px] relative"
                         style={{ color: isActive ? '#4d6fff' : 'rgba(255,255,255,0.45)' }}>
 

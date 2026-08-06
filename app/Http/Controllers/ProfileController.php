@@ -62,6 +62,16 @@ class ProfileController extends Controller
     }
 
     /**
+     * Save theme preference (dark_glass / light_glass).
+     */
+    public function saveTheme(Request $request)
+    {
+        $request->validate(['theme' => 'required|in:dark_glass,light_glass']);
+        $request->user()->update(['theme_preference' => $request->theme]);
+        return response()->json(['ok' => true, 'theme' => $request->theme]);
+    }
+
+    /**
      * Delete the user's account.
      */
     public function destroy(Request $request): RedirectResponse
@@ -82,3 +92,4 @@ class ProfileController extends Controller
         return Redirect::to('/');
     }
 }
+

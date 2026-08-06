@@ -1,14 +1,22 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link, usePage } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
+import axios from 'axios';
 import {
     Menu, X, Home, Zap, BookOpen, Wallet, User,
     Trophy, Sword, Brain, Settings, LogOut, Bell, Film,
+    Sun, Moon,
 } from 'lucide-react';
 import BottomNav from './BottomNav';
 import ChatbotWidget from './ChatbotWidget';
 import { NotificationContainer, useNotifications } from './NotificationSystem';
 import { useFcmAutoRegister } from '@/hooks/useFcmAutoRegister';
+
+// ── Theme helpers ─────────────────────────────────────────────────────────
+function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('nxly_theme', theme);
+}
 
 const NAV_ITEMS = [
     { href: 'dashboard',         icon: Home,     label: 'হোম' },
@@ -114,7 +122,28 @@ export default function MobileLayout({ children, title = '' }) {
     const { auth } = usePage().props;
     const [drawerOpen, setDrawerOpen] = useState(false);
     const { notifications, removeNotification } = useNotifications();
-    useFcmAutoRegister(); // Auto-capture FCM token silently
+    useFcmAutoRegister();
+
+    // ── Theme: load from DB preference, fallback to localStorage ──────────
+    const serverTheme = auth?.user?.theme_preference ?? 'dark_glass';
+    const [theme, setTheme] = useState(() => {
+        return localStorage.getItem('nxly_theme') || serverTheme;
+    });
+
+    useEffect(() => {
+        applyTheme(serverTheme);
+        setTheme(serverTheme);
+    }, [serverTheme]);
+
+    const toggleTheme = useCallback(() => {
+        const next = theme === 'dark_glass' ? 'light_glass' : 'dark_glass';
+        setTheme(next);
+        applyTheme(next);
+        // Save to server (fire and forget)
+        axios.post(route('profile.theme'), { theme: next }).catch(() => {});
+    }, [theme]);
+
+    const isDark = theme === 'dark_glass';
 
     return (
         <div style={{ fontFamily: "'Hind Siliguri','Inter',sans-serif" }}>
@@ -132,7 +161,7 @@ export default function MobileLayout({ children, title = '' }) {
             </div>
 
             {/* ── MOBILE LAYOUT ───────────────────────────────────────────── */}
-            <div className="flex lg:hidden" style={{ minHeight: '100vh', background: 'linear-gradient(135deg,#0a0e23 0%,#0f1a3e 50%,#0a1628 100%)' }}>
+            <div className="flex lg:hidden" style={{ minHeight: '100vh', background: 'var(--bg-body)' }}>
                 <div style={{ width: '100%' }}>
 
                     {/* Top App Bar */}
@@ -148,7 +177,7 @@ export default function MobileLayout({ children, title = '' }) {
 
                         <div className="flex items-center gap-1.5">
                             {/* Token */}
-                        <div className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold"
+                            <div className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold"
                                 style={{ background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.3)', color: '#fcd34d' }}>
                                 🪙 {auth.user?.token_balance ?? 0}
                             </div>
@@ -160,8 +189,18 @@ export default function MobileLayout({ children, title = '' }) {
                                     ৳{parseFloat(auth.user?.wallet_balance ?? 0).toFixed(0)}
                                 </div>
                             </Link>
-                            <motion.button whileTap={{ scale: 0.88 }} className="touch-target rounded-xl" aria-label="নোটিফিকেশন">
-                                <Bell size={20} className="text-white/60" />
+                            {/* Theme Toggle */}
+                            <motion.button
+                                whileTap={{ scale: 0.88 }}
+                                onClick={toggleTheme}
+                                className="touch-target rounded-xl flex items-center justify-center"
+                                aria-label="থিম পরিবর্তন"
+                                title={isDark ? 'Light mode' : 'Dark mode'}
+                            >
+                                {isDark
+                                    ? <Sun size={19} style={{ color: '#fbbf24' }} />
+                                    : <Moon size={19} style={{ color: '#7c3aed' }} />
+                                }
                             </motion.button>
                         </div>
                     </header>
@@ -215,7 +254,21 @@ export default function MobileLayout({ children, title = '' }) {
                                         ))}
                                     </nav>
 
-                                    <div className="px-4 mt-auto space-y-1">
+                                    <div className="px-4 mt-auto space-y-1 pb-4">
+                                        {/* Theme Toggle Row */}
+                                        <button
+                                            onClick={toggleTheme}
+                                            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium"
+                                            style={{
+                                                background: isDark ? 'rgba(251,191,36,0.1)' : 'rgba(124,58,237,0.1)',
+                                                border: `1px solid ${isDark ? 'rgba(251,191,36,0.25)' : 'rgba(124,58,237,0.25)'}`,
+                                                color: isDark ? '#fbbf24' : '#7c3aed',
+                                            }}
+                                        >
+                                            {isDark ? <Sun size={16} /> : <Moon size={16} />}
+                                            {isDark ? 'Light Glass মোডে যান' : 'Dark Glass মোডে যান'}
+                                        </button>
+
                                         {auth.user?.role === 'ADMIN' && (
                                             <Link href={route('admin.dashboard')} onClick={() => setDrawerOpen(false)}
                                                 className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium"

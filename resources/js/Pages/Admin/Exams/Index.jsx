@@ -2,6 +2,7 @@ import { Head, Link, router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { Plus, Zap, Clock, CheckCircle, XCircle, Edit, Trash2, PlayCircle } from 'lucide-react';
 import AdminLayout from '@/Layouts/AdminLayout';
+import Swal from 'sweetalert2';
 
 const STATUS_CONFIG = {
     SCHEDULED: { label: 'শিডিউলড',  color: '#4d6fff', bg: 'rgba(77,111,255,0.15)'  },
@@ -25,13 +26,35 @@ export default function ExamsIndex({ exams }) {
     const list = exams?.data ?? exams ?? [];
 
     const goLive = (id) => {
-        if (!confirm('এই পরীক্ষাটি LIVE করতে চাও?')) return;
-        router.post(route('admin.exams.live', id));
+        Swal.fire({
+            title: 'পরীক্ষা LIVE শুরু',
+            text: 'এই পরীক্ষাটি LIVE করতে চাও?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'হ্যাঁ, LIVE করো',
+            cancelButtonText: 'বাতিল',
+            confirmButtonColor: '#10b981',
+        }).then((result) => {
+            if (result.isConfirmed) {
+                router.post(route('admin.exams.live', id));
+            }
+        });
     };
 
     const destroy = (id) => {
-        if (!confirm('এই পরীক্ষাটি মুছে ফেলতে চাও?')) return;
-        router.delete(route('admin.exams.destroy', id));
+        Swal.fire({
+            title: 'পরীক্ষা ডিলেট',
+            text: 'এই পরীক্ষাটি মুছে ফেলতে চাও?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'হ্যাঁ, মুছে ফেলো',
+            cancelButtonText: 'বাতিল',
+            confirmButtonColor: '#ef4444',
+        }).then((result) => {
+            if (result.isConfirmed) {
+                router.delete(route('admin.exams.destroy', id));
+            }
+        });
     };
 
     return (

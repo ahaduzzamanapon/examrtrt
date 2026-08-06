@@ -3,6 +3,7 @@ import { Head, router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { CheckCircle, XCircle, Clock, Search, ArrowDownCircle } from 'lucide-react';
 import AdminLayout from '@/Layouts/AdminLayout';
+import Swal from 'sweetalert2';
 
 const METHOD_COLOR = { bkash: '#e91e8c', nagad: '#f26722', rocket: '#8b2fc9' };
 
@@ -21,20 +22,43 @@ function StatusBadge({ status }) {
     );
 }
 
+
 export default function AdminDeposits({ deposits }) {
     const list = deposits?.data ?? deposits ?? [];
     const [filter, setFilter] = useState('ALL');
     const [search, setSearch] = useState('');
 
     const approve = (id) => {
-        if (confirm('এই ডিপোজিট টি কি অনুমোদন করতে চান?')) {
-            router.post(route('admin.wallet.deposits.approve', id));
-        }
+        Swal.fire({
+            title: 'অনুমোদন নিশ্চিতকরণ',
+            text: 'এই ডিপোজিট টি কি অনুমোদন করতে চান?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'হ্যাঁ, অনুমোদন করুন',
+            cancelButtonText: 'বাতিল',
+            confirmButtonColor: '#10b981',
+            cancelButtonColor: '#6b7280',
+        }).then((result) => {
+            if (result.isConfirmed) {
+                router.post(route('admin.wallet.deposits.approve', id));
+            }
+        });
     };
 
     const reject  = (id) => {
-        const note = prompt('বাতিল করার কারণ (ঐচ্ছিক):') ?? 'Rejected by admin';
-        router.post(route('admin.wallet.deposits.reject', id), { note });
+        Swal.fire({
+            title: 'ডিপোজিট বাতিল',
+            input: 'text',
+            inputLabel: 'বাতিল করার কারণ (ঐচ্ছিক):',
+            inputValue: 'Rejected by admin',
+            showCancelButton: true,
+            confirmButtonText: 'বাতিল করুন',
+            confirmButtonColor: '#ef4444',
+        }).then((result) => {
+            if (result.isConfirmed) {
+                router.post(route('admin.wallet.deposits.reject', id), { note: result.value ?? 'Rejected by admin' });
+            }
+        });
     };
 
     const filteredList = list.filter(tx => {

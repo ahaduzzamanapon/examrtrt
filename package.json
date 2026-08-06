@@ -27,6 +27,7 @@
         "framer-motion": "^13.0.0",
         "lucide-react": "^1.28.0",
         "pusher-js": "^8.6.0",
+        "sweetalert2": "^11.26.25",
         "web-push": "^3.6.7"
     }
 }

@@ -5,6 +5,7 @@ import { Search, Plus, Trash2, Edit3, ChevronLeft, ChevronRight,
          Upload, Sparkles, CheckCircle, AlertCircle, X, Save, ImagePlus } from 'lucide-react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { getSubjects, SUBJECTS_BY_GOAL } from '@/data/subjects';
+import Swal from 'sweetalert2';
 
 const GOALS = [
     { value: 'bcs', label: 'BCS' }, { value: 'hsc', label: 'HSC' },
@@ -295,13 +296,25 @@ export default function AdminQuestions({ questions, filters, stats }) {
     const csrf = () => document.querySelector('meta[name="csrf-token"]')?.content ?? '';
 
     const doSearch = e => { e.preventDefault(); router.get(route('admin.questions'), { q: search, goal: goalFilter }, { preserveState: true }); };
-    const doDelete = q => { if (!confirm(`"${q.question_text.slice(0, 40)}..." মুছে ফেলতে চাও?`)) return; router.delete(route('admin.questions.destroy', q.id)); };
+    const doDelete = q => {
+        Swal.fire({
+            title: 'প্রশ্ন মোছা',
+            text: `"${q.question_text.slice(0, 40)}..." মুছে ফেলতে চাও?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'মুছে ফেলো',
+            cancelButtonText: 'বাতিল',
+            confirmButtonColor: '#ef4444',
+        }).then(res => {
+            if (res.isConfirmed) router.delete(route('admin.questions.destroy', q.id));
+        });
+    };
 
     const doImport = async () => {
         setImporting(true);
         const res = await fetch(route('admin.questions.import'), { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf() }, body: JSON.stringify({ json: jsonText, exam_goal: importGoal }) });
         setImporting(false);
-        if (res.ok) { setJsonText(''); router.reload(); } else { const d = await res.json().catch(() => ({})); alert(d?.message ?? 'Import failed'); }
+        if (res.ok) { setJsonText(''); router.reload(); } else { const d = await res.json().catch(() => ({})); Swal.fire({ icon: 'error', title: 'ইমপোর্ট ব্যর্থ', text: d?.message ?? 'Import failed' }); }
     };
 
     const doGenerate = async () => {
@@ -318,7 +331,7 @@ export default function AdminQuestions({ questions, filters, stats }) {
         const toSave = selectedIdx.map(i => result[i]);
         const res = await fetch(route('admin.questions.bulk'), { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf() }, body: JSON.stringify({ questions: toSave, exam_goal: goal || 'other' }) });
         const data = await res.json().catch(() => ({}));
-        if (res.ok) { setAiResult(null); setImgResult(null); router.reload(); alert(`✅ ${data.saved} টি প্রশ্ন সেভ হয়েছে।`); }
+        if (res.ok) { setAiResult(null); setImgResult(null); router.reload(); Swal.fire({ icon: 'success', title: 'সেভ সম্পন্ন', text: `✅ ${data.saved} টি প্রশ্ন সেভ হয়েছে।`, timer: 2000, showConfirmButton: false }); }
     };
 
     const startQueue = async (items, startFrom = 0) => {

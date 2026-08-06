@@ -25,6 +25,7 @@ class ReelController extends Controller
             'initialQuestions' => $questions,
             'currentGoal'      => $goal,
             'userGoal'         => $userGoal,
+            'adsterraScript'   => (string) \App\Models\AppSetting::get('adsterra_script', ''),
         ]);
     }
 

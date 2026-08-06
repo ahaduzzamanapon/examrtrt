@@ -3,6 +3,7 @@ import { Head, Link, router, usePage } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Users, Shield, Bell, Trash2, ChevronLeft, ChevronRight, CheckCircle, AlertCircle, Edit3, X, Coins } from 'lucide-react';
 import AdminLayout from '@/Layouts/AdminLayout';
+import Swal from 'sweetalert2';
 
 const GOAL_LABELS = {
     bcs: 'BCS', hsc: 'HSC', ssc: 'SSC', medical: 'Medical',
@@ -59,15 +60,38 @@ export default function AdminUsers({ users, search: initSearch, stats }) {
         router.get(route('admin.users'), { search }, { preserveState: true });
     };
 
+
     const changeRole = (user) => {
         const newRole = user.role === 'ADMIN' ? 'STUDENT' : 'ADMIN';
-        if (!confirm(`${user.name} কে ${newRole} বানাতে চাও?`)) return;
-        router.patch(route('admin.users.role', user.id), { role: newRole });
+        Swal.fire({
+            title: 'রোল পরিবর্তন',
+            text: `${user.name} কে ${newRole} বানাতে চাও?`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'হ্যাঁ, পরিবর্তন করো',
+            cancelButtonText: 'বাতিল',
+            confirmButtonColor: '#f59e0b',
+        }).then((result) => {
+            if (result.isConfirmed) {
+                router.patch(route('admin.users.role', user.id), { role: newRole });
+            }
+        });
     };
 
     const doDelete = (user) => {
-        if (!confirm(`${user.name} কে মুছে ফেলতে চাও?`)) return;
-        router.delete(route('admin.users.destroy', user.id));
+        Swal.fire({
+            title: 'ইউজার ডিলেট',
+            text: `${user.name} কে মুছে ফেলতে চাও?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'হ্যাঁ, মুছে ফেলো',
+            cancelButtonText: 'বাতিল',
+            confirmButtonColor: '#ef4444',
+        }).then((result) => {
+            if (result.isConfirmed) {
+                router.delete(route('admin.users.destroy', user.id));
+            }
+        });
     };
 
     const s = { color: 'rgba(255,255,255,0.35)', fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', padding: '10px 14px', textAlign: 'left' };

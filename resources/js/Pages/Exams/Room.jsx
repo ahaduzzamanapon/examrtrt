@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Head, router } from '@inertiajs/react';
 import axios from 'axios';
+import Swal from 'sweetalert2';
 
 // ── Anti-cheat constants ────────────────────────────────────────────────────
 const BLOCKED_KEYS = [
@@ -138,13 +139,25 @@ export default function ExamRoom({ auth, exam, questions = [], saved_answers = {
         saveProgress(next);
     };
 
+
     // ── Submit exam ───────────────────────────────────────────────────────────
     const handleSubmit = () => {
-        if (!confirm('পরীক্ষা জমা দিবেন? একবার দিলে পরিবর্তন করা যাবে না।')) return;
-        setSubmitting(true);
-        const timeTaken = Math.floor((Date.now() - startTime) / 1000);
-        router.post(route('exams.submit', exam.id), { answers, time_taken_sec: timeTaken }, {
-            onError: () => setSubmitting(false),
+        Swal.fire({
+            title: 'পরীক্ষা জমা দিবেন?',
+            text: 'একবার জমা দিলে আর পরিবর্তন করা যাবে না।',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'হ্যাঁ, জমা দিন',
+            cancelButtonText: 'বাতিল',
+            confirmButtonColor: '#10b981',
+        }).then((result) => {
+            if (result.isConfirmed) {
+                setSubmitting(true);
+                const timeTaken = Math.floor((Date.now() - startTime) / 1000);
+                router.post(route('exams.submit', exam.id), { answers, time_taken_sec: timeTaken }, {
+                    onError: () => setSubmitting(false),
+                });
+            }
         });
     };
 

@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Flame, Heart, Skull, Trophy, Play, RotateCcw, AlertTriangle, Clock } from 'lucide-react';
 import axios from 'axios';
 import MobileLayout from '@/Layouts/MobileLayout';
+import Swal from 'sweetalert2';
 
 export default function SurvivalIndex({ topPlayers = [] }) {
     const [gameState, setGameState]     = useState('idle'); // idle | playing | gameover
@@ -48,7 +49,7 @@ export default function SurvivalIndex({ topPlayers = [] }) {
             setTimeLeft(12);
             setGameState('playing');
         } catch {
-            alert('প্রশ্ন আনত্যে সমস্যা হয়েছে। আবার চেষ্টা করো!');
+            Swal.fire({ icon: 'error', title: 'ত্রুটি', text: 'প্রশ্ন আনতে সমস্যা হয়েছে। আবার চেষ্টা করো!' });
         }
         setLoading(false);
     };

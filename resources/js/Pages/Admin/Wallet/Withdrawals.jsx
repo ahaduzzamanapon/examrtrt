@@ -3,6 +3,7 @@ import { Head, router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { CheckCircle, XCircle, Clock, Search, ArrowUpCircle } from 'lucide-react';
 import AdminLayout from '@/Layouts/AdminLayout';
+import Swal from 'sweetalert2';
 
 const METHOD_COLOR = { bkash: '#e91e8c', nagad: '#f26722', rocket: '#8b2fc9' };
 
@@ -27,14 +28,36 @@ export default function AdminWithdrawals({ withdrawals }) {
     const [search, setSearch] = useState('');
 
     const approve = (id) => {
-        if (confirm('টাকা পাঠানো হয়েছে এবং উইথড্র টি অনুমোদন করতে চান?')) {
-            router.post(route('admin.wallet.withdrawals.approve', id));
-        }
+        Swal.fire({
+            title: 'উইথড্র অনুমোদন',
+            text: 'টাকা পাঠানো হয়েছে এবং উইথড্র টি অনুমোদন করতে চান?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'হ্যাঁ, অনুমোদন করুন',
+            cancelButtonText: 'বাতিল',
+            confirmButtonColor: '#10b981',
+            cancelButtonColor: '#6b7280',
+        }).then((result) => {
+            if (result.isConfirmed) {
+                router.post(route('admin.wallet.withdrawals.approve', id));
+            }
+        });
     };
 
     const reject  = (id) => {
-        const note = prompt('বাতিল করার কারণ (টাকা ফেরত দেওয়া হবে):') ?? 'Rejected by admin';
-        router.post(route('admin.wallet.withdrawals.reject', id), { note });
+        Swal.fire({
+            title: 'উইথড্র বাতিল',
+            input: 'text',
+            inputLabel: 'বাতিল করার কারণ (টাকা ফেরত দেওয়া হবে):',
+            inputValue: 'Rejected by admin',
+            showCancelButton: true,
+            confirmButtonText: 'বাতিল করুন',
+            confirmButtonColor: '#ef4444',
+        }).then((result) => {
+            if (result.isConfirmed) {
+                router.post(route('admin.wallet.withdrawals.reject', id), { note: result.value ?? 'Rejected by admin' });
+            }
+        });
     };
 
     const filteredList = list.filter(tx => {

@@ -3,6 +3,7 @@ import { Head, router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { Clock, CheckCircle2, AlertTriangle, Send, ChevronLeft, ChevronRight, Flag } from 'lucide-react';
 import MobileLayout from '@/Layouts/MobileLayout';
+import Swal from 'sweetalert2';
 import ReportQuestionModal from '@/Components/ReportQuestionModal';
 
 export default function ModelTestRoom({ test }) {
@@ -83,7 +84,17 @@ export default function ModelTestRoom({ test }) {
 
                     <button
                         onClick={() => {
-                            if (confirm('পরীক্ষা জমা দিতে চান?')) submitExam();
+                            Swal.fire({
+                                title: 'পরীক্ষা জমা দিবেন?',
+                                text: 'একবার জমা দিলে আর পরিবর্তন করা যাবে না।',
+                                icon: 'question',
+                                showCancelButton: true,
+                                confirmButtonText: 'হ্যাঁ, জমা দিন',
+                                cancelButtonText: 'ফিরে যান',
+                                confirmButtonColor: '#10b981',
+                            }).then((res) => {
+                                if (res.isConfirmed) submitExam();
+                            });
                         }}
                         disabled={submitting}
                         style={{

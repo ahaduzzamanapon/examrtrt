@@ -10,6 +10,8 @@ const ADMIN_NAV = [
     { href: 'admin.dashboard',     icon: LayoutDashboard, label: 'Dashboard' },
     { href: 'admin.notifications', icon: Bell,            label: 'Notifications' },
     { href: 'admin.users',         icon: Users,           label: 'Users' },
+    { href: 'admin.questions',     icon: FileText,        label: 'Questions' },
+    { href: 'admin.settings',      icon: Settings,        label: 'Settings' },
 ];
 
 function Sidebar({ mobile = false, onClose }) {

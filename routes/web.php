@@ -5,6 +5,8 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\FcmTokenController;
 use App\Http\Controllers\Admin\NotificationController as AdminNotification;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
+use App\Http\Controllers\Admin\QuestionController as AdminQuestionController;
+use App\Http\Controllers\Admin\SettingsController as AdminSettingsController;
 use App\Http\Controllers\Auth\OnboardingController;
 use App\Models\Exam;
 use Illuminate\Support\Facades\Route;
@@ -73,10 +75,23 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/notifications', [AdminNotification::class, 'index'])->name('notifications');
         Route::post('/notifications', [AdminNotification::class, 'send'])->name('notifications.send');
 
-        Route::get('/users',           [AdminUserController::class, 'index'])->name('users');
+        Route::get('/users',              [AdminUserController::class, 'index'])->name('users');
         Route::patch('/users/{user}/role',  [AdminUserController::class, 'updateRole'])->name('users.role');
         Route::patch('/users/{user}/tokens',[AdminUserController::class, 'updateTokens'])->name('users.tokens');
-        Route::delete('/users/{user}', [AdminUserController::class, 'destroy'])->name('users.destroy');
+        Route::delete('/users/{user}',      [AdminUserController::class, 'destroy'])->name('users.destroy');
+
+        // Questions
+        Route::get('/questions',                [AdminQuestionController::class, 'index'])->name('questions');
+        Route::post('/questions',               [AdminQuestionController::class, 'store'])->name('questions.store');
+        Route::patch('/questions/{question}',   [AdminQuestionController::class, 'update'])->name('questions.update');
+        Route::delete('/questions/{question}',  [AdminQuestionController::class, 'destroy'])->name('questions.destroy');
+        Route::post('/questions/import',        [AdminQuestionController::class, 'import'])->name('questions.import');
+        Route::post('/questions/ai-generate',   [AdminQuestionController::class, 'aiGenerate'])->name('questions.ai');
+        Route::post('/questions/bulk-save',     [AdminQuestionController::class, 'bulkSave'])->name('questions.bulk');
+
+        // Settings
+        Route::get('/settings',  [AdminSettingsController::class, 'index'])->name('settings');
+        Route::post('/settings', [AdminSettingsController::class, 'save'])->name('settings.save');
     });
 
     // ── Feature pages ─────────────────────────────────────────────────────────

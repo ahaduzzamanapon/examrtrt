@@ -1,0 +1,264 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Models\AppSetting;
+use App\Models\Question;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
+use Inertia\Inertia;
+
+class QuestionController extends Controller
+{
+    // ── List ──────────────────────────────────────────────────────────────────
+    public function index(Request $request)
+    {
+        $q = $request->get('q', '');
+        $goal = $request->get('goal', '');
+
+        $questions = Question::query()
+            ->when($q,    fn($query) => $query->where('question_text', 'like', "%{$q}%")
+                ->orWhere('subject', 'like', "%{$q}%"))
+            ->when($goal, fn($query) => $query->where('exam_goal', $goal))
+            ->orderByDesc('id')
+            ->paginate(15)
+            ->withQueryString()
+            ->through(fn($q) => [
+                'id'             => $q->id,
+                'exam_goal'      => $q->exam_goal,
+                'exam_type'      => $q->exam_type,
+                'board_year'     => $q->board_year,
+                'subject'        => $q->subject,
+                'question_text'  => $q->question_text,
+                'options'        => $q->options,
+                'correct_answer' => $q->correct_answer,
+                'explanation'    => $q->explanation,
+                'difficulty_level' => $q->difficulty_level,
+                'is_ai_generated'  => $q->is_ai_generated,
+                'is_active'      => $q->is_active,
+            ]);
+
+        return Inertia::render('Admin/Questions', [
+            'questions' => $questions,
+            'filters'   => ['q' => $q, 'goal' => $goal],
+            'stats'     => [
+                'total'     => Question::count(),
+                'ai'        => Question::where('is_ai_generated', true)->count(),
+                'by_goal'   => Question::selectRaw('exam_goal, count(*) as cnt')->groupBy('exam_goal')->pluck('cnt', 'exam_goal'),
+            ],
+        ]);
+    }
+
+    // ── Store (manual) ────────────────────────────────────────────────────────
+    public function store(Request $request)
+    {
+        $data = $request->validate([
+            'exam_goal'      => 'required|string|max:50',
+            'exam_type'      => 'nullable|string|max:150',
+            'board_year'     => 'nullable|string|max:200',
+            'subject'        => 'nullable|string|max:200',
+            'question_text'  => 'required|string',
+            'image_url'      => 'nullable|url|max:500',
+            'options'        => 'required|array',
+            'options.a'      => 'required|string',
+            'options.b'      => 'required|string',
+            'options.c'      => 'required|string',
+            'options.d'      => 'required|string',
+            'correct_answer' => 'required|in:a,b,c,d',
+            'explanation'    => 'nullable|string',
+            'difficulty_level' => 'required|in:LOW,MEDIUM,HIGH',
+        ]);
+
+        Question::create($data + ['is_ai_generated' => false]);
+        return back()->with('success', 'প্রশ্ন যোগ করা হয়েছে।');
+    }
+
+    // ── Update ────────────────────────────────────────────────────────────────
+    public function update(Request $request, Question $question)
+    {
+        $data = $request->validate([
+            'exam_goal'      => 'required|string|max:50',
+            'exam_type'      => 'nullable|string|max:150',
+            'board_year'     => 'nullable|string|max:200',
+            'subject'        => 'nullable|string|max:200',
+            'question_text'  => 'required|string',
+            'image_url'      => 'nullable|url|max:500',
+            'options'        => 'required|array',
+            'options.a'      => 'required|string',
+            'options.b'      => 'required|string',
+            'options.c'      => 'required|string',
+            'options.d'      => 'required|string',
+            'correct_answer' => 'required|in:a,b,c,d',
+            'explanation'    => 'nullable|string',
+            'difficulty_level' => 'required|in:LOW,MEDIUM,HIGH',
+            'is_active'      => 'boolean',
+        ]);
+
+        $question->update($data);
+        return back()->with('success', 'প্রশ্ন আপডেট হয়েছে।');
+    }
+
+    // ── Delete ────────────────────────────────────────────────────────────────
+    public function destroy(Question $question)
+    {
+        $question->delete();
+        return back()->with('success', 'প্রশ্ন মুছে ফেলা হয়েছে।');
+    }
+
+    // ── JSON Bulk Import ──────────────────────────────────────────────────────
+    public function import(Request $request)
+    {
+        $request->validate(['json' => 'required|string']);
+
+        $parsed = json_decode($request->json, true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            return back()->with('error', 'JSON invalid: ' . json_last_error_msg());
+        }
+
+        // Support both: array of questions or object with "questions" key
+        $items = isset($parsed['questions']) ? $parsed['questions'] : $parsed;
+        if (!is_array($items)) {
+            return back()->with('error', 'JSON এ questions array পাওয়া যায়নি।');
+        }
+
+        $imported = 0;
+        $failed   = 0;
+        $examGoal = $request->get('exam_goal', 'bcs');
+
+        foreach ($items as $item) {
+            try {
+                $options = $item['options'] ?? null;
+                if (is_array($options) && isset($options['a'])) {
+                    // already {"a":..,"b":..}
+                } else {
+                    continue;
+                }
+
+                $correct = strtolower($item['correct_answer'] ?? $item['correct_option'] ?? 'a');
+
+                Question::create([
+                    'exam_goal'       => $examGoal,
+                    'exam_type'       => $item['exam_type'] ?? null,
+                    'board_year'      => $item['board_year'] ?? null,
+                    'subject'         => $item['subject'] ?? null,
+                    'question_text'   => $item['question_text'] ?? $item['question'] ?? '',
+                    'image_url'       => $item['image_url'] ?? null,
+                    'options'         => $options,
+                    'correct_answer'  => in_array($correct, ['a','b','c','d']) ? $correct : 'a',
+                    'explanation'     => $item['explanation'] ?? null,
+                    'difficulty_level'=> strtoupper($item['difficulty_level'] ?? $item['difficulty'] ?? 'MEDIUM'),
+                    'is_ai_generated' => false,
+                    'is_active'       => true,
+                ]);
+                $imported++;
+            } catch (\Throwable $e) {
+                $failed++;
+                \Log::warning('[Import] Failed: ' . $e->getMessage());
+            }
+        }
+
+        return back()->with('success', "✅ {$imported}টি প্রশ্ন import হয়েছে" . ($failed ? ", ❌ {$failed}টি ব্যর্থ" : ''));
+    }
+
+    // ── Gemini AI Generate ────────────────────────────────────────────────────
+    public function aiGenerate(Request $request)
+    {
+        $request->validate([
+            'exam_goal'   => 'required|string',
+            'subject'     => 'required|string',
+            'board_year'  => 'nullable|string',
+            'count'       => 'required|integer|min:1|max:20',
+            'difficulty'  => 'required|in:LOW,MEDIUM,HIGH',
+        ]);
+
+        $apiKey = AppSetting::nextGeminiKey();
+        if (!$apiKey) {
+            return response()->json(['error' => 'কোনো Gemini API key সেট করা নেই। Admin → Settings এ যাও।'], 422);
+        }
+
+        $goal       = strtoupper($request->exam_goal);
+        $subject    = $request->subject;
+        $boardYear  = $request->board_year ?? '';
+        $count      = $request->count;
+        $difficulty = $request->difficulty;
+
+        $prompt = <<<PROMPT
+Generate {$count} multiple choice questions for {$goal} exam in Bangladesh.
+Subject: {$subject}
+{$boardYear}
+Difficulty: {$difficulty}
+
+Return ONLY a valid JSON array (no markdown, no explanation outside JSON):
+[
+  {
+    "subject": "{$subject}",
+    "exam_type": "{$goal}",
+    "board_year": "{$boardYear}",
+    "difficulty_level": "{$difficulty}",
+    "question_text": "...(in Bengali)...",
+    "image_url": null,
+    "options": {"a": "...", "b": "...", "c": "...", "d": "..."},
+    "correct_answer": "a",
+    "explanation": "...(in Bengali)..."
+  }
+]
+PROMPT;
+
+        $response = Http::withHeaders(['Content-Type' => 'application/json'])
+            ->timeout(30)
+            ->post("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={$apiKey}", [
+                'contents' => [['parts' => [['text' => $prompt]]]],
+                'generationConfig' => ['temperature' => 0.7, 'maxOutputTokens' => 4096],
+            ]);
+
+        if (!$response->successful()) {
+            return response()->json(['error' => 'Gemini API error: ' . $response->status()], 422);
+        }
+
+        $text = $response->json('candidates.0.content.parts.0.text') ?? '';
+
+        // Strip markdown code fences if present
+        $text = preg_replace('/```json\s*|\s*```/', '', $text);
+        $text = trim($text);
+
+        $questions = json_decode($text, true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            return response()->json(['error' => 'Gemini দিয়ে valid JSON parse করা যায়নি।', 'raw' => substr($text, 0, 500)], 422);
+        }
+
+        return response()->json(['questions' => $questions]);
+    }
+
+    // ── Bulk Save (after AI generate review) ─────────────────────────────────
+    public function bulkSave(Request $request)
+    {
+        $request->validate([
+            'questions'   => 'required|array|min:1',
+            'exam_goal'   => 'required|string',
+        ]);
+
+        $saved = 0;
+        foreach ($request->questions as $item) {
+            try {
+                Question::create([
+                    'exam_goal'        => $request->exam_goal,
+                    'exam_type'        => $item['exam_type'] ?? null,
+                    'board_year'       => $item['board_year'] ?? null,
+                    'subject'          => $item['subject'] ?? null,
+                    'question_text'    => $item['question_text'] ?? '',
+                    'image_url'        => $item['image_url'] ?? null,
+                    'options'          => $item['options'] ?? ['a'=>'','b'=>'','c'=>'','d'=>''],
+                    'correct_answer'   => $item['correct_answer'] ?? 'a',
+                    'explanation'      => $item['explanation'] ?? null,
+                    'difficulty_level' => $item['difficulty_level'] ?? 'MEDIUM',
+                    'is_ai_generated'  => true,
+                    'is_active'        => true,
+                ]);
+                $saved++;
+            } catch (\Throwable) {}
+        }
+
+        return response()->json(['saved' => $saved]);
+    }
+}

@@ -91,8 +91,8 @@ export default function Welcome() {
                 {/* ── NAV ─────────────────────────────────────────────────── */}
                 <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-5 py-3"
                     style={{ background: 'rgba(5,7,26,0.85)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                    <div className="flex items-center gap-2">
-                        <img src="/logo.png" alt="Exam Arena" style={{ height: 32, width: 'auto', objectFit: 'contain' }} />
+                    <div className="flex items-center">
+                        <img src="/logo.png" alt="Exam Arena" style={{ height: 48, width: 'auto', objectFit: 'contain' }} />
                     </div>
                     <div className="flex items-center gap-2">
                         <Link href={route('login')}

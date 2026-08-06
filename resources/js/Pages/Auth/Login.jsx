@@ -31,7 +31,7 @@ export default function Login({ status, canResetPassword }) {
         <>
             <Head title="লগইন — Exam Arena" />
             <div style={{
-                minHeight: '100vh', display: 'flex',
+                height: '100vh', display: 'flex', overflow: 'hidden',
                 fontFamily: "'Hind Siliguri','Inter',sans-serif",
                 background: 'linear-gradient(135deg,#05071a 0%,#0a0e23 50%,#0f1730 100%)',
             }}>
@@ -39,7 +39,7 @@ export default function Login({ status, canResetPassword }) {
                 {/* ── LEFT PANEL (Desktop only) ───────────────────────────── */}
                 <div className="hidden lg:flex" style={{
                     flex: '0 0 48%', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
-                    padding: '40px', position: 'relative', overflow: 'hidden',
+                    padding: '28px 36px', position: 'relative', overflow: 'hidden',
                 }}>
                     {/* BG glow */}
                     <div style={{ position: 'absolute', top: '10%', left: '10%', width: 500, height: 500, background: 'radial-gradient(circle,rgba(77,111,255,0.18) 0%,transparent 70%)', filter: 'blur(60px)', pointerEvents: 'none' }} />
@@ -51,7 +51,7 @@ export default function Login({ status, canResetPassword }) {
                     <div style={{ position: 'relative', zIndex: 1, maxWidth: 420, width: '100%' }}>
                         {/* Logo */}
                         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }}
-                            style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 48 }}>
+                            style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 28 }}>
                             <div style={{ width: 44, height: 44, borderRadius: 13, background: 'linear-gradient(135deg,#4d6fff,#7c3aed)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 6px 24px rgba(77,111,255,0.45)' }}>
                                 <Zap size={22} color="white" fill="white" />
                             </div>
@@ -69,7 +69,7 @@ export default function Login({ status, canResetPassword }) {
                             </span>
                         </motion.h2>
                         <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}
-                            style={{ color: 'rgba(255,255,255,0.45)', fontSize: 15, marginBottom: 40, lineHeight: 1.6 }}>
+                            style={{ color: 'rgba(255,255,255,0.45)', fontSize: 14, marginBottom: 20, lineHeight: 1.6 }}>
                             বাংলাদেশের সেরা কম্পিটিটিভ পরীক্ষার প্ল্যাটফর্মে তোমাকে স্বাগতম।
                         </motion.p>
 
@@ -104,7 +104,7 @@ export default function Login({ status, canResetPassword }) {
 
                         {/* Stats */}
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.7 }}
-                            style={{ display: 'flex', gap: 24, marginTop: 36 }}>
+                            style={{ display: 'flex', gap: 24, marginTop: 20 }}>
                             {[['৫০,০০০+', 'শিক্ষার্থী'], ['২,০০০+', 'দৈনিক পরীক্ষা'], ['৯৮%', 'সন্তুষ্টি']].map(([v, l]) => (
                                 <div key={l}>
                                     <div style={{ color: 'white', fontWeight: 800, fontSize: 18 }}>{v}</div>
@@ -119,8 +119,9 @@ export default function Login({ status, canResetPassword }) {
                 <div style={{
                     flex: 1, display: 'flex', flexDirection: 'column',
                     alignItems: 'center', justifyContent: 'center',
-                    padding: '32px 20px',
+                    padding: '16px 20px',
                     borderLeft: '1px solid rgba(255,255,255,0.05)',
+                    overflowY: 'auto',
                 }}>
                     <motion.div
                         initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
@@ -137,8 +138,8 @@ export default function Login({ status, canResetPassword }) {
                             </div>
                         </div>
 
-                        <div style={{ marginBottom: 28 }}>
-                            <h1 style={{ color: 'white', fontWeight: 800, fontSize: 26, marginBottom: 6 }}>স্বাগতম!</h1>
+                        <div style={{ marginBottom: 16 }}>
+                            <h1 style={{ color: 'white', fontWeight: 800, fontSize: 22, marginBottom: 4 }}>স্বাগতম!</h1>
                             <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 14 }}>তোমার একাউন্টে লগইন করো</p>
                         </div>
 
@@ -150,16 +151,16 @@ export default function Login({ status, canResetPassword }) {
                         )}
 
                         {/* Card */}
-                        <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: 24, padding: '24px', backdropFilter: 'blur(20px)' }}>
+                        <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: 20, padding: '18px 20px', backdropFilter: 'blur(20px)' }}>
 
                             {/* Google */}
                             <a href={route('auth.google')}
                                 style={{
                                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-                                    padding: '13px', borderRadius: 13,
+                                    padding: '11px', borderRadius: 12,
                                     background: 'rgba(255,255,255,0.07)', border: '1.5px solid rgba(255,255,255,0.13)',
                                     color: 'white', fontWeight: 600, fontSize: 14, textDecoration: 'none',
-                                    marginBottom: 18, transition: 'background 0.2s',
+                                    marginBottom: 14, transition: 'background 0.2s',
                                 }}>
                                 <svg width="18" height="18" viewBox="0 0 24 24">
                                     <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -170,7 +171,7 @@ export default function Login({ status, canResetPassword }) {
                                 Google দিয়ে লগইন
                             </a>
 
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
                                 <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.08)' }} />
                                 <span style={{ color: 'rgba(255,255,255,0.28)', fontSize: 12 }}>অথবা ইমেইলে</span>
                                 <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.08)' }} />
@@ -178,7 +179,7 @@ export default function Login({ status, canResetPassword }) {
 
                             <form onSubmit={submit}>
                                 {/* Email */}
-                                <div style={{ marginBottom: 14 }}>
+                                <div style={{ marginBottom: 10 }}>
                                     <label style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 7, display: 'block' }}>ইমেইল</label>
                                     <div style={{ position: 'relative' }}>
                                         <Mail size={15} style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)' }} />
@@ -201,7 +202,7 @@ export default function Login({ status, canResetPassword }) {
                                 </div>
 
                                 {/* Password */}
-                                <div style={{ marginBottom: 16 }}>
+                                <div style={{ marginBottom: 12 }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 7 }}>
                                         <label style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase' }}>পাসওয়ার্ড</label>
                                         {canResetPassword && (
@@ -235,7 +236,7 @@ export default function Login({ status, canResetPassword }) {
                                 </div>
 
                                 {/* Remember */}
-                                <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 18, cursor: 'pointer' }}>
+                                <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14, cursor: 'pointer' }}>
                                     <input type="checkbox" checked={data.remember}
                                         onChange={e => setData('remember', e.target.checked)}
                                         style={{ width: 16, height: 16, accentColor: '#4d6fff', cursor: 'pointer' }} />
@@ -265,7 +266,7 @@ export default function Login({ status, canResetPassword }) {
                             </form>
                         </div>
 
-                        <p style={{ textAlign: 'center', color: 'rgba(255,255,255,0.35)', fontSize: 14, marginTop: 20 }}>
+                        <p style={{ textAlign: 'center', color: 'rgba(255,255,255,0.35)', fontSize: 14, marginTop: 14 }}>
                             একাউন্ট নেই?{' '}
                             <Link href={route('register')} style={{ color: '#7c94ff', fontWeight: 600, textDecoration: 'none' }}>
                                 বিনামূল্যে নিবন্ধন করো →

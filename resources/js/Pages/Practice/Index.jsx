@@ -63,16 +63,16 @@ export default function PracticeIndex({ goals = [], counts = {}, todayCount = 0,
                         ক্যাটাগরি বেছে নাও, সঠিক উত্তর দেখো এবং AI শিক্ষক থেকে ব্যাখ্যা বুঝে নাও
                     </p>
 
-                    {/* Daily Counter */}
+                    {/* Unlimited Token Badge */}
                     <div style={{
                         display: 'inline-flex', alignItems: 'center', gap: 6,
                         marginTop: 14, padding: '6px 14px', borderRadius: 20,
-                        background: remaining > 0 ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)',
-                        border: `1px solid ${remaining > 0 ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`,
+                        background: 'rgba(16,185,129,0.15)',
+                        border: '1px solid rgba(16,185,129,0.3)',
                     }}>
-                        <Sparkles size={13} color={remaining > 0 ? '#34d399' : '#f87171'} />
-                        <span style={{ color: remaining > 0 ? '#34d399' : '#f87171', fontSize: 12, fontWeight: 700 }}>
-                            আজকের বাকি: {remaining}/{dailyLimit} টি ফ্রি প্র্যাকটিস
+                        <Sparkles size={13} color="#34d399" />
+                        <span style={{ color: '#34d399', fontSize: 12, fontWeight: 700 }}>
+                            ⚡ টোকেন দিয়ে আনলিমিটেড প্র্যাকটিস
                         </span>
                     </div>
                 </div>

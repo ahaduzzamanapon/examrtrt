@@ -43,16 +43,6 @@ class PracticeController extends Controller
     public function start(Request $request)
     {
         $user = auth()->user();
-        $dailyLimit = (int) AppSetting::get('practice_daily_limit', 5);
-
-        $todayCount = PracticeTest::where('user_id', $user->id)
-            ->whereDate('created_at', today())
-            ->count();
-
-        if ($todayCount >= $dailyLimit) {
-            return back()->withErrors(['limit' => "আজকের {$dailyLimit}টি প্র্যাকটিস শেষ। আগামীকাল আবার চেষ্টা করো!"]);
-        }
-
         $cost = (int) AppSetting::get('token_practice_cost', 2);
         if ($user->token_balance < $cost) {
             return back()->withErrors(['limit' => "প্র্যাকটিস সেশন শুরু করতে {$cost}টি টোকেন প্রয়োজন। আপনার বর্তমান ব্যালেন্স: {$user->token_balance} টোকেন।"]);

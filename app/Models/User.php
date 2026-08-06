@@ -47,6 +47,7 @@ class User extends Authenticatable
             'token_balance'     => 'integer',
             'total_points'      => 'decimal:2',
             'is_phone_verified' => 'boolean',
+            'exam_goal'         => 'array',
         ];
     }
 

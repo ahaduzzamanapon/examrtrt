@@ -9,29 +9,33 @@ use Inertia\Inertia;
 
 class OnboardingController extends Controller
 {
+    private const VALID_GOALS = ['ssc','hsc','bcs','medical','engineering','bank','university','primary','other'];
+
     /** Show onboarding page */
     public function show()
     {
         $user = Auth::user();
 
         // Skip onboarding if exam_goal already set
-        if ($user && $user->exam_goal) {
+        if ($user && !empty($user->exam_goal)) {
             return redirect()->route('dashboard');
         }
 
         return Inertia::render('Auth/Onboarding');
     }
 
-    /** Save exam_goal (and optionally FCM token) */
+    /** Save exam_goals (array) and optionally FCM token */
     public function save(Request $request)
     {
         $request->validate([
-            'exam_goal' => 'required|string|in:ssc,hsc,bcs,medical,engineering,bank,university,primary,other',
-            'fcm_token' => 'nullable|string|max:500',
+            'exam_goals'  => 'required|array|min:1',
+            'exam_goals.*'=> 'required|string|in:' . implode(',', self::VALID_GOALS),
+            'fcm_token'   => 'nullable|string|max:500',
         ]);
 
         $user = Auth::user();
-        $data = ['exam_goal' => $request->exam_goal];
+
+        $data = ['exam_goal' => json_encode($request->exam_goals)];
 
         if ($request->filled('fcm_token')) {
             $data['fcm_token'] = $request->fcm_token;

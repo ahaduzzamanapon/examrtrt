@@ -1,22 +1,14 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import { Link, usePage } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import axios from 'axios';
 import {
     Menu, X, Home, Zap, BookOpen, Wallet, User,
-    Trophy, Sword, Brain, Settings, LogOut, Bell, Film,
-    Sun, Moon,
+    Trophy, Sword, Brain, Settings, LogOut, Film,
 } from 'lucide-react';
 import BottomNav from './BottomNav';
 import ChatbotWidget from './ChatbotWidget';
 import { NotificationContainer, useNotifications } from './NotificationSystem';
 import { useFcmAutoRegister } from '@/hooks/useFcmAutoRegister';
-
-// ── Theme helpers ─────────────────────────────────────────────────────────
-function applyTheme(theme) {
-    document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('nxly_theme', theme);
-}
 
 const NAV_ITEMS = [
     { href: 'dashboard',         icon: Home,     label: 'হোম' },
@@ -31,20 +23,19 @@ const NAV_ITEMS = [
 ];
 
 // ── Desktop Sidebar ───────────────────────────────────────────────────────────
-function DesktopSidebar({ auth, isDark, toggleTheme }) {
+function DesktopSidebar({ auth }) {
     const current = usePage().url;
 
     return (
         <aside style={{
             position: 'fixed', top: 0, left: 0, bottom: 0,
             width: 240,
-            background: 'var(--bg-sidebar)',
-            borderRight: '1px solid var(--border-nav)',
+            background: 'rgba(8,11,28,0.97)',
+            borderRight: '1px solid rgba(255,255,255,0.07)',
             backdropFilter: 'blur(24px)',
             WebkitBackdropFilter: 'blur(24px)',
             display: 'flex', flexDirection: 'column',
             zIndex: 40, padding: '24px 12px',
-            transition: 'background 0.3s ease',
         }}>
             {/* Logo */}
             <div style={{ padding: '0 12px', marginBottom: 28 }}>
@@ -56,7 +47,7 @@ function DesktopSidebar({ auth, isDark, toggleTheme }) {
             {/* Nav items */}
             <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 3 }}>
                 {NAV_ITEMS.map(({ href, icon: Icon, label }) => {
-                    const isDash = href === 'dashboard' && current === '/dashboard';
+                    const isDash   = href === 'dashboard' && current === '/dashboard';
                     const isActive = isDash || (href !== 'dashboard' && current.startsWith('/' + href.split('.')[0]));
                     return (
                         <Link key={href} href={route(href)} style={{
@@ -64,7 +55,7 @@ function DesktopSidebar({ auth, isDark, toggleTheme }) {
                             padding: '10px 14px', borderRadius: 12,
                             background: isActive ? 'rgba(77,111,255,0.18)' : 'transparent',
                             border: `1px solid ${isActive ? 'rgba(77,111,255,0.3)' : 'transparent'}`,
-                            color: isActive ? '#4d6fff' : 'var(--text-secondary)',
+                            color: isActive ? '#93b4ff' : 'rgba(255,255,255,0.6)',
                             fontWeight: isActive ? 700 : 500,
                             fontSize: 14, textDecoration: 'none',
                             transition: 'all 0.15s',
@@ -77,39 +68,22 @@ function DesktopSidebar({ auth, isDark, toggleTheme }) {
             </nav>
 
             {/* Bottom section */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, paddingTop: 12, borderTop: '1px solid var(--border-divider)' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.07)' }}>
                 {/* Token + Wallet row */}
                 <div style={{ display: 'flex', gap: 6, marginBottom: 2 }}>
                     <div style={{ flex: 1, padding: '9px 12px', borderRadius: 12, background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.22)', display: 'flex', alignItems: 'center', gap: 6 }}>
                         <span style={{ fontSize: 13 }}>🪙</span>
                         <span style={{ color: '#fcd34d', fontSize: 13, fontWeight: 700 }}>{auth.user?.token_balance ?? 0}</span>
-                        <span style={{ color: 'var(--text-muted)', fontSize: 10 }}>Token</span>
+                        <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 10 }}>Token</span>
                     </div>
                     <div style={{ flex: 1, padding: '9px 12px', borderRadius: 12, background: 'rgba(77,111,255,0.12)', border: '1px solid rgba(77,111,255,0.22)', display: 'flex', alignItems: 'center', gap: 6 }}>
                         <Wallet size={13} style={{ color: '#93b4ff' }} />
                         <span style={{ color: '#93b4ff', fontSize: 13, fontWeight: 700 }}>৳{parseFloat(auth.user?.wallet_balance ?? 0).toFixed(0)}</span>
-                        <span style={{ color: 'var(--text-muted)', fontSize: 10 }}>ওয়ালেট</span>
+                        <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 10 }}>ওয়ালেট</span>
                     </div>
                 </div>
 
-                {/* Theme toggle */}
-                <button
-                    onClick={toggleTheme}
-                    style={{
-                        display: 'flex', alignItems: 'center', gap: 10,
-                        padding: '9px 14px', borderRadius: 12, cursor: 'pointer',
-                        background: isDark ? 'rgba(251,191,36,0.10)' : 'rgba(124,58,237,0.10)',
-                        border: `1px solid ${isDark ? 'rgba(251,191,36,0.25)' : 'rgba(124,58,237,0.25)'}`,
-                        color: isDark ? '#fbbf24' : '#7c3aed',
-                        fontSize: 13, fontWeight: 600, width: '100%',
-                        transition: 'all 0.2s ease',
-                    }}
-                >
-                    {isDark ? <Sun size={15} /> : <Moon size={15} />}
-                    {isDark ? 'Light Glass' : 'Dark Glass'}
-                </button>
-
-                {/* Admin panel link */}
+                {/* Admin panel */}
                 {auth.user?.role === 'ADMIN' && (
                     <Link href={route('admin.dashboard')} style={{
                         display: 'flex', alignItems: 'center', gap: 10, padding: '9px 14px', borderRadius: 12,
@@ -140,36 +114,15 @@ export default function MobileLayout({ children, title = '' }) {
     const { notifications, removeNotification } = useNotifications();
     useFcmAutoRegister();
 
-    // ── Theme: load from DB preference, fallback to localStorage ──────────
-    const serverTheme = auth?.user?.theme_preference ?? 'dark_glass';
-    const [theme, setTheme] = useState(() => {
-        return localStorage.getItem('nxly_theme') || serverTheme;
-    });
-
-    useEffect(() => {
-        applyTheme(serverTheme);
-        setTheme(serverTheme);
-    }, [serverTheme]);
-
-    const toggleTheme = useCallback(() => {
-        const next = theme === 'dark_glass' ? 'light_glass' : 'dark_glass';
-        setTheme(next);
-        applyTheme(next);
-        // Save to server (fire and forget)
-        axios.post(route('profile.theme'), { theme: next }).catch(() => {});
-    }, [theme]);
-
-    const isDark = theme === 'dark_glass';
-
     return (
         <div style={{ fontFamily: "'Hind Siliguri','Inter',sans-serif" }}>
 
             {/* ── DESKTOP LAYOUT (lg+) ────────────────────────────────────── */}
-            <div className="hidden lg:flex" style={{ minHeight: '100vh', background: 'var(--bg-body)' }}>
-                <DesktopSidebar auth={auth} isDark={isDark} toggleTheme={toggleTheme} />
-                <main style={{ marginLeft: 240, flex: 1, minHeight: '100vh', padding: '32px 36px', overflowY: 'auto', color: 'var(--text-primary)' }}>
+            <div className="hidden lg:flex" style={{ minHeight: '100vh', background: 'linear-gradient(135deg,#05071a 0%,#0a0e23 60%,#0f1730 100%)' }}>
+                <DesktopSidebar auth={auth} />
+                <main style={{ marginLeft: 240, flex: 1, minHeight: '100vh', padding: '32px 36px', overflowY: 'auto' }}>
                     {title && (
-                        <h1 style={{ color: 'var(--text-primary)', fontWeight: 800, fontSize: 22, marginBottom: 24 }}>{title}</h1>
+                        <h1 style={{ color: 'white', fontWeight: 800, fontSize: 22, marginBottom: 24 }}>{title}</h1>
                     )}
                     {children}
                 </main>
@@ -177,12 +130,12 @@ export default function MobileLayout({ children, title = '' }) {
             </div>
 
             {/* ── MOBILE LAYOUT ───────────────────────────────────────────── */}
-            <div className="flex lg:hidden" style={{ minHeight: '100vh', background: 'var(--bg-body)' }}>
+            <div className="flex lg:hidden" style={{ minHeight: '100vh', background: 'linear-gradient(135deg,#0a0e23 0%,#0f1a3e 50%,#0a1628 100%)' }}>
                 <div style={{ width: '100%' }}>
 
                     {/* Top App Bar */}
                     <header className="fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-4 h-14"
-                        style={{ paddingTop: 'env(safe-area-inset-top,0px)', background: 'rgba(10,14,35,0.88)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+                        style={{ paddingTop: 'env(safe-area-inset-top,0px)', background: 'rgba(8,11,28,0.92)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
                         <motion.button whileTap={{ scale: 0.88 }} onClick={() => setDrawerOpen(true)} className="touch-target rounded-xl" aria-label="মেনু">
                             <Menu size={22} className="text-white/80" />
                         </motion.button>
@@ -205,19 +158,6 @@ export default function MobileLayout({ children, title = '' }) {
                                     ৳{parseFloat(auth.user?.wallet_balance ?? 0).toFixed(0)}
                                 </div>
                             </Link>
-                            {/* Theme Toggle */}
-                            <motion.button
-                                whileTap={{ scale: 0.88 }}
-                                onClick={toggleTheme}
-                                className="touch-target rounded-xl flex items-center justify-center"
-                                aria-label="থিম পরিবর্তন"
-                                title={isDark ? 'Light mode' : 'Dark mode'}
-                            >
-                                {isDark
-                                    ? <Sun size={19} style={{ color: '#fbbf24' }} />
-                                    : <Moon size={19} style={{ color: '#7c3aed' }} />
-                                }
-                            </motion.button>
                         </div>
                     </header>
 
@@ -233,7 +173,7 @@ export default function MobileLayout({ children, title = '' }) {
                                     initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }}
                                     transition={{ type: 'spring', stiffness: 380, damping: 38 }}
                                     className="fixed top-0 left-0 bottom-0 z-50 w-72 flex flex-col overflow-y-auto"
-                                    style={{ background: 'rgba(10,14,35,0.97)', backdropFilter: 'blur(30px)', borderRight: '1px solid rgba(255,255,255,0.08)', paddingTop: 'env(safe-area-inset-top,0px)', paddingBottom: 'calc(env(safe-area-inset-bottom,0px) + 80px)' }}>
+                                    style={{ background: 'rgba(8,11,28,0.98)', backdropFilter: 'blur(30px)', borderRight: '1px solid rgba(255,255,255,0.08)', paddingTop: 'env(safe-area-inset-top,0px)', paddingBottom: 'calc(env(safe-area-inset-bottom,0px) + 80px)' }}>
 
                                     <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
                                         <img src="/logo.png" alt="Exam Arena" style={{ height: 32, objectFit: 'contain' }} />
@@ -271,20 +211,6 @@ export default function MobileLayout({ children, title = '' }) {
                                     </nav>
 
                                     <div className="px-4 mt-auto space-y-1 pb-4">
-                                        {/* Theme Toggle Row */}
-                                        <button
-                                            onClick={toggleTheme}
-                                            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium"
-                                            style={{
-                                                background: isDark ? 'rgba(251,191,36,0.1)' : 'rgba(124,58,237,0.1)',
-                                                border: `1px solid ${isDark ? 'rgba(251,191,36,0.25)' : 'rgba(124,58,237,0.25)'}`,
-                                                color: isDark ? '#fbbf24' : '#7c3aed',
-                                            }}
-                                        >
-                                            {isDark ? <Sun size={16} /> : <Moon size={16} />}
-                                            {isDark ? 'Light Glass মোডে যান' : 'Dark Glass মোডে যান'}
-                                        </button>
-
                                         {auth.user?.role === 'ADMIN' && (
                                             <Link href={route('admin.dashboard')} onClick={() => setDrawerOpen(false)}
                                                 className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium"

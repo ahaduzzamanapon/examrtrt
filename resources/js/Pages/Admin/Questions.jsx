@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Plus, Trash2, Edit3, ChevronLeft, ChevronRight,
          Upload, Sparkles, CheckCircle, AlertCircle, X, Save } from 'lucide-react';
 import AdminLayout from '@/Layouts/AdminLayout';
+import { getSubjects } from '@/data/subjects';
 
 const GOALS = [
     { value: 'bcs', label: 'BCS' }, { value: 'hsc', label: 'HSC' },
@@ -67,7 +68,7 @@ function QuestionModal({ initial, onClose }) {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
                     <div>
                         <label style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, display: 'block', marginBottom: 4 }}>পরীক্ষার লক্ষ্য *</label>
-                        <select value={form.exam_goal} onChange={e => set('exam_goal', e.target.value)} style={SEL}>
+                        <select value={form.exam_goal} onChange={e => { set('exam_goal', e.target.value); set('subject', ''); }} style={SEL}>
                             {GOALS.map(g => <option key={g.value} value={g.value} style={{ background: '#0c1025' }}>{g.label}</option>)}
                         </select>
                     </div>
@@ -88,8 +89,13 @@ function QuestionModal({ initial, onClose }) {
                 </div>
 
                 <div style={{ marginBottom: 10 }}>
-                    <label style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, display: 'block', marginBottom: 4 }}>বিষয় (Subject)</label>
-                    <input value={form.subject} onChange={e => set('subject', e.target.value)} placeholder="বাংলা ভাষা ও সাহিত্য" style={INP} />
+                    <label style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, display: 'block', marginBottom: 4 }}>পরীক্ষার বিষয় *</label>
+                    <select value={form.subject} onChange={e => set('subject', e.target.value)} style={SEL}>
+                        <option value="" style={{ background: '#0c1025' }}>-- বিষয় নির্বাচন করুন --</option>
+                        {getSubjects(form.exam_goal).map(s => (
+                            <option key={s} value={s} style={{ background: '#0c1025' }}>{s}</option>
+                        ))}
+                    </select>
                 </div>
 
                 <div style={{ marginBottom: 10 }}>
@@ -160,7 +166,7 @@ export default function AdminQuestions({ questions, filters, stats }) {
     const [importing, setImporting]   = useState(false);
 
     // AI Generate state
-    const [aiForm, setAiForm]       = useState({ exam_goal: 'bcs', subject: 'বাংলা ভাষা ও সাহিত্য', board_year: '', count: 5, difficulty: 'MEDIUM' });
+    const [aiForm, setAiForm]       = useState({ exam_goal: 'bcs', subject: getSubjects('bcs')[0], board_year: '', count: 5, difficulty: 'MEDIUM' });
     const [generating, setGenerating] = useState(false);
     const [aiResult, setAiResult]   = useState(null);   // array of questions
     const [aiError, setAiError]     = useState('');
@@ -396,7 +402,7 @@ export default function AdminQuestions({ questions, filters, stats }) {
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                             <div>
                                 <label style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, display: 'block', marginBottom: 4 }}>পরীক্ষার লক্ষ্য</label>
-                                <select value={aiForm.exam_goal} onChange={e => setAiForm(f => ({ ...f, exam_goal: e.target.value }))} style={SEL}>
+                                <select value={aiForm.exam_goal} onChange={e => setAiForm(f => ({ ...f, exam_goal: e.target.value, subject: getSubjects(e.target.value)[0] }))} style={SEL}>
                                     {GOALS.map(g => <option key={g.value} value={g.value} style={{ background: '#0c1025' }}>{g.label}</option>)}
                                 </select>
                             </div>
@@ -407,8 +413,13 @@ export default function AdminQuestions({ questions, filters, stats }) {
                                 </select>
                             </div>
                             <div>
-                                <label style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, display: 'block', marginBottom: 4 }}>বিষয় *</label>
-                                <input value={aiForm.subject} onChange={e => setAiForm(f => ({ ...f, subject: e.target.value }))} placeholder="বাংলা ভাষা ও সাহিত্য" style={INP} />
+                                <label style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, display: 'block', marginBottom: 4 }}>পরীক্ষার বিষয় *</label>
+                                <select value={aiForm.subject} onChange={e => setAiForm(f => ({ ...f, subject: e.target.value }))} style={SEL}>
+                                    <option value="" style={{ background: '#0c1025' }}>-- বিষয় নির্বাচন করুন --</option>
+                                    {getSubjects(aiForm.exam_goal).map(s => (
+                                        <option key={s} value={s} style={{ background: '#0c1025' }}>{s}</option>
+                                    ))}
+                                </select>
                             </div>
                             <div>
                                 <label style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, display: 'block', marginBottom: 4 }}>কতটি প্রশ্ন? (১-২০)</label>

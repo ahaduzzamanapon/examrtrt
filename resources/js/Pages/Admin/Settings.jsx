@@ -5,10 +5,69 @@ import { Plus, Trash2, Save, Key, Zap, CheckCircle, AlertCircle } from 'lucide-r
 import AdminLayout from '@/Layouts/AdminLayout';
 
 const GEMINI_MODELS = [
-    'gemini-2.0-flash',
-    'gemini-2.0-flash-lite',
-    'gemini-1.5-flash',
-    'gemini-1.5-pro',
+    {
+        id: 'gemini-2.5-flash-lite',
+        label: 'Gemini 2.5 Flash-Lite',
+        desc: 'সবচেয়ে দ্রুত উত্তর',
+        badge: 'FASTEST',
+        badgeColor: '#34d399',
+        icon: '⚡',
+        isNew: true,
+    },
+    {
+        id: 'gemini-2.5-flash',
+        label: 'Gemini 2.5 Flash',
+        desc: 'সর্বোচ্চ সহায়তা, সুষম',
+        badge: 'RECOMMENDED',
+        badgeColor: '#4d6fff',
+        icon: '🔥',
+        isNew: true,
+    },
+    {
+        id: 'gemini-2.5-pro',
+        label: 'Gemini 2.5 Pro',
+        desc: 'Extended thinking, জটিল সমস্যা',
+        badge: 'POWERFUL',
+        badgeColor: '#c084fc',
+        icon: '🧠',
+        isNew: false,
+    },
+    {
+        id: 'gemini-2.0-flash',
+        label: 'Gemini 2.0 Flash',
+        desc: 'দ্রুত ও নির্ভরযোগ্য',
+        badge: 'STABLE',
+        badgeColor: '#fbbf24',
+        icon: '✨',
+        isNew: false,
+    },
+    {
+        id: 'gemini-2.0-flash-lite',
+        label: 'Gemini 2.0 Flash-Lite',
+        desc: 'হালকা, কম cost',
+        badge: 'LITE',
+        badgeColor: '#94a3b8',
+        icon: '🪶',
+        isNew: false,
+    },
+    {
+        id: 'gemini-1.5-pro',
+        label: 'Gemini 1.5 Pro',
+        desc: 'গণিত ও কোড বিশেষজ্ঞ',
+        badge: 'PRO',
+        badgeColor: '#f87171',
+        icon: '🔬',
+        isNew: false,
+    },
+    {
+        id: 'gemini-1.5-flash',
+        label: 'Gemini 1.5 Flash',
+        desc: 'পুরনো Flash সংস্করণ',
+        badge: 'LEGACY',
+        badgeColor: '#64748b',
+        icon: '💨',
+        isNew: false,
+    },
 ];
 
 export default function AdminSettings({ geminiKeys, geminiModel }) {
@@ -66,11 +125,49 @@ export default function AdminSettings({ geminiKeys, geminiModel }) {
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
                         <Zap size={16} color="#fcd34d" />
                         <span style={{ color: 'white', fontWeight: 700, fontSize: 14 }}>Gemini Model</span>
+                        <span style={{ marginLeft: 'auto', color: 'rgba(255,255,255,0.3)', fontSize: 11 }}>
+                            selected: <code style={{ color: '#fbbf24' }}>{model}</code>
+                        </span>
                     </div>
-                    <select value={model} onChange={e => setModel(e.target.value)}
-                        style={{ ...inp, cursor: 'pointer' }}>
-                        {GEMINI_MODELS.map(m => <option key={m} value={m} style={{ background: '#0c1025' }}>{m}</option>)}
-                    </select>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                        {GEMINI_MODELS.map(m => {
+                            const isSelected = model === m.id;
+                            return (
+                                <motion.button
+                                    key={m.id}
+                                    onClick={() => setModel(m.id)}
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    style={{
+                                        padding: '12px 14px', borderRadius: 12, textAlign: 'left', cursor: 'pointer',
+                                        border: `1.5px solid ${isSelected ? m.badgeColor : 'rgba(255,255,255,0.08)'}`,
+                                        background: isSelected ? `${m.badgeColor}12` : 'rgba(255,255,255,0.03)',
+                                        transition: 'all 0.15s', position: 'relative', overflow: 'hidden',
+                                    }}
+                                >
+                                    {/* Selected tick */}
+                                    {isSelected && (
+                                        <div style={{ position: 'absolute', top: 8, right: 8, width: 18, height: 18, borderRadius: '50%', background: m.badgeColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10 }}>✓</div>
+                                    )}
+
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 5 }}>
+                                        <span style={{ fontSize: 16 }}>{m.icon}</span>
+                                        <span style={{ color: 'white', fontWeight: 700, fontSize: 12 }}>{m.label}</span>
+                                        {m.isNew && (
+                                            <span style={{ padding: '1px 6px', borderRadius: 6, background: 'rgba(52,211,153,0.2)', color: '#34d399', fontSize: 9, fontWeight: 700 }}>NEW</span>
+                                        )}
+                                    </div>
+
+                                    <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, marginBottom: 6 }}>{m.desc}</div>
+
+                                    <span style={{ padding: '2px 7px', borderRadius: 6, background: `${m.badgeColor}18`, color: m.badgeColor, fontSize: 9, fontWeight: 700 }}>
+                                        {m.badge}
+                                    </span>
+                                </motion.button>
+                            );
+                        })}
+                    </div>
                 </div>
 
                 {/* Gemini API Keys */}

@@ -88,19 +88,45 @@ export default function ReelIndex({ initialQuestions = [], currentGoal = 'bcs', 
         }
     };
 
+    const [touchStartY, setTouchStartY] = useState(0);
+
+    const handleTouchStart = (e) => {
+        setTouchStartY(e.touches[0].clientY);
+    };
+
+    const handleTouchEnd = (e) => {
+        const touchEndY = e.changedTouches[0].clientY;
+        const diffY = touchStartY - touchEndY;
+
+        // Swipe Up -> Next question, Swipe Down -> Prev question
+        if (diffY > 50) {
+            nextQuestion();
+        } else if (diffY < -50) {
+            prevQuestion();
+        }
+    };
+
+    const handleWheel = (e) => {
+        if (e.deltaY > 30) {
+            nextQuestion();
+        } else if (e.deltaY < -30) {
+            prevQuestion();
+        }
+    };
+
     // Answer Selection
     const handleSelectOption = (qId, optionKey, correctKey) => {
         if (answers[qId]) return; // already answered
 
         const isCorrect = optionKey.toLowerCase() === correctKey.toLowerCase();
         setAnswers(prev => ({ ...prev, [qId]: optionKey }));
+        setShowExp(prev => ({ ...prev, [qId]: true })); // Reveal explanation ON ANY ANSWER
 
         if (isCorrect) {
             setScore(s => s + 10);
             setStreak(st => st + 1);
         } else {
             setStreak(0);
-            setShowExp(prev => ({ ...prev, [qId]: true })); // Auto-show explanation on wrong
         }
     };
 
@@ -109,6 +135,10 @@ export default function ReelIndex({ initialQuestions = [], currentGoal = 'bcs', 
     };
 
     const toggleExp = (qId) => {
+        if (!answers[qId]) {
+            alert('উত্তর নির্বাচন করার পর ব্যাখ্যা দেখতে পাবেন!');
+            return;
+        }
         setShowExp(prev => ({ ...prev, [qId]: !prev[qId] }));
     };
 
@@ -175,7 +205,12 @@ export default function ReelIndex({ initialQuestions = [], currentGoal = 'bcs', 
                 </div>
 
                 {/* ── Main Reel Slide Content ──────────────────────────────────── */}
-                <div style={{ flex: 1, position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div
+                    onTouchStart={handleTouchStart}
+                    onTouchEnd={handleTouchEnd}
+                    onWheel={handleWheel}
+                    style={{ flex: 1, position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', touchAction: 'pan-y' }}
+                >
                     <AnimatePresence mode="wait">
                         {currentQ ? (
                             <motion.div

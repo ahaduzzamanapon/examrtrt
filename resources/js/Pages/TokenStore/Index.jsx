@@ -1,9 +1,9 @@
-import { useState } from 'react';
-import { Head, Link, useForm, usePage } from '@inertiajs/react';
-import { motion } from 'framer-motion';
+import { useState, useEffect } from 'react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
     Zap, Share2, Copy, Check, Gift, ShoppingBag,
-    Wallet, ArrowRight, Sparkles, AlertCircle, Clock
+    Wallet, ArrowRight, Sparkles, AlertCircle, Clock, PlayCircle, X
 } from 'lucide-react';
 import MobileLayout from '@/Layouts/MobileLayout';
 
@@ -13,11 +13,16 @@ export default function TokenStoreIndex({
     packages = [],
     referralCode = '',
     referralLink = '',
-    status = {}
+    status = {},
+    adViewActive = true,
+    adViewAmount = 5
 }) {
     const { errors, flash } = usePage().props;
     const [copied, setCopied] = useState(false);
     const [buyingId, setBuyingId] = useState(null);
+    const [adModal, setAdModal] = useState(false);
+    const [adTimer, setAdTimer] = useState(5);
+    const [adClaimable, setAdClaimable] = useState(false);
 
     const copyReferral = () => {
         navigator.clipboard.writeText(referralLink);
@@ -27,13 +32,41 @@ export default function TokenStoreIndex({
 
     const handleBuy = (pkgId) => {
         setBuyingId(pkgId);
-        useForm().post(route('tokens.buy', { package_id: pkgId }), {
+        router.post(route('tokens.buy'), { package_id: pkgId }, {
             onFinish: () => setBuyingId(null),
         });
     };
 
     const handleClaimDaily = () => {
-        useForm().post(route('tokens.daily-claim'));
+        router.post(route('tokens.daily-claim'));
+    };
+
+    const startWatchAd = () => {
+        setAdTimer(5);
+        setAdClaimable(false);
+        setAdModal(true);
+    };
+
+    useEffect(() => {
+        let interval = null;
+        if (adModal && adTimer > 0) {
+            interval = setInterval(() => {
+                setAdTimer(t => {
+                    if (t <= 1) {
+                        clearInterval(interval);
+                        setAdClaimable(true);
+                        return 0;
+                    }
+                    return t - 1;
+                });
+            }, 1000);
+        }
+        return () => clearInterval(interval);
+    }, [adModal, adTimer]);
+
+    const claimAdReward = () => {
+        setAdModal(false);
+        router.post(route('tokens.watch-ad'));
     };
 
     return (

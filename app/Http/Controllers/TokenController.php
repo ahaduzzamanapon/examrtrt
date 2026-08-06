@@ -32,6 +32,9 @@ class TokenController extends Controller
 
         $referralLink = url("/register?ref={$referralCode}");
 
+        $adViewActive  = (bool) \App\Models\AppSetting::get('ad_view_active', true);
+        $adViewAmount  = (int) \App\Models\AppSetting::get('token_ad_view_amount', 5);
+
         return Inertia::render('TokenStore/Index', [
             'tokenBalance' => (int) $user->token_balance,
             'walletBalance'=> (float) $user->wallet_balance,
@@ -39,6 +42,8 @@ class TokenController extends Controller
             'referralCode' => $referralCode,
             'referralLink' => $referralLink,
             'status'       => $tokenService->todayStatus($user),
+            'adViewActive' => $adViewActive,
+            'adViewAmount' => $adViewAmount,
         ]);
     }
 
@@ -100,5 +105,22 @@ class TokenController extends Controller
         }
 
         return back()->with('success', $result['message']);
+    }
+
+    public function watchAd(TokenService $tokenService)
+    {
+        $active = (bool) \App\Models\AppSetting::get('ad_view_active', true);
+        if (!$active) {
+            return back()->withErrors(['bonus' => 'বিজ্ঞাপন দেখে টোকেন অর্জন বর্তমানে বন্ধ রয়েছে।']);
+        }
+
+        $adId = 'AD-' . strtoupper(\Illuminate\Support\Str::random(6));
+        $res  = $tokenService->recordAdView(auth()->user(), $adId);
+
+        if (!$res['success']) {
+            return back()->withErrors(['bonus' => $res['message']]);
+        }
+
+        return back()->with('success', $res['message']);
     }
 }

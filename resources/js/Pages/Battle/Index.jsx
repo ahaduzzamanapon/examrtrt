@@ -26,6 +26,10 @@ export default function BattleIndex({ invites = [], mySessions = [], wallet = 0 
         form.post(route('battle.create-invite'));
     };
 
+    const handleCancel = (inviteId) => {
+        useForm().post(route('battle.cancel', inviteId));
+    };
+
     const handleAccept = (inviteId) => {
         useForm().post(route('battle.accept', inviteId));
     };
@@ -150,10 +154,17 @@ export default function BattleIndex({ invites = [], mySessions = [], wallet = 0 
                                     </div>
 
                                     {isMine ? (
-                                        <Link href={route('battle.room', inv.id)}
-                                            style={{ padding: '8px 14px', borderRadius: 10, background: 'rgba(77,111,255,0.2)', color: '#93b4ff', fontWeight: 700, fontSize: 12, textDecoration: 'none' }}>
-                                            রুমে যাও →
-                                        </Link>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                            <Link href={route('battle.room', inv.id)}
+                                                style={{ padding: '8px 12px', borderRadius: 10, background: 'rgba(77,111,255,0.2)', color: '#93b4ff', fontWeight: 700, fontSize: 12, textDecoration: 'none' }}>
+                                                রুমে যাও →
+                                            </Link>
+                                            <button
+                                                onClick={() => handleCancel(inv.id)}
+                                                style={{ padding: '8px 10px', borderRadius: 10, background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171', fontWeight: 700, fontSize: 11, cursor: 'pointer' }}>
+                                                বাতিল ✕
+                                            </button>
+                                        </div>
                                     ) : (
                                         <button
                                             onClick={() => handleAccept(inv.id)}

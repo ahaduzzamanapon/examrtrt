@@ -147,7 +147,16 @@ export default function Register() {
     const finish = async (withNotif) => {
         if (withNotif && 'Notification' in window) await Notification.requestPermission().catch(() => {});
         setLoading(true); setErr('');
-        router.post('/register', { name, email, password, password_confirmation: password, exam_goal: goal }, {
+
+        const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+        const refParam  = urlParams ? (urlParams.get('ref') || urlParams.get('referral_code') || '') : '';
+
+        router.post('/register', {
+            name, email, password,
+            password_confirmation: password,
+            exam_goal: goal,
+            ref: refParam,
+        }, {
             onError: errs => { setErr(Object.values(errs)[0] ?? 'নিবন্ধন ব্যর্থ।'); setLoading(false); },
         });
     };

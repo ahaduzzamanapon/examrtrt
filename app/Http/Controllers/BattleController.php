@@ -209,22 +209,42 @@ class BattleController extends Controller
             $session->status = 'COMPLETED';
             $session->winner_id = $winnerId;
 
-            // Payout prize if winner exists and stake > 0
-            if ($winnerId && $stake > 0) {
-                $prize = $stake * 2 * 0.9; // 10% platform fee
-                User::where('id', $winnerId)->increment('wallet_balance', $prize);
+            // Payout prize if winner exists, OR refund both players if TIE
+            if ($stake > 0) {
+                if ($winnerId) {
+                    $prize = $stake * 2 * 0.9; // 10% platform fee
+                    User::where('id', $winnerId)->increment('wallet_balance', $prize);
 
-                WalletTransaction::create([
-                    'user_id'       => $winnerId,
-                    'type'          => 'PRIZE_PAYOUT',
-                    'gross_amount'  => $prize,
-                    'fee'           => $stake * 2 * 0.1,
-                    'net_amount'    => $prize,
-                    'status'        => 'APPROVED',
-                    'payment_method'=> 'wallet',
-                    'trx_id'        => 'WIN-' . strtoupper(\Illuminate\Support\Str::random(6)),
-                    'admin_note'    => '1v1 Battle Winner Payout',
-                ]);
+                    WalletTransaction::create([
+                        'user_id'       => $winnerId,
+                        'type'          => 'PRIZE_PAYOUT',
+                        'gross_amount'  => $prize,
+                        'fee'           => $stake * 2 * 0.1,
+                        'net_amount'    => $prize,
+                        'status'        => 'APPROVED',
+                        'payment_method'=> 'wallet',
+                        'trx_id'        => 'WIN-' . strtoupper(\Illuminate\Support\Str::random(6)),
+                        'admin_note'    => '1v1 Battle Winner Payout',
+                    ]);
+                } else {
+                    // Tie / Draw — refund stake to both players
+                    foreach ([$session->sender_id, $session->receiver_id] as $pId) {
+                        if ($pId) {
+                            User::where('id', $pId)->increment('wallet_balance', $stake);
+                            WalletTransaction::create([
+                                'user_id'       => $pId,
+                                'type'          => 'REFUND',
+                                'gross_amount'  => $stake,
+                                'fee'           => 0,
+                                'net_amount'    => $stake,
+                                'status'        => 'APPROVED',
+                                'payment_method'=> 'wallet',
+                                'trx_id'        => 'REF-' . strtoupper(\Illuminate\Support\Str::random(6)),
+                                'admin_note'    => '1v1 Battle Draw Stake Refund',
+                            ]);
+                        }
+                    }
+                }
             }
         }
 
@@ -235,5 +255,35 @@ class BattleController extends Controller
             'session' => $session,
             'invite'  => $invite,
         ]);
+    }
+
+    // ── Cancel a Pending Challenge & Refund Stake ─────────────────────────────
+    public function cancelInvite($id)
+    {
+        $user = auth()->user();
+        $invite = BattleInvite::where('sender_id', $user->id)
+            ->where('status', 'PENDING')
+            ->findOrFail($id);
+
+        $stake = (float) $invite->stake_amount;
+
+        if ($stake > 0) {
+            $user->increment('wallet_balance', $stake);
+            WalletTransaction::create([
+                'user_id'       => $user->id,
+                'type'          => 'REFUND',
+                'gross_amount'  => $stake,
+                'fee'           => 0,
+                'net_amount'    => $stake,
+                'status'        => 'APPROVED',
+                'payment_method'=> 'wallet',
+                'trx_id'        => 'REF-' . strtoupper(\Illuminate\Support\Str::random(6)),
+                'admin_note'    => '1v1 Battle Cancelled Stake Refund',
+            ]);
+        }
+
+        $invite->update(['status' => 'EXPIRED']);
+
+        return back()->with('success', 'চ্যালেঞ্জটি বাতিল করা হয়েছে এবং ওয়ালেট ব্যালেন্স ফেরত দেওয়া হয়েছে।');
     }
 }

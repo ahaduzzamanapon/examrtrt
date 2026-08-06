@@ -126,7 +126,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/wallet/deposits/{transaction}/reject',         [AdminWalletController::class, 'rejectDeposit'])->name('wallet.deposits.reject');
         Route::get('/wallet/withdrawals',                            [AdminWalletController::class, 'withdrawals'])->name('wallet.withdrawals');
         Route::post('/wallet/withdrawals/{transaction}/approve',     [AdminWalletController::class, 'approveWithdrawal'])->name('wallet.withdrawals.approve');
-        Route::post('/wallet/withdrawals/{transaction}/reject',      [AdminWalletController::class, 'rejectWithdrawal'])->name('wallet.withdrawals.reject');
+        // Question Disputes Management
+        Route::get('/disputes',             [\App\Http\Controllers\Admin\DisputeController::class, 'index'])->name('disputes.index');
+        Route::post('/disputes/{id}',       [\App\Http\Controllers\Admin\DisputeController::class, 'update'])->name('disputes.update');
     });
 
     // ── Feature pages ─────────────────────────────────────────────────────────
@@ -146,6 +148,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/battle',                     [BattleController::class, 'index'])->name('battle.index');
     Route::post('/battle/create-invite',      [BattleController::class, 'createInvite'])->name('battle.create-invite');
     Route::post('/battle/accept/{id}',        [BattleController::class, 'acceptInvite'])->name('battle.accept');
+    Route::post('/battle/cancel/{id}',        [BattleController::class, 'cancelInvite'])->name('battle.cancel');
     Route::get('/battle/room/{id}',           [BattleController::class, 'room'])->name('battle.room');
     Route::post('/battle/room/{id}/submit',    [BattleController::class, 'submitAnswer'])->name('battle.submit-answer');
 
@@ -173,6 +176,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/tokens',                     [TokenController::class, 'index'])->name('tokens.index');
     Route::post('/tokens/buy',                [TokenController::class, 'buyPackage'])->name('tokens.buy');
     Route::post('/tokens/daily-claim',        [TokenController::class, 'claimDailyBonus'])->name('tokens.daily-claim');
+    Route::post('/tokens/watch-ad',           [TokenController::class, 'watchAd'])->name('tokens.watch-ad');
 
     // ── Wallet ─────────────────────────────────────────────────────────────────
     Route::get('/wallet',              [WalletController::class, 'index'])->name('wallet.index');

@@ -14,8 +14,7 @@ const VAPID = 'BKPEwvQSYwZhDuz0M3Bxodhf4Um980h5IvJJrIWcERJopbvV6JabGrSyk69lre_cO
 
 /**
  * Silently registers FCM token in the background.
- * - If user has no fcm_token on server → always try (bypass sessionStorage).
- * - If user already has a token → run only once per session.
+ * Also handles FOREGROUND messages via onMessage → shows browser Notification.
  */
 export function useFcmAutoRegister() {
     const { auth } = usePage().props;
@@ -26,12 +25,12 @@ export function useFcmAutoRegister() {
         if (!('Notification' in window)) return;
         if (!('serviceWorker' in navigator)) return;
 
-        // If server already has a token → only run once per session
         if (serverHasToken && sessionStorage.getItem('fcm_registered')) return;
+
+        let unsubOnMessage = null;
 
         const register = async () => {
             try {
-                // Only ask for permission if not already granted
                 if (Notification.permission === 'default') {
                     const perm = await Notification.requestPermission();
                     if (perm !== 'granted') return;
@@ -48,40 +47,55 @@ export function useFcmAutoRegister() {
                 } catch {}
 
                 const { initializeApp, getApps, getApp } = await import('firebase/app');
-                const { getMessaging, getToken }          = await import('firebase/messaging');
+                const { getMessaging, getToken, onMessage } = await import('firebase/messaging');
 
                 const app       = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
                 const messaging = getMessaging(app);
-                const swReg     = await navigator.serviceWorker.register('/firebase-sw.js');
 
-                const token = await getToken(messaging, {
-                    vapidKey,
-                    serviceWorkerRegistration: swReg,
+                // ── Foreground message handler ────────────────────────────────
+                // When site is open (foreground), service worker onBackgroundMessage
+                // does NOT fire. We show the notification manually here.
+                unsubOnMessage = onMessage(messaging, (payload) => {
+                    const d = payload.data ?? {};
+                    const title = d.title || 'Exam Arena';
+                    const body  = d.body  || '';
+                    const url   = d.url   || '/';
+
+                    if (Notification.permission === 'granted') {
+                        const n = new Notification(title, {
+                            body,
+                            icon:  d.icon  || '/favicon.png',
+                            tag:   'exam-arena-broadcast',
+                            renotify: false,
+                            data: { url },
+                        });
+                        n.onclick = () => { window.focus(); window.location.href = url; n.close(); };
+                    }
                 });
+
+                // ── Token registration ────────────────────────────────────────
+                const swReg = await navigator.serviceWorker.register('/firebase-sw.js');
+                const token = await getToken(messaging, { vapidKey, serviceWorkerRegistration: swReg });
 
                 if (!token) return;
 
                 const csrf = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
                 const res = await fetch('/fcm-token', {
                     method:  'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': csrf,
-                        'Accept':       'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json' },
                     body: JSON.stringify({ token }),
                 });
 
-                if (res.ok) {
-                    sessionStorage.setItem('fcm_registered', '1');
-                }
+                if (res.ok) sessionStorage.setItem('fcm_registered', '1');
             } catch (err) {
                 console.debug('[FCM]', err?.message ?? err);
             }
         };
 
-        // 2s delay so page renders first
         const t = setTimeout(register, 2000);
-        return () => clearTimeout(t);
+        return () => {
+            clearTimeout(t);
+            unsubOnMessage?.();
+        };
     }, [serverHasToken]);
 }

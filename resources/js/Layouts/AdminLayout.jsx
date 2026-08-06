@@ -40,7 +40,7 @@ function Sidebar({ mobile = false, onClose }) {
             </div>
 
             {/* Nav */}
-            <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 3 }}>
+            <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 3, overflowY: 'auto', paddingRight: 4 }}>
                 <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '0 10px', marginBottom: 6 }}>
                     Main
                 </div>

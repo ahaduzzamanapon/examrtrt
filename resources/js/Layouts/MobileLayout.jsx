@@ -48,7 +48,7 @@ function DesktopSidebar({ auth }) {
             </div>
 
             {/* Nav items */}
-            <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 3 }}>
+            <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 3, overflowY: 'auto', paddingRight: 4 }}>
                 {NAV_ITEMS.map(({ href, icon: Icon, label }) => {
                     const isDash   = href === 'dashboard' && current === '/dashboard';
                     const isActive = isDash || (href !== 'dashboard' && current.startsWith('/' + href.split('.')[0]));
@@ -199,7 +199,7 @@ export default function MobileLayout({ children, title = '' }) {
                                         </div>
                                     </div>
 
-                                    <nav className="flex-1 px-3 mt-3 space-y-1">
+                                    <nav className="flex-1 px-3 mt-3 space-y-1 overflow-y-auto">
                                         {NAV_ITEMS.map(({ href, icon: Icon, label }) => (
                                             <Link key={href} href={route(href)} onClick={() => setDrawerOpen(false)}
                                                 className="block rounded-xl"

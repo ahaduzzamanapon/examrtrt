@@ -22,6 +22,7 @@ class User extends Authenticatable
         'role',
         'exam_goal',
         'fcm_token',
+        'token_balance',
         'wallet_balance',
         'free_contest_passes',
         'total_points',
@@ -43,6 +44,7 @@ class User extends Authenticatable
             'last_login_date'   => 'date',
             'password'          => 'hashed',
             'wallet_balance'    => 'decimal:2',
+            'token_balance'     => 'integer',
             'total_points'      => 'decimal:2',
             'is_phone_verified' => 'boolean',
         ];

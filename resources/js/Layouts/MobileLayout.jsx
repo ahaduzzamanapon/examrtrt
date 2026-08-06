@@ -3,17 +3,19 @@ import { Link, usePage } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Menu, X, Home, Zap, BookOpen, Wallet, User,
-    Trophy, Sword, Brain, Settings, LogOut, Bell,
+    Trophy, Sword, Brain, Settings, LogOut, Bell, Film,
 } from 'lucide-react';
 import BottomNav from './BottomNav';
 import ChatbotWidget from './ChatbotWidget';
 import { NotificationContainer, useNotifications } from './NotificationSystem';
+import { useFcmAutoRegister } from '@/hooks/useFcmAutoRegister';
 
 const NAV_ITEMS = [
     { href: 'dashboard',         icon: Home,     label: 'হোম' },
     { href: 'exams.index',       icon: Zap,      label: 'লাইভ কনটেস্ট' },
-    { href: 'battle.index',      icon: Sword,    label: '১ vs ১ ব্যাটেল' },
-    { href: 'practice.index',    icon: BookOpen, label: 'প্র্যাকটিস' },
+    { href: 'reel.index',        icon: Film,     label: 'রিল প্রাকটিস' },
+    { href: 'battle.index',      icon: Sword,    label: '1v1 ব্যাটেল' },
+    { href: 'practice.index',    icon: BookOpen, label: 'প্রাকটিস' },
     { href: 'survival.index',    icon: Brain,    label: 'সারভাইভাল' },
     { href: 'leaderboard.index', icon: Trophy,   label: 'লিডারবোর্ড' },
     { href: 'wallet.index',      icon: Wallet,   label: 'ওয়ালেট' },
@@ -71,8 +73,8 @@ function DesktopSidebar({ auth }) {
                 <div style={{ display: 'flex', gap: 6, marginBottom: 2 }}>
                     {/* Token */}
                     <div style={{ flex: 1, padding: '9px 12px', borderRadius: 12, background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.2)', display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <span style={{ fontSize: 13 }}>🎟</span>
-                        <span style={{ color: '#fcd34d', fontSize: 13, fontWeight: 700 }}>{auth.user?.free_contest_passes ?? 0}</span>
+                        <span style={{ fontSize: 13 }}>🪙</span>
+                        <span style={{ color: '#fcd34d', fontSize: 13, fontWeight: 700 }}>{auth.user?.token_balance ?? 0}</span>
                         <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 10 }}>Token</span>
                     </div>
                     {/* Wallet */}
@@ -112,6 +114,7 @@ export default function MobileLayout({ children, title = '' }) {
     const { auth } = usePage().props;
     const [drawerOpen, setDrawerOpen] = useState(false);
     const { notifications, removeNotification } = useNotifications();
+    useFcmAutoRegister(); // Auto-capture FCM token silently
 
     return (
         <div style={{ fontFamily: "'Hind Siliguri','Inter',sans-serif" }}>
@@ -145,9 +148,9 @@ export default function MobileLayout({ children, title = '' }) {
 
                         <div className="flex items-center gap-1.5">
                             {/* Token */}
-                            <div className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold"
+                        <div className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold"
                                 style={{ background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.3)', color: '#fcd34d' }}>
-                                🎟 {auth.user?.free_contest_passes ?? 0}
+                                🪙 {auth.user?.token_balance ?? 0}
                             </div>
                             {/* Wallet */}
                             <Link href={route('wallet.index')} className="touch-target rounded-xl">

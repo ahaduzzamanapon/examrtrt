@@ -178,7 +178,7 @@ export default function MobileLayout({ children, title = '' }) {
                                     initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }}
                                     transition={{ type: 'spring', stiffness: 380, damping: 38 }}
                                     className="fixed top-0 left-0 bottom-0 z-50 w-72 flex flex-col overflow-y-auto"
-                                    style={{ background: 'rgba(10,14,35,0.97)', backdropFilter: 'blur(30px)', borderRight: '1px solid rgba(255,255,255,0.08)', paddingTop: 'env(safe-area-inset-top,0px)', paddingBottom: 'env(safe-area-inset-bottom,16px)' }}>
+                                    style={{ background: 'rgba(10,14,35,0.97)', backdropFilter: 'blur(30px)', borderRight: '1px solid rgba(255,255,255,0.08)', paddingTop: 'env(safe-area-inset-top,0px)', paddingBottom: 'calc(env(safe-area-inset-bottom,0px) + 80px)' }}>
 
                                     <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
                                         <img src="/logo.png" alt="Exam Arena" style={{ height: 32, objectFit: 'contain' }} />

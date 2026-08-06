@@ -34,7 +34,8 @@ jobs:
             if [ -f "$DEPLOY_DIR/artisan" ]; then
               echo "📦 Pulling latest code..."
               cd "$DEPLOY_DIR"
-              git pull origin main
+              git fetch origin
+              git reset --hard origin/main
             else
               echo "🆕 First deploy — cloning repo..."
               git clone "$REPO" "$DEPLOY_DIR"

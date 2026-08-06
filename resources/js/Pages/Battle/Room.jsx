@@ -1,13 +1,15 @@
 import { useState, useEffect, useRef } from 'react';
 import { Head, Link } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sword, Trophy, Clock, CheckCircle2, XCircle, Users, RefreshCw, Copy, Check, Share2 } from 'lucide-react';
+import { Sword, Trophy, Clock, CheckCircle2, XCircle, Users, RefreshCw, Copy, Check, Share2, Flag } from 'lucide-react';
 import axios from 'axios';
 import MobileLayout from '@/Layouts/MobileLayout';
+import ReportQuestionModal from '@/Components/ReportQuestionModal';
 
 export default function BattleRoom({ invite: initialInvite, session: initialSession, userId }) {
     const [invite, setInvite]           = useState(initialInvite);
     const [copied, setCopied]           = useState(false);
+    const [reportOpen, setReportOpen]   = useState(false);
     const questions                     = invite.questions_snapshot || [];
 
     const [index, setIndex]             = useState(0);
@@ -24,6 +26,17 @@ export default function BattleRoom({ invite: initialInvite, session: initialSess
     );
     const [timeLeft, setTimeLeft]       = useState(10);
     const [isCompleted, setIsCompleted] = useState(initialSession?.status === 'COMPLETED');
+
+    // Heartbeat ping while waiting as host
+    useEffect(() => {
+        let hbInterval = null;
+        if (isSender && isWaiting) {
+            hbInterval = setInterval(() => {
+                axios.post(route('battle.heartbeat', invite.id)).catch(() => {});
+            }, 5000);
+        }
+        return () => clearInterval(hbInterval);
+    }, [isSender, isWaiting, invite.id]);
     const [winner, setWinner]           = useState(initialSession?.winner_id || null);
 
     const timerRef = useRef(null);
@@ -308,6 +321,19 @@ export default function BattleRoom({ invite: initialInvite, session: initialSess
                                     );
                                 })}
                             </div>
+
+                            {/* Report Button */}
+                            <button
+                                onClick={() => setReportOpen(true)}
+                                style={{
+                                    width: '100%', marginTop: 14, padding: '10px 14px', borderRadius: 12,
+                                    background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)',
+                                    color: '#f87171', fontWeight: 700, fontSize: 12, cursor: 'pointer',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                                }}
+                            >
+                                <Flag size={15} /> প্রশ্নে কোনো ভুল আছে? রিপোর্ট করুন 🚩
+                            </button>
                         </motion.div>
                     ) : (
                         /* 🏆 STATE 3: MATCH RESULT */

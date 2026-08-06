@@ -149,6 +149,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/battle/create-invite',      [BattleController::class, 'createInvite'])->name('battle.create-invite');
     Route::post('/battle/accept/{id}',        [BattleController::class, 'acceptInvite'])->name('battle.accept');
     Route::post('/battle/cancel/{id}',        [BattleController::class, 'cancelInvite'])->name('battle.cancel');
+    Route::post('/battle/heartbeat/{id}',     [BattleController::class, 'heartbeat'])->name('battle.heartbeat');
     Route::get('/battle/room/{id}',           [BattleController::class, 'room'])->name('battle.room');
     Route::post('/battle/room/{id}/submit',    [BattleController::class, 'submitAnswer'])->name('battle.submit-answer');
 

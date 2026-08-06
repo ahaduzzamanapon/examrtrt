@@ -1,18 +1,21 @@
+import { useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import { CheckCircle, XCircle } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, Search, ArrowUpCircle } from 'lucide-react';
 import AdminLayout from '@/Layouts/AdminLayout';
 
 const METHOD_COLOR = { bkash: '#e91e8c', nagad: '#f26722', rocket: '#8b2fc9' };
 
 function StatusBadge({ status }) {
+    const st = String(status).toLowerCase();
     const cfg = {
-        pending:  { label: 'পেন্ডিং',  color: '#f59e0b' },
-        approved: { label: 'Approved', color: '#10b981' },
-        rejected: { label: 'Rejected', color: '#ef4444' },
-    }[status] ?? { label: status, color: '#888' };
+        pending:  { label: '⏳ পেন্ডিং',  color: '#f59e0b', bg: 'rgba(245,158,11,0.2)' },
+        approved: { label: '✓ Approved', color: '#10b981', bg: 'rgba(16,185,129,0.2)' },
+        rejected: { label: '✕ Rejected', color: '#ef4444', bg: 'rgba(239,68,68,0.2)' },
+    }[st] ?? { label: status, color: '#888', bg: 'rgba(255,255,255,0.1)' };
+
     return (
-        <span style={{ padding: '2px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700, background: `${cfg.color}18`, color: cfg.color, border: `1px solid ${cfg.color}40` }}>
+        <span style={{ padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 800, background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.color}40` }}>
             {cfg.label}
         </span>
     );
@@ -20,106 +23,169 @@ function StatusBadge({ status }) {
 
 export default function AdminWithdrawals({ withdrawals }) {
     const list = withdrawals?.data ?? withdrawals ?? [];
+    const [filter, setFilter] = useState('ALL');
+    const [search, setSearch] = useState('');
 
     const approve = (id) => {
-        if (!confirm('উইথড্রয়াল approve করবে? (টাকা পাঠানোর পরে করো)')) return;
-        router.post(route('admin.wallet.withdrawals.approve', id));
+        if (confirm('টাকা পাঠানো হয়েছে এবং উইথড্র টি অনুমোদন করতে চান?')) {
+            router.post(route('admin.wallet.withdrawals.approve', id));
+        }
     };
-    const reject = (id) => {
-        const note = prompt('Rejection reason (optional):') ?? 'Rejected';
+
+    const reject  = (id) => {
+        const note = prompt('বাতিল করার কারণ (টাকা ফেরত দেওয়া হবে):') ?? 'Rejected by admin';
         router.post(route('admin.wallet.withdrawals.reject', id), { note });
     };
 
+    const filteredList = list.filter(tx => {
+        const st = String(tx.status).toLowerCase();
+        if (filter !== 'ALL' && st !== filter.toLowerCase()) return false;
+        if (search) {
+            const q = search.toLowerCase();
+            return (tx.payment_number?.includes(q) || tx.user?.name?.toLowerCase().includes(q) || tx.user?.email?.toLowerCase().includes(q));
+        }
+        return true;
+    });
+
     return (
         <AdminLayout title="Withdrawals">
-            <Head title="Withdrawal Management" />
+            <Head title="উইথড্র ম্যানেজমেন্ট — Admin" />
 
-            <div style={{ marginBottom: 24 }}>
-                <h1 style={{ color: 'white', fontWeight: 800, fontSize: 22, margin: 0 }}>উইথড্রয়াল ব্যবস্থাপনা</h1>
-                <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 13, marginTop: 4 }}>
-                    উইথড্র রিকোয়েস্ট দেখো এবং ম্যানুয়ালি প্রসেস করো
-                </p>
-            </div>
-
-            {list.length === 0 ? (
-                <div style={{ padding: 40, textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: 14 }}>
-                    কোনো উইথড্র রিকোয়েস্ট নেই ✅
+            <div style={{ padding: '16px 20px', maxWidth: 900, margin: '0 auto' }}>
+                <div style={{ marginBottom: 20 }}>
+                    <h1 style={{ color: 'white', fontWeight: 800, fontSize: 22, margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <ArrowUpCircle color="#f43f5e" /> উইথড্র ম্যানেজমেন্ট
+                    </h1>
+                    <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: 13, marginTop: 4 }}>
+                        পেন্ডিং উইথড্র রিকোয়েস্ট অনুমোদন বা বাতিল করুন
+                    </p>
                 </div>
-            ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                    {list.map((tx, i) => (
-                        <motion.div key={tx.id}
-                            initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: i * 0.03 }}
+
+                {/* Filter Tabs & Search */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 20 }}>
+                    <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
+                        {['ALL', 'PENDING', 'APPROVED', 'REJECTED'].map((st) => (
+                            <button
+                                key={st}
+                                onClick={() => setFilter(st)}
+                                style={{
+                                    padding: '8px 14px', borderRadius: 10, border: 'none', cursor: 'pointer',
+                                    background: filter === st ? '#4d6fff' : 'rgba(255,255,255,0.06)',
+                                    color: filter === st ? 'white' : 'rgba(255,255,255,0.6)',
+                                    fontWeight: 700, fontSize: 12, whiteSpace: 'nowrap',
+                                }}
+                            >
+                                {st === 'ALL' ? 'সবগুলো' : st === 'PENDING' ? '⏳ পেন্ডিং' : st === 'APPROVED' ? '✓ অনুমোদিত' : '✕ বাতিল'}
+                            </button>
+                        ))}
+                    </div>
+
+                    <div style={{ position: 'relative' }}>
+                        <Search size={16} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.4)' }} />
+                        <input
+                            type="text"
+                            placeholder="ফোন বা ইমেইল দিয়ে খুঁজুন..."
+                            value={search}
+                            onChange={e => setSearch(e.target.value)}
                             style={{
-                                padding: '16px 20px', borderRadius: 14,
-                                background: 'rgba(255,255,255,0.04)',
-                                border: tx.status === 'pending'
-                                    ? '1px solid rgba(239,68,68,0.25)'
-                                    : '1px solid rgba(255,255,255,0.07)',
+                                width: '100%', padding: '10px 12px 10px 38px', borderRadius: 12,
+                                background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+                                color: 'white', fontSize: 13, outline: 'none', boxSizing: 'border-box',
                             }}
-                        >
-                            <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
-                                {/* Left */}
-                                <div>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                                        <StatusBadge status={tx.status} />
-                                        <span style={{
-                                            padding: '2px 8px', borderRadius: 20, fontSize: 11, fontWeight: 700,
-                                            background: `${METHOD_COLOR[tx.payment_method] ?? '#888'}22`,
-                                            color: METHOD_COLOR[tx.payment_method] ?? '#888',
-                                        }}>
-                                            {tx.payment_method?.toUpperCase()}
-                                        </span>
-                                    </div>
-                                    <div style={{ display: 'flex', gap: 14, marginBottom: 4 }}>
-                                        <div>
-                                            <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 10, textTransform: 'uppercase' }}>মোট</div>
-                                            <div style={{ color: 'white', fontWeight: 800, fontSize: 18 }}>৳{parseFloat(tx.gross_amount).toFixed(2)}</div>
-                                        </div>
-                                        <div>
-                                            <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 10, textTransform: 'uppercase' }}>ফি (২%)</div>
-                                            <div style={{ color: '#f87171', fontWeight: 700, fontSize: 15 }}>৳{parseFloat(tx.fee).toFixed(2)}</div>
-                                        </div>
-                                        <div>
-                                            <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 10, textTransform: 'uppercase' }}>পাবেন</div>
-                                            <div style={{ color: '#34d399', fontWeight: 800, fontSize: 18 }}>৳{parseFloat(tx.net_amount).toFixed(2)}</div>
-                                        </div>
-                                    </div>
-                                    <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12 }}>
-                                        → পাঠাও: <span style={{ color: '#93b4ff', fontWeight: 700 }}>{tx.payment_number}</span>
-                                    </div>
-                                    <div style={{ color: 'rgba(255,255,255,0.25)', fontSize: 11, marginTop: 4 }}>
-                                        👤 {tx.user?.name} · {tx.user?.email}
-                                    </div>
-                                    <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: 11 }}>
-                                        {new Date(tx.created_at).toLocaleString('bn-BD')}
-                                    </div>
-                                    {tx.admin_note && (
-                                        <div style={{ color: '#f87171', fontSize: 11, marginTop: 4 }}>Note: {tx.admin_note}</div>
-                                    )}
-                                </div>
-
-                                {/* Actions */}
-                                {tx.status === 'pending' && (
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                                        <motion.button whileTap={{ scale: 0.95 }}
-                                            onClick={() => approve(tx.id)}
-                                            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 16px', borderRadius: 10, border: '1px solid rgba(16,185,129,0.4)', background: 'rgba(16,185,129,0.15)', color: '#34d399', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
-                                            <CheckCircle size={14} /> Sent ✓
-                                        </motion.button>
-                                        <motion.button whileTap={{ scale: 0.95 }}
-                                            onClick={() => reject(tx.id)}
-                                            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 16px', borderRadius: 10, border: '1px solid rgba(239,68,68,0.35)', background: 'rgba(239,68,68,0.12)', color: '#f87171', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
-                                            <XCircle size={14} /> Reject
-                                        </motion.button>
-                                    </div>
-                                )}
-                            </div>
-                        </motion.div>
-                    ))}
+                        />
+                    </div>
                 </div>
-            )}
+
+                {filteredList.length === 0 ? (
+                    <div style={{ padding: 40, textAlign: 'center', background: 'rgba(255,255,255,0.03)', borderRadius: 16, color: 'rgba(255,255,255,0.4)', fontSize: 14 }}>
+                        কোনো উইথড্র রেকর্ড পাওয়া যায়নি ✅
+                    </div>
+                ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                        {filteredList.map((tx, i) => {
+                            const isPending = String(tx.status).toLowerCase() === 'pending';
+                            return (
+                                <motion.div key={tx.id}
+                                    initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: i * 0.02 }}
+                                    style={{
+                                        padding: '16px 18px', borderRadius: 16,
+                                        background: isPending ? 'rgba(245,158,11,0.06)' : 'rgba(255,255,255,0.03)',
+                                        border: isPending ? '1.5px solid rgba(245,158,11,0.4)' : '1px solid rgba(255,255,255,0.08)',
+                                    }}
+                                >
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 10, marginBottom: 12 }}>
+                                        <div>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                                                <StatusBadge status={tx.status} />
+                                                <span style={{
+                                                    padding: '2px 8px', borderRadius: 6, fontSize: 11, fontWeight: 800,
+                                                    background: `${METHOD_COLOR[tx.payment_method?.toLowerCase()] ?? '#888'}22`,
+                                                    color: METHOD_COLOR[tx.payment_method?.toLowerCase()] ?? '#888',
+                                                }}>
+                                                    {tx.payment_method?.toUpperCase()}
+                                                </span>
+                                            </div>
+                                            <div style={{ color: '#f87171', fontWeight: 900, fontSize: 20 }}>
+                                                ৳{parseFloat(tx.net_amount).toFixed(2)} <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', fontWeight: 500 }}>(ফি সহ ৳{parseFloat(tx.gross_amount).toFixed(2)})</span>
+                                            </div>
+                                        </div>
+
+                                        <div style={{ textAlign: 'right' }}>
+                                            <div style={{ color: '#93b4ff', fontWeight: 800, fontSize: 14 }}>
+                                                Send To: {tx.payment_number}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div style={{ padding: '10px 12px', borderRadius: 10, background: 'rgba(0,0,0,0.2)', marginBottom: isPending ? 12 : 0 }}>
+                                        <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: 12, fontWeight: 600 }}>
+                                            👤 {tx.user?.name} ({tx.user?.email})
+                                        </div>
+                                        <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11, marginTop: 2 }}>
+                                            🕒 {new Date(tx.created_at).toLocaleString('bn-BD')}
+                                        </div>
+                                        {tx.admin_note && (
+                                            <div style={{ color: '#f87171', fontSize: 11, marginTop: 4 }}>
+                                                নোট: {tx.admin_note}
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Action Buttons — Full Width on Mobile */}
+                                    {isPending && (
+                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                                            <button
+                                                onClick={() => approve(tx.id)}
+                                                style={{
+                                                    padding: '11px', borderRadius: 12, border: 'none',
+                                                    background: 'linear-gradient(135deg,#10b981,#059669)',
+                                                    color: 'white', fontWeight: 800, fontSize: 13, cursor: 'pointer',
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                                                    boxShadow: '0 4px 12px rgba(16,185,129,0.3)',
+                                                }}
+                                            >
+                                                <CheckCircle size={16} /> অনুমোদন করুন
+                                            </button>
+                                            <button
+                                                onClick={() => reject(tx.id)}
+                                                style={{
+                                                    padding: '11px', borderRadius: 12, border: 'none',
+                                                    background: 'rgba(239,68,68,0.2)', border: '1px solid rgba(239,68,68,0.4)',
+                                                    color: '#f87171', fontWeight: 800, fontSize: 13, cursor: 'pointer',
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                                                }}
+                                            >
+                                                <XCircle size={16} /> বাতিল করুন
+                                            </button>
+                                        </div>
+                                    )}
+                                </motion.div>
+                            );
+                        })}
+                    </div>
+                )}
+            </div>
         </AdminLayout>
     );
 }

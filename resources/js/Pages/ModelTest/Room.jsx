@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { Head, router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import { Clock, CheckCircle2, AlertTriangle, Send, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Clock, CheckCircle2, AlertTriangle, Send, ChevronLeft, ChevronRight, Flag } from 'lucide-react';
 import MobileLayout from '@/Layouts/MobileLayout';
+import ReportQuestionModal from '@/Components/ReportQuestionModal';
 
 export default function ModelTestRoom({ test }) {
     const questions = test.questions_snapshot || [];
@@ -10,6 +11,7 @@ export default function ModelTestRoom({ test }) {
     const [answers, setAnswers]         = useState({}); // { [question_id]: selected_key }
     const [timeLeft, setTimeLeft]       = useState(test.duration_minutes * 60);
     const [submitting, setSubmitting]   = useState(false);
+    const [reportOpen, setReportOpen]   = useState(false);
 
     const timerRef = useRef(null);
     const startTimeRef = useRef(Date.now());
@@ -204,10 +206,30 @@ export default function ModelTestRoom({ test }) {
                                 পরের প্রশ্ন <ChevronRight size={16} />
                             </button>
                         </div>
+                        {/* Report Button */}
+                        <button
+                            onClick={() => setReportOpen(true)}
+                            style={{
+                                width: '100%', marginTop: 12, padding: '10px 14px', borderRadius: 12,
+                                background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)',
+                                color: '#f87171', fontWeight: 700, fontSize: 12, cursor: 'pointer',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                            }}
+                        >
+                            <Flag size={15} /> প্রশ্নে কোনো ভুল আছে? রিপোর্ট করুন 🚩
+                        </button>
                     </motion.div>
                 )}
 
             </div>
+
+            {/* Question Report Modal */}
+            <ReportQuestionModal
+                questionId={currentQ?.id}
+                questionText={currentQ?.question_text}
+                isOpen={reportOpen}
+                onClose={() => setReportOpen(false)}
+            />
         </MobileLayout>
     );
 }

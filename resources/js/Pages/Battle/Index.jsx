@@ -1,17 +1,17 @@
 import { useState } from 'react';
-import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sword, Trophy, Zap, Plus, Users, Shield, ArrowRight, CheckCircle2, Clock } from 'lucide-react';
 import MobileLayout from '@/Layouts/MobileLayout';
 
 const STAKES = [
     { value: 0,  label: 'ফ্রি প্র্যাকটিস', badge: 'FREE' },
-    { value: 10, label: '১০ টাকা স্টেক',  badge: '৳১০' },
-    { value: 20, label: '২০ টাকা স্টেক',  badge: '৳২০' },
-    { value: 50, label: '৫০ টাকা স্টেক',  badge: '৳৫০' },
+    { value: 10, label: '১০ টোকেন স্টেক', badge: '⚡১০' },
+    { value: 20, label: '২০ টোকেন স্টেক', badge: '⚡২০' },
+    { value: 50, label: '৫০ টোকেন স্টেক', badge: '⚡৫০' },
 ];
 
-export default function BattleIndex({ invites = [], mySessions = [], wallet = 0 }) {
+export default function BattleIndex({ invites = [], mySessions = [], tokenBalance = 0 }) {
     const { errors, auth } = usePage().props;
     const [showCreate, setShowCreate] = useState(false);
     const [selectedStake, setSelectedStake] = useState(0);
@@ -27,11 +27,11 @@ export default function BattleIndex({ invites = [], mySessions = [], wallet = 0 
     };
 
     const handleCancel = (inviteId) => {
-        useForm().post(route('battle.cancel', inviteId));
+        router.post(route('battle.cancel', inviteId));
     };
 
     const handleAccept = (inviteId) => {
-        useForm().post(route('battle.accept', inviteId));
+        router.post(route('battle.accept', inviteId));
     };
 
     return (
@@ -58,10 +58,10 @@ export default function BattleIndex({ invites = [], mySessions = [], wallet = 0 
                             </div>
                             <div>
                                 <h2 style={{ color: 'white', fontWeight: 900, fontSize: 20, margin: 0 }}>
-                                    ১v১ লাইভ ব্যাটেল
+                                    ১v১ অনলাইন রিয়েলটাইম ব্যাটেল
                                 </h2>
-                                <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12, margin: 0 }}>
-                                    লাইভ প্রতিপক্ষের সাথে সরাসরি কুইজ যুদ্ধ!
+                                <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 12, margin: 0 }}>
+                                    বন্ধুদের সাথে প্রতিযোগিতা করো এবং সেরা হও!
                                 </p>
                             </div>
                         </div>
@@ -71,8 +71,8 @@ export default function BattleIndex({ invites = [], mySessions = [], wallet = 0 
                         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                         background: 'rgba(0,0,0,0.25)', padding: '10px 14px', borderRadius: 14, marginTop: 14,
                     }}>
-                        <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12 }}>আপনার ওয়ালেট ব্যালেন্স:</div>
-                        <div style={{ color: '#fbbf24', fontWeight: 900, fontSize: 16 }}>৳{wallet.toFixed(2)}</div>
+                        <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12 }}>আপনার টোকেন ব্যালেন্স:</div>
+                        <div style={{ color: '#fbbf24', fontWeight: 900, fontSize: 16 }}>⚡{tokenBalance}</div>
                     </div>
 
                     <button
@@ -142,7 +142,7 @@ export default function BattleIndex({ invites = [], mySessions = [], wallet = 0 
                                                 background: inv.stake_amount > 0 ? 'rgba(245,158,11,0.2)' : 'rgba(16,185,129,0.15)',
                                                 color: inv.stake_amount > 0 ? '#fbbf24' : '#34d399',
                                             }}>
-                                                {inv.stake_amount > 0 ? `৳${inv.stake_amount} স্টেক` : 'FREE'}
+                                                {inv.stake_amount > 0 ? `⚡${inv.stake_amount} স্টেক` : 'FREE'}
                                             </span>
                                             <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 11 }}>
                                                 {new Date(inv.created_at).toLocaleTimeString('bn-BD', { timeStyle: 'short' })}

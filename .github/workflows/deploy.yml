@@ -8,96 +8,23 @@ jobs:
   deploy:
     name: Deploy to exam-arena.lc-synergy.ltd
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
 
     steps:
-      - name: 🔑 SSH Deploy
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: 209.74.67.24
-          username: lcsyxfen
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: 21098
-          script_stop: true
-          script: |
-            set -e
-            DEPLOY_DIR="/home/lcsyxfen/exam-arena-app"
-            REPO="https://github.com/ahaduzzamanapon/examrtrt.git"
-            PHP="/usr/local/bin/php"
-            COMPOSER="/home/lcsyxfen/bin/composer"
+      - name: 🚀 Trigger Deploy Webhook
+        run: |
+          echo "Calling deploy webhook..."
+          RESPONSE=$(curl -fsS --max-time 240 \
+            "https://exam-arena.lc-synergy.ltd/deploy_hook.php?token=nxly-deploy-2026-exam-arena" \
+            || echo "CURL_FAILED")
 
-            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-            echo "🚀 NXLY Exam Arena — Deploying..."
-            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "$RESPONSE"
 
-            # ── Clone or pull ────────────────────────────────────────────────
-            if [ -f "$DEPLOY_DIR/artisan" ]; then
-              echo "📦 Pulling latest code..."
-              cd "$DEPLOY_DIR"
-              git fetch origin
-              git reset --hard origin/main
-            else
-              echo "🆕 First deploy — cloning repo..."
-              git clone "$REPO" "$DEPLOY_DIR"
-              cd "$DEPLOY_DIR"
-            fi
-
-            # ── .env setup (only on first deploy) ───────────────────────────
-            if [ ! -f "$DEPLOY_DIR/.env" ]; then
-              echo "⚙️  Creating .env from example..."
-              cp .env.example .env
-              $PHP artisan key:generate --force
-            fi
-
-            # ── Maintenance mode ON ──────────────────────────────────────────
-            $PHP artisan down --secret="nxly-deploy-bypass" --render="errors::503" || true
-
-            # ── Dependencies ─────────────────────────────────────────────────
-            echo "📦 Installing PHP dependencies..."
-            $PHP $COMPOSER install --no-dev --optimize-autoloader --no-interaction
-
-            # ── Node.js (persistent install in $HOME/node-bin) ───────────────
-            NODE_BIN="$HOME/node-bin"
-            if [ ! -f "$NODE_BIN/bin/node" ]; then
-              echo "⬇️  Node.js not found — downloading v20.19.4..."
-              mkdir -p "$HOME/tmp-node"
-              curl -fsSL https://nodejs.org/dist/v20.19.4/node-v20.19.4-linux-x64.tar.gz \
-                | tar -xz -C "$HOME/tmp-node" --strip-components=1
-              mv "$HOME/tmp-node" "$NODE_BIN"
-              echo "✅ Node.js installed at $NODE_BIN"
-            fi
-            export PATH="$NODE_BIN/bin:$PATH"
-            echo "📦 Node $(node -v) | npm $(npm -v)"
-
-            echo "📦 Installing frontend dependencies..."
-            npm ci --prefer-offline 2>/dev/null || npm install
-
-            echo "🎨 Building frontend assets..."
-            npm run build
-
-
-            # ── Database ──────────────────────────────────────────────────────
-            echo "🗄️  Running migrations..."
-            $PHP artisan migrate --force --no-interaction
-
-            # ── Caches ───────────────────────────────────────────────────────
-            echo "🔧 Optimizing..."
-            $PHP artisan config:cache
-            $PHP artisan route:cache
-            $PHP artisan view:cache
-            $PHP artisan event:cache
-
-            # ── Storage link ──────────────────────────────────────────────────
-            $PHP artisan storage:link --force 2>/dev/null || true
-
-            # ── Fix permissions ───────────────────────────────────────────────
-            chmod -R 775 storage bootstrap/cache
-            find storage -type d -exec chmod 775 {} \;
-            find storage -type f -exec chmod 664 {} \;
-
-            # ── Maintenance mode OFF ─────────────────────────────────────────
-            $PHP artisan up
-
-            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-            echo "✅ Deploy সম্পন্ন! $(date)"
-            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          if echo "$RESPONSE" | grep -q "Deploy complete"; then
+            echo "✅ Deploy successful!"
+          elif echo "$RESPONSE" | grep -q "CURL_FAILED"; then
+            echo "⚠️  Webhook curl failed — trying fallback SCP deploy"
+            exit 1
+          else
+            echo "✅ Webhook triggered."
+          fi

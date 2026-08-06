@@ -1,0 +1,89 @@
+name: 🚀 Deploy to Production
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    name: Deploy to exam-arena.lc-synergy.ltd
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: 🔑 SSH Deploy
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 209.74.67.24
+          username: lcsyxfen
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 21098
+          script_stop: true
+          script: |
+            set -e
+            DEPLOY_DIR="/home/lcsyxfen/exam-arena-app"
+            REPO="https://github.com/ahaduzzamanapon/examrtrt.git"
+            PHP="/usr/local/bin/php"
+            COMPOSER="/home/lcsyxfen/bin/composer"
+
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "🚀 NXLY Exam Arena — Deploying..."
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+            # ── Clone or pull ────────────────────────────────────────────────
+            if [ -f "$DEPLOY_DIR/artisan" ]; then
+              echo "📦 Pulling latest code..."
+              cd "$DEPLOY_DIR"
+              git pull origin main
+            else
+              echo "🆕 First deploy — cloning repo..."
+              git clone "$REPO" "$DEPLOY_DIR"
+              cd "$DEPLOY_DIR"
+            fi
+
+            # ── .env setup (only on first deploy) ───────────────────────────
+            if [ ! -f "$DEPLOY_DIR/.env" ]; then
+              echo "⚙️  Creating .env from example..."
+              cp .env.example .env
+              $PHP artisan key:generate --force
+            fi
+
+            # ── Maintenance mode ON ──────────────────────────────────────────
+            $PHP artisan down --secret="nxly-deploy-bypass" --render="errors::503" || true
+
+            # ── Dependencies ─────────────────────────────────────────────────
+            echo "📦 Installing PHP dependencies..."
+            $PHP $COMPOSER install --no-dev --optimize-autoloader --no-interaction
+
+            # ── Build frontend assets ─────────────────────────────────────────
+            echo "🎨 Building frontend..."
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            npm ci --prefer-offline 2>/dev/null || npm install
+            npm run build
+
+            # ── Database ──────────────────────────────────────────────────────
+            echo "🗄️  Running migrations..."
+            $PHP artisan migrate --force --no-interaction
+
+            # ── Caches ───────────────────────────────────────────────────────
+            echo "🔧 Optimizing..."
+            $PHP artisan config:cache
+            $PHP artisan route:cache
+            $PHP artisan view:cache
+            $PHP artisan event:cache
+
+            # ── Storage link ──────────────────────────────────────────────────
+            $PHP artisan storage:link --force 2>/dev/null || true
+
+            # ── Fix permissions ───────────────────────────────────────────────
+            chmod -R 775 storage bootstrap/cache
+            find storage -type d -exec chmod 775 {} \;
+            find storage -type f -exec chmod 664 {} \;
+
+            # ── Maintenance mode OFF ─────────────────────────────────────────
+            $PHP artisan up
+
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "✅ Deploy সম্পন্ন! $(date)"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

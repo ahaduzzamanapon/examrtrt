@@ -300,40 +300,20 @@ export default function ReelIndex({ initialQuestions = [], currentGoal = 'bcs', 
                     userSelect: 'none',
                 }}
             >
-                {/* ── TOP GOAL SELECTOR & STATS ──────────────────────────────────── */}
-                <div>
-                    <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 10, scrollbarWidth: 'none' }}>
-                        {GOALS.map(g => (
-                            <button
-                                key={g.value}
-                                onClick={() => handleGoalChange(g.value)}
-                                style={{
-                                    padding: '6px 14px', borderRadius: 20, border: 'none', cursor: 'pointer',
-                                    background: selectedGoal === g.value ? 'linear-gradient(135deg,#4d6fff,#7c3aed)' : 'rgba(255,255,255,0.06)',
-                                    color: selectedGoal === g.value ? 'white' : 'rgba(255,255,255,0.6)',
-                                    fontWeight: 700, fontSize: 12, whiteSpace: 'nowrap',
-                                    boxShadow: selectedGoal === g.value ? '0 4px 14px rgba(77,111,255,0.3)' : 'none',
-                                }}
-                            >
-                                {g.label}
-                            </button>
-                        ))}
-                    </div>
-
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4, marginBottom: 12 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                            <span style={{ color: '#fbbf24', fontWeight: 800, fontSize: 13, display: 'flex', alignItems: 'center', gap: 4 }}>
-                                <Trophy size={14} /> {score} pt
+                {/* ── STATS BAR ───────────────────────────────────────────────── */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <span style={{ color: '#fbbf24', fontWeight: 800, fontSize: 13, display: 'flex', alignItems: 'center', gap: 4 }}>
+                            <Trophy size={14} /> {score} pt
+                        </span>
+                        {streak > 1 && (
+                            <span style={{ color: '#f97316', fontWeight: 800, fontSize: 13, display: 'flex', alignItems: 'center', gap: 4 }}>
+                                <Flame size={14} /> {streak} streak!
                             </span>
-                            {streak > 1 && (
-                                <span style={{ color: '#f97316', fontWeight: 800, fontSize: 13, display: 'flex', alignItems: 'center', gap: 4 }}>
-                                    <Flame size={14} /> {streak} streak!
-                                </span>
-                            )}
-                        </div>
-                        <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, fontWeight: 700 }}>
-                            {currentIndex + 1} / {questions.length}
-                        </div>
+                        )}
+                    </div>
+                    <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, fontWeight: 700 }}>
+                        {currentIndex + 1} / {questions.length}
                     </div>
                 </div>
 

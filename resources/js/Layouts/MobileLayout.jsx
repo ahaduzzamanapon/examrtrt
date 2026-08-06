@@ -66,12 +66,21 @@ function DesktopSidebar({ auth }) {
             </nav>
 
             {/* Bottom section */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.07)' }}>
-                {/* Wallet balance */}
-                <div style={{ padding: '10px 14px', borderRadius: 12, background: 'rgba(77,111,255,0.1)', border: '1px solid rgba(77,111,255,0.2)', display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                    <Wallet size={14} style={{ color: '#93b4ff' }} />
-                    <span style={{ color: '#93b4ff', fontSize: 13, fontWeight: 700 }}>৳{parseFloat(auth.user?.wallet_balance ?? 0).toFixed(0)}</span>
-                    <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 11 }}>ওয়ালেট</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.07)' }}>
+                {/* Token + Wallet row */}
+                <div style={{ display: 'flex', gap: 6, marginBottom: 2 }}>
+                    {/* Token */}
+                    <div style={{ flex: 1, padding: '9px 12px', borderRadius: 12, background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.2)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <span style={{ fontSize: 13 }}>🎟</span>
+                        <span style={{ color: '#fcd34d', fontSize: 13, fontWeight: 700 }}>{auth.user?.free_contest_passes ?? 0}</span>
+                        <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 10 }}>Token</span>
+                    </div>
+                    {/* Wallet */}
+                    <div style={{ flex: 1, padding: '9px 12px', borderRadius: 12, background: 'rgba(77,111,255,0.1)', border: '1px solid rgba(77,111,255,0.2)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <Wallet size={13} style={{ color: '#93b4ff' }} />
+                        <span style={{ color: '#93b4ff', fontSize: 13, fontWeight: 700 }}>৳{parseFloat(auth.user?.wallet_balance ?? 0).toFixed(0)}</span>
+                        <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 10 }}>ওয়ালেট</span>
+                    </div>
                 </div>
 
                 {/* Admin panel link */}
@@ -134,7 +143,13 @@ export default function MobileLayout({ children, title = '' }) {
                             <img src="/logo.png" alt="Exam Arena" style={{ height: 30, objectFit: 'contain' }} />
                         </Link>
 
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-1.5">
+                            {/* Token */}
+                            <div className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold"
+                                style={{ background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.3)', color: '#fcd34d' }}>
+                                🎟 {auth.user?.free_contest_passes ?? 0}
+                            </div>
+                            {/* Wallet */}
                             <Link href={route('wallet.index')} className="touch-target rounded-xl">
                                 <div className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold"
                                     style={{ background: 'rgba(77,111,255,0.15)', border: '1px solid rgba(77,111,255,0.3)', color: '#93b4ff' }}>

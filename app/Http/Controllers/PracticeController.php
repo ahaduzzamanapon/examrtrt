@@ -75,11 +75,11 @@ class PracticeController extends Controller
 
         // Record practice session
         PracticeTest::create([
-            'user_id'    => $user->id,
-            'category'   => $goal,
-            'score'      => 0,
-            'total'      => count($questions),
-            'started_at' => now(),
+            'user_id'            => $user->id,
+            'categories'         => [$goal],
+            'questions_snapshot' => $questions,
+            'score'              => 0,
+            'completed'          => false,
         ]);
 
         return Inertia::render('Practice/Session', [

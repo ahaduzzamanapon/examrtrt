@@ -3,7 +3,7 @@ import { Head, useForm, usePage } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Bell, Send, Users, Image as ImageIcon, Link as LinkIcon,
-    CheckCircle, AlertCircle, Loader2, Zap, Target,
+    CheckCircle, AlertCircle, Loader2, Zap, Target, Mail, Smartphone, Radio,
 } from 'lucide-react';
 import AdminLayout from '@/Layouts/AdminLayout';
 
@@ -44,6 +44,7 @@ export default function Notifications({ stats }) {
         image_url: '',
         target:    'all',
         click_url: '/dashboard',
+        channel:   'push',
     });
 
     const selectedGoal = GOALS.find(g => g.id === data.target);
@@ -86,7 +87,8 @@ export default function Notifications({ stats }) {
                     {/* Stats row */}
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }}
                         style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 28 }}>
-                        <StatCard value={stats?.total ?? 0} label="মোট সাবস্ক্রাইবার" color="#4d6fff" />
+                        <StatCard value={stats?.total ?? 0} label="📲 Push Subscribers" color="#4d6fff" />
+                        <StatCard value={stats?.total_email ?? 0} label="📧 Email Users" color="#10b981" />
                         {GOALS.filter(g => g.id !== 'all').map(g => {
                             const cnt = stats?.by_goal?.[g.id] ?? 0;
                             if (!cnt) return null;
@@ -124,6 +126,35 @@ export default function Notifications({ stats }) {
                                         <div style={{ marginTop: 8, color: '#fbbf24', fontSize: 12, display: 'flex', alignItems: 'center', gap: 5 }}>
                                             <Users size={12} />
                                             {selectedGoal?.emoji} {selectedGoal?.label} — প্রায় <strong style={{ color: '#f59e0b' }}>{targetCount} জন</strong> পাবে
+                                        </div>
+                                    </div>
+
+                                    {/* Channel selector */}
+                                    <div style={{ marginBottom: 18 }}>
+                                        <label style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11, fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+                                            <Radio size={12} /> পাঠানোর মাধ্যম
+                                        </label>
+                                        <div style={{ display: 'flex', gap: 8 }}>
+                                            {[
+                                                { id: 'push',  icon: Smartphone, label: 'Push Only',  color: '#4d6fff' },
+                                                { id: 'email', icon: Mail,        label: 'Email Only', color: '#10b981' },
+                                                { id: 'both',  icon: Send,        label: 'Push + Email', color: '#f59e0b' },
+                                            ].map(ch => (
+                                                <button key={ch.id} type="button" onClick={() => setData('channel', ch.id)}
+                                                    style={{
+                                                        flex: 1, padding: '10px 8px', borderRadius: 12, fontSize: 12,
+                                                        cursor: 'pointer', display: 'flex', flexDirection: 'column',
+                                                        alignItems: 'center', gap: 5,
+                                                        background: data.channel === ch.id ? `rgba(${ch.id==='push'?'77,111,255':ch.id==='email'?'16,185,129':'245,158,11'},0.2)` : 'rgba(255,255,255,0.05)',
+                                                        border: `1.5px solid ${data.channel === ch.id ? ch.color : 'rgba(255,255,255,0.1)'}`,
+                                                        color: data.channel === ch.id ? ch.color : 'rgba(255,255,255,0.5)',
+                                                        fontWeight: data.channel === ch.id ? 700 : 400,
+                                                        transition: 'all 0.15s',
+                                                    }}>
+                                                    <ch.icon size={14} />
+                                                    {ch.label}
+                                                </button>
+                                            ))}
                                         </div>
                                     </div>
 
@@ -194,15 +225,22 @@ export default function Notifications({ stats }) {
                                         style={{
                                             width: '100%', padding: '14px', borderRadius: 13, border: 'none',
                                             background: (processing || !data.title || !data.body)
-                                                ? 'rgba(77,111,255,0.25)' : 'linear-gradient(135deg,#4d6fff,#7c3aed)',
+                                                ? 'rgba(77,111,255,0.25)'
+                                                : data.channel === 'email' ? 'linear-gradient(135deg,#059669,#10b981)'
+                                                : data.channel === 'both'  ? 'linear-gradient(135deg,#f59e0b,#d97706)'
+                                                : 'linear-gradient(135deg,#4d6fff,#7c3aed)',
                                             color: 'white', fontWeight: 700, fontSize: 15,
                                             cursor: (processing || !data.title || !data.body) ? 'not-allowed' : 'pointer',
                                             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                                            boxShadow: (!processing && data.title && data.body) ? '0 6px 20px rgba(77,111,255,0.4)' : 'none',
+                                            boxShadow: (!processing && data.title && data.body) ? '0 6px 20px rgba(77,111,255,0.35)' : 'none',
                                         }}>
                                         {processing
                                             ? <><Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> পাঠানো হচ্ছে...</>
-                                            : <><Send size={15} /> {targetCount} জনকে পাঠাও</>
+                                            : data.channel === 'email'
+                                                ? <><Mail size={15} /> {stats?.total_email ?? 0} জনকে Email পাঠাও</>
+                                                : data.channel === 'both'
+                                                    ? <><Send size={15} /> Push + Email উভয়ই পাঠাও</>
+                                                    : <><Send size={15} /> {targetCount} জনকে Push পাঠাও</>
                                         }
                                     </motion.button>
                                 </div>

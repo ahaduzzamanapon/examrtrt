@@ -13,9 +13,30 @@ const QUICK_LINKS = [
         title: 'Push Notifications',
         desc: 'সব বা নির্দিষ্ট শিক্ষার্থীদের notification পাঠাও',
     },
-    // Future admin features:
-    // { href: 'admin.users', icon: Users, color: '#10b981', bg: 'rgba(16,185,129,0.15)', title: 'Users', desc: 'Manage students' },
-    // { href: 'admin.exams', icon: FileText, color: '#f59e0b', bg: 'rgba(245,158,11,0.15)', title: 'Exams', desc: 'Create & manage exams' },
+    {
+        href: 'admin.users',
+        icon: Users,
+        color: '#10b981',
+        bg: 'rgba(16,185,129,0.15)',
+        title: 'Users',
+        desc: 'শিক্ষার্থীদের manage করো',
+    },
+    {
+        href: 'admin.exams.index',
+        icon: FileText,
+        color: '#f59e0b',
+        bg: 'rgba(245,158,11,0.15)',
+        title: 'Exams',
+        desc: 'পরীক্ষা তৈরি ও পরিচালনা করো',
+    },
+    {
+        href: 'admin.questions',
+        icon: FileText,
+        color: '#a78bfa',
+        bg: 'rgba(167,139,250,0.15)',
+        title: 'Questions',
+        desc: 'প্রশ্ন ব্যাংক ও AI generation',
+    },
 ];
 
 function StatCard({ label, value, icon: Icon, color }) {

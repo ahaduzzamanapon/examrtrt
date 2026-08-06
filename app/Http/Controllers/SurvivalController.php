@@ -44,6 +44,14 @@ class SurvivalController extends Controller
             ->get(['id', 'question_text', 'options', 'correct_answer', 'explanation', 'subject', 'difficulty_level'])
             ->toArray();
 
+        if (empty($questions)) {
+            $questions = Question::where('is_active', true)
+                ->inRandomOrder()
+                ->limit(30)
+                ->get(['id', 'question_text', 'options', 'correct_answer', 'explanation', 'subject', 'difficulty_level'])
+                ->toArray();
+        }
+
         return response()->json([
             'questions' => $questions,
         ]);

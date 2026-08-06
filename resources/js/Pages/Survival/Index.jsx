@@ -41,8 +41,14 @@ export default function SurvivalIndex({ topPlayers = [] }) {
     const startMatch = async () => {
         setLoading(true);
         try {
-            const res = await axios.get(route('survival.questions'));
-            setQuestions(res.data.questions || []);
+            const res = await axios.get('/api/survival/q');
+            const qList = res.data.questions || [];
+            if (qList.length === 0) {
+                Swal.fire({ icon: 'warning', title: 'প্রশ্ন খালি', text: 'সারভাইভাল মোডের প্রশ্ন লোড করা যায়নি। আবার চেষ্টা করুন।' });
+                setLoading(false);
+                return;
+            }
+            setQuestions(qList);
             setCurrentIndex(0);
             setScore(0);
             setSelectedOpt(null);

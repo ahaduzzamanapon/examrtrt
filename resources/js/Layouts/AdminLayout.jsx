@@ -3,16 +3,18 @@ import { Head, Link, usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import {
     LayoutDashboard, Bell, Users, FileText,
-    Settings, LogOut, ChevronRight, Menu, X, Zap,
+    Settings, LogOut, ChevronRight, Menu, X, Zap, Wallet, ArrowDownCircle, ArrowUpCircle,
 } from 'lucide-react';
 
 const ADMIN_NAV = [
-    { href: 'admin.dashboard',     icon: LayoutDashboard, label: 'Dashboard' },
-    { href: 'admin.notifications', icon: Bell,            label: 'Notifications' },
-    { href: 'admin.users',         icon: Users,           label: 'Users' },
-    { href: 'admin.questions',     icon: FileText,        label: 'Questions' },
-    { href: 'admin.exams.index',   icon: Zap,             label: 'Exams' },
-    { href: 'admin.settings',      icon: Settings,        label: 'Settings' },
+    { href: 'admin.dashboard',          icon: LayoutDashboard, label: 'Dashboard' },
+    { href: 'admin.notifications',      icon: Bell,            label: 'Notifications' },
+    { href: 'admin.users',              icon: Users,           label: 'Users' },
+    { href: 'admin.questions',          icon: FileText,        label: 'Questions' },
+    { href: 'admin.exams.index',        icon: Zap,             label: 'Exams' },
+    { href: 'admin.wallet.deposits',    icon: ArrowDownCircle, label: 'Deposits' },
+    { href: 'admin.wallet.withdrawals', icon: ArrowUpCircle,   label: 'Withdrawals' },
+    { href: 'admin.settings',           icon: Settings,        label: 'Settings' },
 ];
 
 function Sidebar({ mobile = false, onClose }) {

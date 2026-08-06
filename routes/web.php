@@ -4,11 +4,13 @@ use App\Http\Controllers\PushSubscriptionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\FcmTokenController;
 use App\Http\Controllers\ExamController;
+use App\Http\Controllers\WalletController;
 use App\Http\Controllers\Admin\NotificationController as AdminNotification;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Admin\QuestionController as AdminQuestionController;
 use App\Http\Controllers\Admin\ExamController as AdminExamController;
 use App\Http\Controllers\Admin\SettingsController as AdminSettingsController;
+use App\Http\Controllers\Admin\WalletController as AdminWalletController;
 use App\Http\Controllers\Auth\OnboardingController;
 use App\Models\Exam;
 use Illuminate\Support\Facades\Route;
@@ -110,6 +112,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Settings
         Route::get('/settings',  [AdminSettingsController::class, 'index'])->name('settings');
         Route::post('/settings', [AdminSettingsController::class, 'save'])->name('settings.save');
+
+        // Wallet Management
+        Route::get('/wallet/deposits',                               [AdminWalletController::class, 'deposits'])->name('wallet.deposits');
+        Route::post('/wallet/deposits/{transaction}/approve',        [AdminWalletController::class, 'approveDeposit'])->name('wallet.deposits.approve');
+        Route::post('/wallet/deposits/{transaction}/reject',         [AdminWalletController::class, 'rejectDeposit'])->name('wallet.deposits.reject');
+        Route::get('/wallet/withdrawals',                            [AdminWalletController::class, 'withdrawals'])->name('wallet.withdrawals');
+        Route::post('/wallet/withdrawals/{transaction}/approve',     [AdminWalletController::class, 'approveWithdrawal'])->name('wallet.withdrawals.approve');
+        Route::post('/wallet/withdrawals/{transaction}/reject',      [AdminWalletController::class, 'rejectWithdrawal'])->name('wallet.withdrawals.reject');
     });
 
     // ── Feature pages ─────────────────────────────────────────────────────────
@@ -129,7 +139,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/practice',    fn () => Inertia::render('Practice/Index'))->name('practice.index');
     Route::get('/survival',    fn () => Inertia::render('Survival/Index'))->name('survival.index');
     Route::get('/leaderboard', fn () => Inertia::render('Leaderboard/Index'))->name('leaderboard.index');
-    Route::get('/wallet',      fn () => Inertia::render('Wallet/Index'))->name('wallet.index');
+
+    // ── Wallet ─────────────────────────────────────────────────────────────────
+    Route::get('/wallet',              [WalletController::class, 'index'])->name('wallet.index');
+    Route::post('/wallet/deposit',     [WalletController::class, 'depositStore'])->name('wallet.deposit');
+    Route::post('/wallet/withdraw',    [WalletController::class, 'withdrawStore'])->name('wallet.withdraw');
 });
 
 require __DIR__ . '/auth.php';

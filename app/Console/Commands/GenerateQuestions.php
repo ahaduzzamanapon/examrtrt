@@ -89,6 +89,7 @@ class GenerateQuestions extends Command
         $bar->start();
 
         foreach ($jobs as $index => $job) {
+            $step    = $index + 1;
             $goal    = $job['goal'];
             $subject = $job['subject'];
             $currentLabel = strtoupper($goal) . " → {$subject}";
@@ -101,8 +102,8 @@ class GenerateQuestions extends Command
                 if ($existing > 0) {
                     $skipped++;
                     $bar->advance();
-                    $logs[] = "⏭️ [{$index}/{$total}] {$currentLabel}: Skipped (already has {$existing} questions)";
-                    $this->updateStatus('running', $total, $index + 1, $currentLabel, $saved, $skipped, $failed, $logs);
+                    $logs[] = "⏭️ [{$step}/{$total}] {$currentLabel}: Skipped (already has {$existing} questions)";
+                    $this->updateStatus('running', $total, $step, $currentLabel, $saved, $skipped, $failed, $logs);
                     continue;
                 }
             }
@@ -112,8 +113,8 @@ class GenerateQuestions extends Command
             if (!$apiKey) {
                 $failed++;
                 $bar->advance();
-                $logs[] = "❌ [{$index}/{$total}] {$currentLabel}: No Gemini API Key available!";
-                $this->updateStatus('running', $total, $index + 1, $currentLabel, $saved, $skipped, $failed, $logs);
+                $logs[] = "❌ [{$step}/{$total}] {$currentLabel}: No Gemini API Key available!";
+                $this->updateStatus('running', $total, $step, $currentLabel, $saved, $skipped, $failed, $logs);
                 continue;
             }
 
@@ -126,15 +127,15 @@ class GenerateQuestions extends Command
                 }
                 // Rotate key on failure and retry after delay
                 $apiKey = AppSetting::nextGeminiKey() ?? $apiKey;
-                $logs[] = "⚠️ [{$index}/{$total}] {$currentLabel}: Retry {$attempt}/3 with rotated key...";
+                $logs[] = "⚠️ [{$step}/{$total}] {$currentLabel}: Retry {$attempt}/3 with rotated key...";
                 sleep(2);
             }
 
             if ($questions === null) {
                 $failed++;
                 $bar->advance();
-                $logs[] = "❌ [{$index}/{$total}] {$currentLabel}: Generation failed after retries.";
-                $this->updateStatus('running', $total, $index + 1, $currentLabel, $saved, $skipped, $failed, $logs);
+                $logs[] = "❌ [{$step}/{$total}] {$currentLabel}: Generation failed after retries.";
+                $this->updateStatus('running', $total, $step, $currentLabel, $saved, $skipped, $failed, $logs);
                 continue;
             }
 
@@ -164,9 +165,9 @@ class GenerateQuestions extends Command
                 }
             }
 
-            $logs[] = "✅ [{$index + 1}/{$total}] {$currentLabel}: Saved {$itemSaved} questions.";
+            $logs[] = "✅ [{$step}/{$total}] {$currentLabel}: Saved {$itemSaved} questions.";
             $bar->advance();
-            $this->updateStatus('running', $total, $index + 1, $currentLabel, $saved, $skipped, $failed, $logs);
+            $this->updateStatus('running', $total, $step, $currentLabel, $saved, $skipped, $failed, $logs);
 
             // Delay 2 seconds between batch calls for rate-limit protection
             sleep(2);

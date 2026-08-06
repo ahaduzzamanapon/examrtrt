@@ -1,43 +1,49 @@
 import { useEffect } from 'react';
-import { usePage } from '@inertiajs/react';
+
+const FIREBASE_CONFIG = {
+    apiKey:            'AIzaSyDp_Af0POFa-EekqDEFdgLzVLNSAtYbU10',
+    authDomain:        'exam-arena-6148c.firebaseapp.com',
+    projectId:         'exam-arena-6148c',
+    storageBucket:     'exam-arena-6148c.firebasestorage.app',
+    messagingSenderId: '165082016850',
+    appId:             '1:165082016850:web:9fb8f973b6e20743b4038b',
+};
 
 /**
  * Silently registers FCM token in the background after login/registration.
- * - Requests Notification permission if not yet granted
- * - Saves the FCM token to the server via POST /fcm-token
- * - Runs once per session (tracks in sessionStorage)
+ * Runs once per browser session (tracked via sessionStorage).
  */
 export function useFcmAutoRegister() {
-    const { firebase: firebaseProps } = usePage().props;
-
     useEffect(() => {
         if (typeof window === 'undefined') return;
         if (!('Notification' in window)) return;
-
-        // Only run once per browser session
         if (sessionStorage.getItem('fcm_registered')) return;
 
         const register = async () => {
             try {
-                // Import Firebase SDK (npm package)
+                // Read VAPID key from DOM (set in app.blade.php)
+                const vapidKey = document.getElementById('vapid-key')?.textContent?.trim()
+                    ?? 'BKPEwvQSYwZhDuz0M3Bxodhf4Um980h5IvJJrIWcERJopbvV6JabGrSyk69lre_cOpqfRIAPsrhpMwVNvAjmWfc';
+
+                // Read firebase config from DOM or use default
+                let firebaseConfig = FIREBASE_CONFIG;
+                try {
+                    const raw = document.getElementById('firebase-config')?.textContent;
+                    if (raw) firebaseConfig = JSON.parse(raw);
+                } catch {}
+
                 const { initializeApp, getApps, getApp } = await import('firebase/app');
                 const { getMessaging, getToken }          = await import('firebase/messaging');
 
-                // Init Firebase (avoid duplicate app)
-                const app = getApps().length > 0
-                    ? getApp()
-                    : initializeApp(firebaseProps?.config ?? {});
-
+                const app       = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
                 const messaging = getMessaging(app);
 
-                // Register service worker
+                // Register the service worker
                 const swReg = await navigator.serviceWorker.register('/firebase-sw.js');
 
-                // Request permission
+                // Request notification permission
                 const permission = await Notification.requestPermission();
                 if (permission !== 'granted') return;
-
-                const vapidKey = firebaseProps?.vapid_key ?? '';
 
                 const token = await getToken(messaging, {
                     vapidKey,
@@ -48,25 +54,26 @@ export function useFcmAutoRegister() {
 
                 // Save to server
                 const csrf = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
-                await fetch(route('fcm.token'), {
+                const res = await fetch('/fcm-token', {
                     method:  'POST',
                     headers: {
-                        'Content-Type':  'application/json',
-                        'X-CSRF-TOKEN':  csrf,
-                        'Accept':        'application/json',
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrf,
+                        'Accept':       'application/json',
                     },
                     body: JSON.stringify({ token }),
                 });
 
-                sessionStorage.setItem('fcm_registered', '1');
+                if (res.ok) {
+                    sessionStorage.setItem('fcm_registered', '1');
+                }
             } catch (err) {
-                // Silent fail — don't interrupt the user experience
-                console.debug('[FCM]', err);
+                console.debug('[FCM Auto-Register]', err?.message ?? err);
             }
         };
 
-        // Small delay so page renders first
-        const t = setTimeout(register, 2000);
+        // 3-second delay so the page renders first
+        const t = setTimeout(register, 3000);
         return () => clearTimeout(t);
     }, []);
 }

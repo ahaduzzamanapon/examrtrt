@@ -27,6 +27,10 @@
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
+        {{-- Firebase config for FCM token registration (public values, safe to expose) --}}
+        <script id="firebase-config" type="application/json">{"apiKey":"AIzaSyDp_Af0POFa-EekqDEFdgLzVLNSAtYbU10","authDomain":"exam-arena-6148c.firebaseapp.com","projectId":"exam-arena-6148c","storageBucket":"exam-arena-6148c.firebasestorage.app","messagingSenderId":"165082016850","appId":"1:165082016850:web:9fb8f973b6e20743b4038b"}</script>
+        <span id="vapid-key" style="display:none">{{ env('FIREBASE_VAPID_PUBLIC_KEY', 'BKPEwvQSYwZhDuz0M3Bxodhf4Um980h5IvJJrIWcERJopbvV6JabGrSyk69lre_cOpqfRIAPsrhpMwVNvAjmWfc') }}</span>
+
         {{-- Scripts --}}
         @routes
         @viteReactRefresh

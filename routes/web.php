@@ -171,6 +171,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // ── Question Disputes / Reports ───────────────────────────────────────────
     Route::get('/disputes',                   [DisputeController::class, 'index'])->name('disputes.index');
+    Route::post('/disputes',                  [DisputeController::class, 'store']);
     Route::post('/disputes/store',            [DisputeController::class, 'store'])->name('disputes.store');
 
     // ── Token Store ────────────────────────────────────────────────────────────

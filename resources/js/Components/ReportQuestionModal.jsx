@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useForm } from '@inertiajs/react';
+import { router } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Flag, Send, CheckCircle2 } from 'lucide-react';
 
@@ -15,24 +15,27 @@ export default function ReportQuestionModal({ questionId, questionText, isOpen, 
     const [customReason, setCustomReason] = useState('');
     const [submitted, setSubmitted] = useState(false);
 
-    const form = useForm({
-        question_id:   questionId,
-        report_reason: '',
-    });
+    const [loading, setLoading] = useState(false);
 
     const handleSubmit = (e) => {
         e.preventDefault();
         const reason = customReason.trim() || selectedReason;
-        form.setData('question_id', questionId);
-        form.setData('report_reason', reason);
+        setLoading(true);
 
-        form.post(route('disputes.store'), {
+        router.post(route('disputes.store'), {
+            question_id: questionId,
+            report_reason: reason,
+        }, {
             onSuccess: () => {
+                setLoading(false);
                 setSubmitted(true);
                 setTimeout(() => {
                     setSubmitted(false);
                     onClose();
                 }, 1500);
+            },
+            onError: () => {
+                setLoading(false);
             },
         });
     };
@@ -125,7 +128,7 @@ export default function ReportQuestionModal({ questionId, questionText, isOpen, 
                             <motion.button
                                 whileTap={{ scale: 0.97 }}
                                 type="submit"
-                                disabled={form.processing}
+                                disabled={loading}
                                 style={{
                                     padding: '12px', borderRadius: 12, border: 'none',
                                     background: 'linear-gradient(135deg,#ef4444,#dc2626)',
@@ -134,7 +137,7 @@ export default function ReportQuestionModal({ questionId, questionText, isOpen, 
                                     marginTop: 4, boxShadow: '0 4px 14px rgba(239,68,68,0.3)',
                                 }}
                             >
-                                <Send size={15} /> {form.processing ? 'জমা হচ্ছে...' : 'রিপোর্ট পাঠান'}
+                                <Send size={15} /> {loading ? 'জমা হচ্ছে...' : 'রিপোর্ট পাঠান'}
                             </motion.button>
                         </form>
                     )}

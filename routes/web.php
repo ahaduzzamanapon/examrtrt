@@ -69,12 +69,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
             return Inertia::render('Admin/Dashboard', compact('stats'));
         })->name('dashboard');
         Route::get('/notifications', [AdminNotification::class, 'index'])->name('notifications');
-        Route::post('/notifications',[AdminNotification::class, 'send'])->name('notifications.send');
+        Route::post('/notifications', [AdminNotification::class, 'send'])->name('notifications.send');
     });
 
-    // ── Feature stubs ─────────────────────────────────────────────────────────
+    // ── Feature pages ─────────────────────────────────────────────────────────
     Route::get('/exams',       fn () => Inertia::render('Exams/Index'))->name('exams.index');
     Route::get('/exams/{id}',  fn ($id) => Inertia::render('Exams/Show', ['examId' => $id]))->name('exams.show');
+    Route::get('/reel',        fn () => Inertia::render('Reel/Index'))->name('reel.index');
     Route::get('/battle',      fn () => Inertia::render('Battle/Index'))->name('battle.index');
     Route::get('/practice',    fn () => Inertia::render('Practice/Index'))->name('practice.index');
     Route::get('/survival',    fn () => Inertia::render('Survival/Index'))->name('survival.index');

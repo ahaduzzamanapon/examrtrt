@@ -55,11 +55,15 @@ jobs:
             echo "📦 Installing PHP dependencies..."
             $PHP $COMPOSER install --no-dev --optimize-autoloader --no-interaction
 
-            # ── Build frontend assets ─────────────────────────────────────────
-            echo "🎨 Building frontend..."
+            # ── Node.js via NVM ───────────────────────────────────────────────
             export NVM_DIR="$HOME/.nvm"
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+
+            echo "📦 Installing frontend dependencies..."
             npm ci --prefer-offline 2>/dev/null || npm install
+
+            echo "🎨 Building frontend assets..."
             npm run build
 
             # ── Database ──────────────────────────────────────────────────────

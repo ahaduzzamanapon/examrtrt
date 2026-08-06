@@ -389,6 +389,8 @@ PROMPT;
         $cmdString .= " --count={$count} --difficulty={$difficulty}";
         if ($force) $cmdString .= " --force";
 
+        $basePath = base_path();
+
         // Initialize job status
         AppSetting::set('ai_job_status', [
             'state'      => 'running',
@@ -402,11 +404,12 @@ PROMPT;
             'updated_at' => now()->toIso8601String(),
         ]);
 
-        // Launch in background
+        // Launch in background with working directory set to base_path
         if (str_starts_with(PHP_OS, 'WIN')) {
-            pclose(popen("start /B php artisan {$cmdString} > NUL 2>&1", "r"));
+            pclose(popen("cd /d " . escapeshellarg($basePath) . " && start /B php artisan {$cmdString} > NUL 2>&1", "r"));
         } else {
-            exec("/usr/local/bin/php artisan {$cmdString} > /dev/null 2>&1 &");
+            $cmd = "cd " . escapeshellarg($basePath) . " && /usr/local/bin/php artisan {$cmdString} > /dev/null 2>&1 &";
+            exec($cmd);
         }
 
         return response()->json(['message' => 'Background generation command started!']);

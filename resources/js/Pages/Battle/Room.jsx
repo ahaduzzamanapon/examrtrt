@@ -1,12 +1,15 @@
 import { useState, useEffect, useRef } from 'react';
 import { Head, Link } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sword, Trophy, Clock, CheckCircle2, XCircle, Users, RefreshCw } from 'lucide-react';
+import { Sword, Trophy, Clock, CheckCircle2, XCircle, Users, RefreshCw, Copy, Check, Share2 } from 'lucide-react';
 import axios from 'axios';
 import MobileLayout from '@/Layouts/MobileLayout';
 
-export default function BattleRoom({ invite, session: initialSession, userId }) {
-    const questions = invite.questions_snapshot || [];
+export default function BattleRoom({ invite: initialInvite, session: initialSession, userId }) {
+    const [invite, setInvite]           = useState(initialInvite);
+    const [copied, setCopied]           = useState(false);
+    const questions                     = invite.questions_snapshot || [];
+
     const [index, setIndex]             = useState(0);
     const [selectedOpt, setSelectedOpt] = useState(null);
     const [myScore, setMyScore]         = useState(0);
@@ -19,12 +22,22 @@ export default function BattleRoom({ invite, session: initialSession, userId }) 
     const pollRef  = useRef(null);
     const currentQ = questions[index];
 
-    const isSender = userId === invite.sender_id;
+    const isSender     = userId === invite.sender_id;
+    const isWaiting    = invite.status === 'PENDING' || !invite.receiver_id;
     const opponentName = isSender ? (invite.receiver?.name || 'প্রতিপক্ষ') : (invite.sender?.name || 'প্রতিপক্ষ');
 
-    // Timer per question (10s)
+    // Share link for host
+    const shareUrl = typeof window !== 'undefined' ? window.location.href : '';
+
+    const copyInviteLink = () => {
+        navigator.clipboard.writeText(shareUrl);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    };
+
+    // Timer per question (10s) — ONLY runs if match is ACCEPTED and not finished
     useEffect(() => {
-        if (!isCompleted && selectedOpt === null) {
+        if (!isWaiting && !isCompleted && selectedOpt === null) {
             timerRef.current = setInterval(() => {
                 setTimeLeft(prev => {
                     if (prev <= 1) {
@@ -35,18 +48,20 @@ export default function BattleRoom({ invite, session: initialSession, userId }) 
                     return prev - 1;
                 });
             }, 1000);
+        } else {
+            clearInterval(timerRef.current);
         }
         return () => clearInterval(timerRef.current);
-    }, [index, selectedOpt, isCompleted]);
+    }, [index, selectedOpt, isCompleted, isWaiting]);
 
-    // Poll live scores every 2 seconds
+    // Poll live status & opponent score every 2 seconds
     useEffect(() => {
         pollRef.current = setInterval(() => {
             fetchLiveStatus();
         }, 2000);
 
         return () => clearInterval(pollRef.current);
-    }, [index, myScore]);
+    }, [index, myScore, isWaiting]);
 
     const fetchLiveStatus = async () => {
         try {
@@ -54,6 +69,10 @@ export default function BattleRoom({ invite, session: initialSession, userId }) 
                 score: myScore,
                 is_finished: isCompleted,
             });
+
+            if (res.data.invite) {
+                setInvite(res.data.invite);
+            }
 
             if (res.data.session) {
                 const s = res.data.session;
@@ -72,7 +91,7 @@ export default function BattleRoom({ invite, session: initialSession, userId }) 
     };
 
     const handleSelectOption = (key) => {
-        if (selectedOpt !== null || isCompleted) return;
+        if (selectedOpt !== null || isCompleted || isWaiting) return;
         setSelectedOpt(key);
         clearInterval(timerRef.current);
 
@@ -94,7 +113,7 @@ export default function BattleRoom({ invite, session: initialSession, userId }) 
             setSelectedOpt(null);
             setTimeLeft(10);
         } else {
-            // End of 10 questions
+            // End of questions
             setIsCompleted(true);
             axios.post(route('battle.submit-answer', invite.id), {
                 score: currentMyScore,
@@ -136,8 +155,8 @@ export default function BattleRoom({ invite, session: initialSession, userId }) 
                             }}>
                                 VS
                             </div>
-                            <div style={{ color: '#f87171', fontSize: 13, fontWeight: 800 }}>
-                                ⏱ {timeLeft}s
+                            <div style={{ color: isWaiting ? '#fbbf24' : '#f87171', fontSize: 13, fontWeight: 800 }}>
+                                {isWaiting ? '⏳ ওয়েটিং' : `⏱ ${timeLeft}s`}
                             </div>
                         </div>
 
@@ -146,7 +165,9 @@ export default function BattleRoom({ invite, session: initialSession, userId }) 
                             <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, fontWeight: 700, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
                                 {opponentName}
                             </div>
-                            <div style={{ color: '#f87171', fontWeight: 900, fontSize: 26, marginTop: 2 }}>{opponentScore}</div>
+                            <div style={{ color: '#f87171', fontWeight: 900, fontSize: 26, marginTop: 2 }}>
+                                {isWaiting ? '-' : opponentScore}
+                            </div>
                         </div>
 
                     </div>
@@ -154,7 +175,61 @@ export default function BattleRoom({ invite, session: initialSession, userId }) 
 
                 {/* Main Battle Room State */}
                 <AnimatePresence mode="wait">
-                    {!isCompleted && currentQ ? (
+                    {/* ⏳ STATE 1: WAITING FOR OPPONENT TO ACCEPT */}
+                    {isWaiting ? (
+                        <motion.div
+                            key="waiting"
+                            initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
+                            style={{
+                                padding: '36px 20px', textAlign: 'center', borderRadius: 22,
+                                background: 'linear-gradient(135deg, rgba(245,158,11,0.12), rgba(77,111,255,0.08))',
+                                border: '1px solid rgba(245,158,11,0.3)', boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
+                            }}
+                        >
+                            <div style={{ position: 'relative', width: 64, height: 64, margin: '0 auto 16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <RefreshCw size={44} color="#f59e0b" className="animate-spin" />
+                                <Sword size={20} color="white" style={{ position: 'absolute' }} />
+                            </div>
+
+                            <h3 style={{ color: 'white', fontWeight: 900, fontSize: 20, margin: 0 }}>
+                                প্রতিপক্ষের জন্য অপেক্ষা করা হচ্ছে...
+                            </h3>
+                            <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, margin: '6px 0 20px', lineHeight: 1.5 }}>
+                                লবিতে অন্য কোনো প্লেয়ার আপনার চ্যালেঞ্জ গ্রহণ করলেই <strong>দু'জনের একসাথে পরীক্ষা শুরু হবে!</strong>
+                            </p>
+
+                            {/* Share Link Input */}
+                            <div style={{
+                                display: 'flex', alignItems: 'center', gap: 8,
+                                background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(255,255,255,0.1)',
+                                borderRadius: 12, padding: '8px 12px', marginBottom: 16,
+                            }}>
+                                <input
+                                    type="text"
+                                    readOnly
+                                    value={shareUrl}
+                                    style={{ flex: 1, background: 'none', border: 'none', color: 'rgba(255,255,255,0.7)', fontSize: 12, outline: 'none' }}
+                                />
+                                <button
+                                    onClick={copyInviteLink}
+                                    style={{
+                                        display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', borderRadius: 8,
+                                        border: 'none', background: copied ? '#10b981' : '#f59e0b', color: 'white',
+                                        fontWeight: 700, fontSize: 12, cursor: 'pointer', flexShrink: 0,
+                                    }}
+                                >
+                                    {copied ? <Check size={13} /> : <Copy size={13} />}
+                                    {copied ? 'কপি হয়েছে' : 'লিংক কপি করো'}
+                                </button>
+                            </div>
+
+                            <div style={{ color: '#fbbf24', fontSize: 12, fontWeight: 600 }}>
+                                💡 বন্ধুদের সাথে লিংক শেয়ার করে অথবা লবির প্লেয়ার যুক্ত হওয়া পর্যন্ত অপেক্ষা করুন
+                            </div>
+                        </motion.div>
+
+                    ) : !isCompleted && currentQ ? (
+                        /* ⚔️ STATE 2: LIVE MATCH IN PROGRESS */
                         <motion.div key={currentQ.id} initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}>
                             {/* Question Card */}
                             <div style={{
@@ -231,6 +306,7 @@ export default function BattleRoom({ invite, session: initialSession, userId }) 
                             </div>
                         </motion.div>
                     ) : (
+                        /* 🏆 STATE 3: MATCH RESULT */
                         <motion.div key="result" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} style={{ textAlign: 'center', padding: '30px 0' }}>
                             <div style={{ fontSize: 64, marginBottom: 12 }}>
                                 {winner === userId ? '🏆' : (winner ? '💔' : '🤝')}

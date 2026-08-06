@@ -229,9 +229,11 @@ class BattleController extends Controller
         }
 
         $session->save();
+        $invite->load(['sender:id,name,avatar', 'receiver:id,name,avatar']);
 
         return response()->json([
             'session' => $session,
+            'invite'  => $invite,
         ]);
     }
 }

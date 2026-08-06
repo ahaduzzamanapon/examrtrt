@@ -11,8 +11,8 @@ Route::get('/', function () {
     if (auth()->check()) {
         return redirect()->route('dashboard');
     }
-    return redirect()->route('login');
-});
+    return Inertia::render('Welcome');
+})->name('welcome');
 
 // ── Authenticated routes ──────────────────────────────────────────────────────
 Route::middleware(['auth', 'verified'])->group(function () {

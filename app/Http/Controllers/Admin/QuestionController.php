@@ -208,9 +208,11 @@ Return ONLY a valid JSON array (no markdown, no explanation outside JSON):
 ]
 PROMPT;
 
+        $model = AppSetting::get('gemini_model', 'gemini-3.6-flash');
+
         $response = Http::withHeaders(['Content-Type' => 'application/json'])
             ->timeout(30)
-            ->post("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={$apiKey}", [
+            ->post("https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}", [
                 'contents' => [['parts' => [['text' => $prompt]]]],
                 'generationConfig' => ['temperature' => 0.7, 'maxOutputTokens' => 4096],
             ]);

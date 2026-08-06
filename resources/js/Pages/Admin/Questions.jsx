@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Plus, Trash2, Edit3, ChevronLeft, ChevronRight,
@@ -185,12 +185,38 @@ export default function AdminQuestions({ questions, filters, stats }) {
     const [selected, setSelected]     = useState([]);
 
     // Queue
-    const [queue, setQueue]     = useState([]);
-    const [qDone, setQDone]     = useState(0);
+    const [queue, setQueue]       = useState([]);
+    const [qDone, setQDone]       = useState(0);
     const [qCurrent, setQCurrent] = useState('');
     const [qRunning, setQRunning] = useState(false);
-    const [qSaved, setQSaved]   = useState(0);
+    const [qSaved, setQSaved]     = useState(0);
+    const [qResumable, setQResumable] = useState(null); // saved queue from localStorage
     const qStop = useRef(false);
+    const Q_KEY = 'exam_ai_queue_progress';
+
+    // On mount: check if there's a saved/interrupted queue
+    useEffect(() => {
+        try {
+            const saved = JSON.parse(localStorage.getItem(Q_KEY) || 'null');
+            if (saved && saved.items?.length > 0 && saved.done < saved.items.length) {
+                setQResumable(saved);
+                // Restore visual state
+                setQueue(saved.items);
+                setQDone(saved.done);
+                setQSaved(saved.saved);
+            } else if (saved && saved.done >= saved.items?.length) {
+                // Completed but not cleared — show completion
+                setQueue(saved.items ?? []);
+                setQDone(saved.done);
+                setQSaved(saved.saved);
+            }
+        } catch {}
+    }, []);
+
+    const saveQueueProgress = (items, done, saved) => {
+        try { localStorage.setItem(Q_KEY, JSON.stringify({ items, done, saved, ts: Date.now() })); } catch {}
+    };
+    const clearQueueProgress = () => { try { localStorage.removeItem(Q_KEY); } catch {} };
 
     // Image Extract
     const imgRef = useRef(null);
@@ -231,19 +257,28 @@ export default function AdminQuestions({ questions, filters, stats }) {
         if (res.ok) { setAiResult(null); setImgResult(null); router.reload(); alert(`✅ ${data.saved} টি প্রশ্ন সেভ হয়েছে।`); }
     };
 
-    const startQueue = async (items) => {
+    const startQueue = async (items, startFrom = 0) => {
         if (!items.length) return;
-        setQueue(items); setQDone(0); setQSaved(0); setQRunning(true); qStop.current = false;
-        for (let i = 0; i < items.length; i++) {
-            if (qStop.current) break;
+        setQueue(items); setQDone(startFrom); setQSaved(0); setQRunning(true);
+        setQResumable(null); qStop.current = false;
+        saveQueueProgress(items, startFrom, 0);
+
+        let savedCount = 0;
+        for (let i = startFrom; i < items.length; i++) {
+            if (qStop.current) {
+                saveQueueProgress(items, i, savedCount);
+                break;
+            }
             const { exam_goal, subject } = items[i];
             setQDone(i); setQCurrent(`${exam_goal.toUpperCase()} → ${subject}`);
+            saveQueueProgress(items, i, savedCount);
             try {
                 const res = await fetch(route('admin.questions.ai'), { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf() }, body: JSON.stringify({ exam_goal, subject, count: aiForm.count || 1, difficulty: aiForm.difficulty || 'MEDIUM', board_year: aiForm.board_year }) });
                 const data = await res.json().catch(() => ({}));
                 if (res.ok && data.questions?.length > 0) {
                     await fetch(route('admin.questions.bulk'), { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf() }, body: JSON.stringify({ questions: data.questions, exam_goal }) });
-                    setQSaved(s => s + 1);
+                    savedCount++;
+                    setQSaved(savedCount);
                 }
             } catch {}
             await new Promise(r => setTimeout(r, 1200));

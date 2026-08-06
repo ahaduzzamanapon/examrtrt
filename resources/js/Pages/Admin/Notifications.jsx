@@ -20,6 +20,64 @@ const GOALS = [
     { id: 'other',       emoji: '📋', label: 'Other' },
 ];
 
+const TEMPLATES = [
+    {
+        id: 'welcome',
+        emoji: '🎉',
+        label: 'স্বাগতম',
+        title: 'Exam Arena তে স্বাগতম! 🎉',
+        body: 'আমাদের সাথে যোগ দেওয়ার জন্য ধন্যবাদ। প্রতিদিন অনুশীলন করুন এবং তোমার লক্ষ্য অর্জন করো।',
+        click_url: '/dashboard',
+        target: 'all',
+    },
+    {
+        id: 'contest_live',
+        emoji: '⚡',
+        label: 'Contest শুরু',
+        title: 'Live Contest শুরু হয়েছে! ⚡',
+        body: 'এখনই যোগ দাও এবং পয়েন্ট জিতে নাও। সময় সীমিত!',
+        click_url: '/dashboard',
+        target: 'all',
+    },
+    {
+        id: 'result',
+        emoji: '🏆',
+        label: 'ফলাফল',
+        title: 'তোমার পরীক্ষার ফলাফল প্রকাশিত হয়েছে! 🏆',
+        body: 'এখনই দেখো তুমি কত পয়েন্ট পেয়েছো এবং লিডারবোর্ডে তোমার অবস্থান কোথায়।',
+        click_url: '/dashboard',
+        target: 'all',
+    },
+    {
+        id: 'offer',
+        emoji: '🎁',
+        label: 'বিশেষ অফার',
+        title: 'বিশেষ অফার! আজই সুযোগ নাও 🎁',
+        body: 'সীমিত সময়ের জন্য বিশেষ সুবিধা পাচ্ছো। এখনই প্রোফাইলে যাও।',
+        click_url: '/dashboard',
+        target: 'all',
+    },
+    {
+        id: 'motivation',
+        emoji: '💪',
+        label: 'অনুপ্রেরণা',
+        title: 'আজও একটু পড়ো, স্বপ্ন পূরণ হবে! 💪',
+        body: 'ধারাবাহিকতাই সাফল্যের চাবিকাঠি। আজকের প্র্যাকটিস সেশন শুরু করো।',
+        click_url: '/dashboard',
+        target: 'all',
+    },
+    {
+        id: 'token_bonus',
+        emoji: '🪙',
+        label: 'Token Bonus',
+        title: 'বিনামূল্যে Token পাও! 🪙',
+        body: 'আজ লগইন করলেই পাবে বোনাস Token। এখনই অ্যাপ খোলো।',
+        click_url: '/dashboard',
+        target: 'all',
+    },
+];
+
+
 function StatCard({ value, label, color }) {
     return (
         <div style={{
@@ -51,6 +109,10 @@ export default function Notifications({ stats }) {
     const targetCount  = data.target === 'all'
         ? (stats?.total ?? 0)
         : (stats?.by_goal?.[data.target] ?? 0);
+
+    const applyTemplate = (tpl) => {
+        setData(d => ({ ...d, title: tpl.title, body: tpl.body, click_url: tpl.click_url, target: tpl.target }));
+    };
 
     const submit = (e) => {
         e.preventDefault();
@@ -94,6 +156,30 @@ export default function Notifications({ stats }) {
                             if (!cnt) return null;
                             return <StatCard key={g.id} value={cnt} label={g.label} color="rgba(255,255,255,0.7)" />;
                         })}
+                    </motion.div>
+
+                    {/* ── Quick Templates ────────────────────────────────── */}
+                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }}
+                        style={{ marginBottom: 24, padding: '16px 18px', borderRadius: 16, background: 'rgba(77,111,255,0.06)', border: '1px solid rgba(77,111,255,0.15)' }}>
+                        <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.35)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 12 }}>
+                            ⚡ দ্রুত টেমপ্লেট
+                        </div>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
+                            {TEMPLATES.map(tpl => (
+                                <motion.button key={tpl.id} type="button" whileTap={{ scale: 0.93 }}
+                                    onClick={() => applyTemplate(tpl)}
+                                    style={{
+                                        padding: '7px 14px', borderRadius: 20, border: '1px solid rgba(77,111,255,0.25)',
+                                        background: data.title === tpl.title ? 'rgba(77,111,255,0.25)' : 'rgba(255,255,255,0.05)',
+                                        color: data.title === tpl.title ? '#93b4ff' : 'rgba(255,255,255,0.6)',
+                                        fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                                        transition: 'all 0.15s',
+                                        display: 'flex', alignItems: 'center', gap: 5,
+                                    }}>
+                                    {tpl.emoji} {tpl.label}
+                                </motion.button>
+                            ))}
+                        </div>
                     </motion.div>
 
                     <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1.4fr) minmax(0,1fr)', gap: 20, alignItems: 'start' }}>

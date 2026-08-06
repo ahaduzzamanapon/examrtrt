@@ -6,6 +6,8 @@ use App\Http\Controllers\FcmTokenController;
 use App\Http\Controllers\ExamController;
 use App\Http\Controllers\WalletController;
 use App\Http\Controllers\PracticeController;
+use App\Http\Controllers\SurvivalController;
+use App\Http\Controllers\LeaderboardController;
 use App\Http\Controllers\Admin\NotificationController as AdminNotification;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Admin\QuestionController as AdminQuestionController;
@@ -140,8 +142,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/practice',            [PracticeController::class, 'index'])->name('practice.index');
     Route::post('/practice/start',     [PracticeController::class, 'start'])->name('practice.start');
     Route::post('/practice/ask-ai',    [PracticeController::class, 'askAi'])->name('practice.ask-ai');
-    Route::get('/survival',    fn () => Inertia::render('Survival/Index'))->name('survival.index');
-    Route::get('/leaderboard', fn () => Inertia::render('Leaderboard/Index'))->name('leaderboard.index');
+    Route::get('/survival',            [SurvivalController::class, 'index'])->name('survival.index');
+    Route::get('/api/survival/q',      [SurvivalController::class, 'fetchQuestions'])->name('survival.questions');
+    Route::get('/leaderboard',         [LeaderboardController::class, 'index'])->name('leaderboard.index');
 
     // ── Wallet ─────────────────────────────────────────────────────────────────
     Route::get('/wallet',              [WalletController::class, 'index'])->name('wallet.index');

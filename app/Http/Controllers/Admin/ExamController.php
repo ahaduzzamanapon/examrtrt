@@ -36,6 +36,8 @@ class ExamController extends Controller
             'description'       => 'nullable|string',
             'type'              => 'required|in:FREE,CONTEST',
             'categories'        => 'required|array|min:1',
+            'target_streams'    => 'nullable|array',
+            'target_streams.*'  => 'in:science,arts,commerce,general',
             'entry_fee'         => 'required|numeric|min:0',
             'total_marks'       => 'required|integer|min:1',
             'duration_minutes'  => 'required|integer|min:1',
@@ -48,10 +50,16 @@ class ExamController extends Controller
             'question_count'    => 'required|integer|min:1|max:200',
         ]);
 
-        // Snapshot questions randomly from DB based on categories
-        $questions = Question::whereIn('exam_goal', $data['categories'])
-            ->where('is_active', true)
-            ->inRandomOrder()
+        // Snapshot questions: filter by category and stream if specified
+        $targetStreams = $data['target_streams'] ?? [];
+        $qQuery = Question::whereIn('exam_goal', $data['categories'])
+            ->where('is_active', true);
+        if (!empty($targetStreams)) {
+            $qQuery->where(function ($q) use ($targetStreams) {
+                $q->whereIn('stream', $targetStreams)->orWhere('stream', 'general');
+            });
+        }
+        $questions = $qQuery->inRandomOrder()
             ->limit($data['question_count'])
             ->get(['id', 'question_text', 'options', 'correct_answer', 'subject', 'exam_goal'])
             ->toArray();
@@ -65,6 +73,7 @@ class ExamController extends Controller
             'description'        => $data['description'],
             'type'               => $data['type'],
             'categories'         => $data['categories'],
+            'target_streams'     => !empty($targetStreams) ? $targetStreams : null,
             'entry_fee'          => $data['type'] === 'FREE' ? 0 : $data['entry_fee'],
             'total_marks'        => $data['total_marks'],
             'duration_minutes'   => $data['duration_minutes'],
@@ -106,6 +115,8 @@ class ExamController extends Controller
             'title'             => 'required|string|max:255',
             'description'       => 'nullable|string',
             'entry_fee'         => 'required|numeric|min:0',
+            'target_streams'    => 'nullable|array',
+            'target_streams.*'  => 'in:science,arts,commerce,general',
             'total_marks'       => 'required|integer|min:1',
             'duration_minutes'  => 'required|integer|min:1',
             'negative_marking'  => 'boolean',
@@ -116,6 +127,7 @@ class ExamController extends Controller
             'prize_distribution'=> 'nullable|array',
         ]);
 
+        $data['target_streams'] = !empty($data['target_streams']) ? $data['target_streams'] : null;
         $exam->update($data);
 
         return redirect()->route('admin.exams.index')->with('success', 'Exam updated.');

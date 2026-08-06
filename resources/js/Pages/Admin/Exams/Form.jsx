@@ -25,6 +25,7 @@ export default function ExamForm({ auth, exam, categories = [] }) {
         description:        exam?.description ?? '',
         type:               exam?.type ?? 'FREE',
         categories:         exam?.categories ?? [],
+        target_streams:     exam?.target_streams ?? [],  // [] = all streams
         entry_fee:          exam?.entry_fee ?? 0,
         total_marks:        exam?.total_marks ?? 100,
         duration_minutes:   exam?.duration_minutes ?? 60,
@@ -163,6 +164,40 @@ export default function ExamForm({ auth, exam, categories = [] }) {
                             </div>
                             {errors.categories && <p className="text-red-400 text-xs mt-1">{errors.categories}</p>}
                         </div>
+
+                        {/* Target streams — only relevant for hsc/ssc categories */}
+                        {(data.categories.includes('hsc') || data.categories.includes('ssc')) && (
+                            <div>
+                                <label className="text-muted text-sm mb-1 block">🎓 কোন বিভাগের জন্য?</label>
+                                <div className="text-xs text-white/30 mb-2">খালি রাখলে সব বিভাগ দেখতে পাবে</div>
+                                <div className="flex flex-wrap gap-2">
+                                    {[{id:'science',label:'🔬 বিজ্ঞান'},{id:'arts',label:'📜 মানবিক'},{id:'commerce',label:'💼 বাণিজ্য'}].map(s => (
+                                        <button
+                                            key={s.id}
+                                            type="button"
+                                            onClick={() => {
+                                                const arr = data.target_streams.includes(s.id)
+                                                    ? data.target_streams.filter(x => x !== s.id)
+                                                    : [...data.target_streams, s.id];
+                                                setData('target_streams', arr);
+                                            }}
+                                            className={`px-3 py-1 rounded-full text-xs font-semibold border transition-all ${
+                                                data.target_streams.includes(s.id)
+                                                    ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300'
+                                                    : 'border-white/20 text-muted'
+                                            }`}
+                                        >
+                                            {s.label}
+                                        </button>
+                                    ))}
+                                </div>
+                                {data.target_streams.length > 0 && (
+                                    <div className="text-xs text-emerald-400 mt-2">
+                                        ✓ শুধু {data.target_streams.join(', ')} বিভাগের ছাত্ররা দেখবে
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
 
                     {/* ─── Exam Config ─────────────────────────────────── */}

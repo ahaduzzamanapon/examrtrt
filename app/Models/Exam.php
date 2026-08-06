@@ -14,6 +14,7 @@ class Exam extends Model
         'description',
         'type',
         'categories',
+        'target_streams',
         'entry_fee',
         'total_marks',
         'duration_minutes',
@@ -31,6 +32,7 @@ class Exam extends Model
     {
         return [
             'categories'         => 'array',
+            'target_streams'     => 'array',
             'prize_distribution' => 'array',
             'questions_snapshot' => 'array',
             'negative_marking'   => 'boolean',

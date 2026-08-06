@@ -133,7 +133,7 @@ export default function MobileLayout({ children, title = '' }) {
     useFcmAutoRegister();
 
     return (
-        <div style={{ fontFamily: "'Hind Siliguri','Inter',sans-serif" }}>
+        <div style={{ fontFamily: "'Noto Sans Bengali', 'Anek Bangla', 'Inter', sans-serif" }}>
 
             {/* ── DESKTOP LAYOUT (lg+) ────────────────────────────────────── */}
             <div className="hidden lg:flex" style={{ minHeight: '100vh', background: 'linear-gradient(135deg,#05071a 0%,#0a0e23 60%,#0f1730 100%)' }}>

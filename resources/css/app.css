@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 /* ── Google Fonts: Bengali + Latin ───────────────────────────────────────── */
-@import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@300;400;500;600;700;800&family=Anek+Bangla:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 /* ══════════════════════════════════════════════════════════════════════════
    THEME SYSTEM — CSS Custom Properties
@@ -109,7 +109,7 @@
 
     body {
         @apply antialiased;
-        font-family: 'Hind Siliguri', 'Inter', sans-serif;
+        font-family: 'Noto Sans Bengali', 'Anek Bangla', 'Inter', sans-serif;
         background: var(--bg-body);
         background-attachment: fixed;
         color: var(--text-primary);

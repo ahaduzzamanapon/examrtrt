@@ -17,6 +17,11 @@
 
         <title inertia>{{ config('app.name', 'NXLY Exam Arena') }}</title>
 
+        {{-- Favicon & Icons --}}
+        <link rel="icon" type="image/png" href="/favicon.png">
+        <link rel="apple-touch-icon" href="/favicon.png">
+        <meta property="og:image" content="/logo.png">
+
         {{-- Google Fonts: Bengali + Latin --}}
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

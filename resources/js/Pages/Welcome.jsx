@@ -92,9 +92,7 @@ export default function Welcome() {
                 <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-5 py-3"
                     style={{ background: 'rgba(5,7,26,0.85)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
                     <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg flex items-center justify-center font-black text-white text-sm"
-                            style={{ background: 'linear-gradient(135deg, #4d6fff, #7c3aed)' }}>N</div>
-                        <span className="font-bold text-white text-sm">NXLY <span style={{ background: 'linear-gradient(90deg,#4d6fff,#a78bfa)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Arena</span></span>
+                        <img src="/logo.png" alt="Exam Arena" style={{ height: 32, width: 'auto', objectFit: 'contain' }} />
                     </div>
                     <div className="flex items-center gap-2">
                         <Link href={route('login')}

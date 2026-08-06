@@ -1,0 +1,341 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Google Fonts: Bengali + Latin ───────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+/* ── Base Reset & Mobile Defaults ─────────────────────────────────────────── */
+@layer base {
+    *, *::before, *::after {
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent; /* Remove tap flash on mobile */
+    }
+
+    html {
+        font-size: 16px;
+        -webkit-text-size-adjust: 100%; /* Prevent iOS font scaling */
+        scroll-behavior: smooth;
+    }
+
+    body {
+        @apply font-sans antialiased;
+        background: #0a0e23;
+        color: #e2e8f0;
+        overscroll-behavior: none; /* Prevent pull-to-refresh interfering with exam */
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Prevent text selection during exam */
+    .no-select {
+        -webkit-user-select: none;
+        user-select: none;
+    }
+
+    /* iOS safe area support */
+    .safe-top    { padding-top:    env(safe-area-inset-top, 0px); }
+    .safe-bottom { padding-bottom: env(safe-area-inset-bottom, 16px); }
+}
+
+/* ── Component Classes ────────────────────────────────────────────────────── */
+@layer components {
+
+    /* ─ Glass Card ─ */
+    .card-glass {
+        @apply rounded-2xl border border-white/10;
+        background:       rgba(255, 255, 255, 0.05);
+        backdrop-filter:  blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        box-shadow:       0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08);
+    }
+
+    .card-glass-sm {
+        @apply rounded-xl border border-white/10;
+        background:      rgba(255, 255, 255, 0.04);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        box-shadow:      0 4px 16px rgba(0,0,0,0.3);
+    }
+
+    /* ─ Primary Button (mobile touch-optimized) ─ */
+    .btn-primary {
+        @apply inline-flex items-center justify-center gap-2 rounded-xl font-semibold;
+        @apply min-h-touch px-5 py-3 text-sm;
+        background:  linear-gradient(135deg, #4d6fff 0%, #7c3aed 100%);
+        color:       white;
+        box-shadow:  0 4px 20px rgba(77,111,255,0.4);
+        transition:  all 0.15s ease;
+        cursor:      pointer;
+
+        &:hover  { filter: brightness(1.1); transform: translateY(-1px); box-shadow: 0 6px 24px rgba(77,111,255,0.5); }
+        &:active { transform: scale(0.96); filter: brightness(0.95); }
+        &:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    }
+
+    .btn-secondary {
+        @apply inline-flex items-center justify-center gap-2 rounded-xl font-semibold;
+        @apply min-h-touch px-5 py-3 text-sm;
+        background:  rgba(255,255,255,0.08);
+        border:      1px solid rgba(255,255,255,0.15);
+        color:       #e2e8f0;
+        transition:  all 0.15s ease;
+
+        &:hover  { background: rgba(255,255,255,0.12); }
+        &:active { transform: scale(0.96); }
+        &:disabled { opacity: 0.5; cursor: not-allowed; }
+    }
+
+    .btn-danger {
+        @apply inline-flex items-center justify-center gap-2 rounded-xl font-semibold;
+        @apply min-h-touch px-5 py-3 text-sm text-white;
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        box-shadow: 0 4px 16px rgba(239,68,68,0.3);
+        transition: all 0.15s ease;
+
+        &:hover  { filter: brightness(1.1); }
+        &:active { transform: scale(0.96); }
+    }
+
+    .btn-gold {
+        @apply inline-flex items-center justify-center gap-2 rounded-xl font-semibold;
+        @apply min-h-touch px-5 py-3 text-sm text-white;
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        box-shadow: 0 4px 16px rgba(245,158,11,0.4);
+        transition: all 0.15s ease;
+
+        &:hover  { filter: brightness(1.1); }
+        &:active { transform: scale(0.96); }
+    }
+
+    /* ─ Glass Input ─ */
+    .input-glass {
+        @apply w-full rounded-xl px-4 py-3 text-sm text-white placeholder-white/30;
+        @apply min-h-touch border border-white/10;
+        background:      rgba(255,255,255,0.06);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        outline: none;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+        &:focus {
+            border-color: rgba(77,111,255,0.6);
+            box-shadow: 0 0 0 3px rgba(77,111,255,0.15);
+        }
+    }
+
+    /* ─ Badge / Chip ─ */
+    .badge {
+        @apply inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold;
+    }
+    .badge-blue   { @apply badge; background: rgba(77,111,255,0.2);  color: #93b4ff; border: 1px solid rgba(77,111,255,0.3);  }
+    .badge-green  { @apply badge; background: rgba(16,185,129,0.2);  color: #6ee7b7; border: 1px solid rgba(16,185,129,0.3);  }
+    .badge-gold   { @apply badge; background: rgba(245,158,11,0.2);  color: #fcd34d; border: 1px solid rgba(245,158,11,0.3);  }
+    .badge-red    { @apply badge; background: rgba(239,68,68,0.2);   color: #fca5a5; border: 1px solid rgba(239,68,68,0.3);   }
+    .badge-purple { @apply badge; background: rgba(139,92,246,0.2);  color: #c4b5fd; border: 1px solid rgba(139,92,246,0.3);  }
+
+    /* ─ Bottom Nav (Mobile) ─ */
+    .bottom-nav {
+        @apply fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around;
+        @apply safe-bottom;
+        height:          60px;
+        background:      rgba(10,14,35,0.92);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-top:      1px solid rgba(255,255,255,0.08);
+    }
+
+    .bottom-nav-item {
+        @apply flex flex-col items-center justify-center gap-0.5 flex-1 py-2;
+        @apply min-h-touch cursor-pointer transition-colors duration-150;
+        color: rgba(255,255,255,0.45);
+
+        &.active     { color: #4d6fff; }
+        &:active     { color: #7c3aed; }
+
+        .nav-label   { @apply text-[10px] font-medium; }
+        .nav-icon    { @apply w-5 h-5; }
+    }
+
+    /* ─ Screen container (accounts for bottom nav) ─ */
+    .page-container {
+        @apply min-h-screen pb-nav; /* Leave space for bottom nav */
+        background: linear-gradient(135deg, #0a0e23 0%, #0f1a3e 50%, #0a1628 100%);
+    }
+
+    /* ─ Section header ─ */
+    .section-title {
+        @apply text-lg font-bold text-white mb-3;
+    }
+    .section-subtitle {
+        @apply text-sm text-white/50 mb-4;
+    }
+
+    /* ─ Exam answer option card (mobile-optimized) ─ */
+    .option-card {
+        @apply w-full rounded-xl p-4 text-left border cursor-pointer transition-all duration-150;
+        @apply min-h-touch;
+        background:   rgba(255,255,255,0.04);
+        border-color: rgba(255,255,255,0.10);
+        color:        rgba(255,255,255,0.85);
+
+        &:active { transform: scale(0.98); }
+    }
+    .option-card.selected {
+        background:   rgba(77,111,255,0.2);
+        border-color: rgba(77,111,255,0.6);
+        color:        white;
+        box-shadow:   0 0 12px rgba(77,111,255,0.2);
+    }
+    .option-card.correct {
+        background:   rgba(16,185,129,0.2);
+        border-color: rgba(16,185,129,0.6);
+        color:        white;
+    }
+    .option-card.wrong {
+        background:   rgba(239,68,68,0.2);
+        border-color: rgba(239,68,68,0.6);
+        color:        white;
+    }
+    .option-card.marked {
+        background:   rgba(245,158,11,0.12);
+        border-color: rgba(245,158,11,0.4);
+    }
+
+    /* ─ Question palette dots ─ */
+    .palette-dot {
+        @apply w-9 h-9 rounded-lg flex items-center justify-center text-xs font-bold cursor-pointer transition-all;
+        &.unanswered { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.5); }
+        &.answered   { background: rgba(16,185,129,0.3);   color: #6ee7b7; border: 1px solid rgba(16,185,129,0.5); }
+        &.marked     { background: rgba(245,158,11,0.25);  color: #fcd34d; border: 1px solid rgba(245,158,11,0.5); }
+        &.current    { background: rgba(77,111,255,0.4);   color: white;   border: 1px solid rgba(77,111,255,0.8); box-shadow: 0 0 12px rgba(77,111,255,0.4); }
+    }
+
+    /* ─ Live timer ring ─ */
+    .timer-ring { @apply relative inline-flex items-center justify-center; }
+
+    /* ─ Leaderboard row ─ */
+    .lb-row {
+        @apply flex items-center gap-3 p-3 rounded-xl border border-white/5;
+        background: rgba(255,255,255,0.03);
+        transition:  background 0.2s ease;
+        &.me { background: rgba(77,111,255,0.12); border-color: rgba(77,111,255,0.3); }
+    }
+
+    /* ─ Wallet balance card ─ */
+    .wallet-card {
+        @apply card-glass p-5 rounded-3xl relative overflow-hidden;
+        background: linear-gradient(135deg, rgba(77,111,255,0.2) 0%, rgba(124,58,237,0.15) 100%);
+    }
+
+    /* ─ Skeleton loader ─ */
+    .skeleton {
+        @apply rounded-xl;
+        background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%);
+        background-size: 200% 100%;
+        animation: shimmer 1.5s linear infinite;
+    }
+
+    /* ─ Flashcard (TikTok style) ─ */
+    .flashcard {
+        @apply card-glass rounded-3xl p-6 cursor-pointer select-none;
+        transform-style: preserve-3d;
+        transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        min-height: 260px;
+    }
+    .flashcard.flipped { transform: rotateY(180deg); }
+    .flashcard-front, .flashcard-back {
+        @apply absolute inset-0 p-6 rounded-3xl;
+        backface-visibility: hidden;
+        -webkit-backface-visibility: hidden;
+    }
+    .flashcard-back { transform: rotateY(180deg); }
+
+    /* ─ Chatbot widget ─ */
+    .chatbot-widget {
+        @apply fixed z-50;
+        bottom: 80px; /* Above bottom nav */
+        right: 16px;
+    }
+    .chatbot-bubble {
+        @apply w-14 h-14 rounded-full flex items-center justify-center cursor-pointer;
+        background: linear-gradient(135deg, #4d6fff, #7c3aed);
+        box-shadow: 0 8px 24px rgba(77,111,255,0.5);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        &:hover  { transform: scale(1.08); }
+        &:active { transform: scale(0.94); }
+    }
+    .chatbot-window {
+        @apply card-glass rounded-2xl overflow-hidden flex flex-col;
+        width:      340px;
+        max-width:  calc(100vw - 32px);
+        height:     480px;
+        max-height: calc(100dvh - 160px);
+    }
+
+    /* ─ Watermark overlay (exam anti-cheat) ─ */
+    .watermark-overlay {
+        @apply fixed inset-0 pointer-events-none select-none z-10;
+        overflow: hidden;
+    }
+    .watermark-text {
+        position: absolute;
+        opacity: 0.035;
+        font-size: 14px;
+        color: white;
+        white-space: nowrap;
+        transform: rotate(-35deg);
+        transform-origin: center;
+        user-select: none;
+    }
+
+    /* ─ Battle invite popup ─ */
+    .battle-popup {
+        @apply card-glass rounded-3xl p-6 text-center;
+        max-width: 320px;
+        width:     calc(100vw - 32px);
+        animation: bounceIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    /* ─ Survival death overlay ─ */
+    .death-overlay {
+        @apply fixed inset-0 z-50 flex flex-col items-center justify-center text-center p-6;
+        background: rgba(0,0,0,0.85);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+    }
+}
+
+/* ── Scrollbar styling (desktop only) ────────────────────────────────────── */
+@media (min-width: 768px) {
+    ::-webkit-scrollbar       { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: rgba(255,255,255,0.03); }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 999px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.25); }
+}
+
+/* ── Desktop sidebar offset ───────────────────────────────────────────────── */
+@media (min-width: 1024px) {
+    .with-sidebar { margin-left: 260px; }
+    .with-sidebar-collapsed { margin-left: 70px; }
+}
+
+/* ── Animations ───────────────────────────────────────────────────────────── */
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50%       { transform: translateY(-8px); }
+}
+
+@keyframes glow-pulse {
+    0%, 100% { box-shadow: 0 0 20px rgba(77,111,255,0.3); }
+    50%       { box-shadow: 0 0 40px rgba(77,111,255,0.6); }
+}
+
+@keyframes countdown-ring {
+    from { stroke-dashoffset: 0; }
+    to   { stroke-dashoffset: 283; } /* 2π×45 ≈ 283 */
+}
+
+/* ── PWA / Install prompt ─────────────────────────────────────────────────── */
+@media (display-mode: standalone) {
+    .hide-in-pwa { display: none; }
+}

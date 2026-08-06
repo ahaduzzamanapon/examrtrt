@@ -250,7 +250,7 @@ export default function PracticeSession({ questions = [], goal = '' }) {
                                             marginBottom: 8,
                                         }}
                                     >
-                                        <Bot size={18} /> Ask AI Teacher — বিস্তারিত শিক্ষক থেকে শোনো
+                                        <Bot size={18} /> Ask AI Teacher — ⚡৫ টোকেন দিয়ে শোনো
                                     </button>
 
                                     {/* Report Question Button */}

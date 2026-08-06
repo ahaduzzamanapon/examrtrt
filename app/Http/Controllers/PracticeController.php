@@ -96,10 +96,29 @@ class PracticeController extends Controller
             'context'  => 'nullable|string|max:1000',
         ]);
 
+        $user = auth()->user();
+        $cost = (int) AppSetting::get('token_ai_teacher_cost', 5);
+
+        if ($user->token_balance < $cost) {
+            return response()->json([
+                'error' => "AI শিক্ষকের সাহায্য নিতে {$cost}টি টোকেন প্রয়োজন। আপনার ব্যালেন্স: {$user->token_balance} টোকেন।"
+            ], 422);
+        }
+
         $apiKey = AppSetting::nextGeminiKey();
         if (!$apiKey) {
             return response()->json(['error' => 'AI সাময়িকভাবে অনুপলব্ধ।'], 503);
         }
+
+        // Deduct 5 tokens
+        $user->decrement('token_balance', $cost);
+        \App\Models\TokenTransaction::create([
+            'user_id'       => $user->id,
+            'type'          => 'PRACTICE_SPEND',
+            'amount'        => -$cost,
+            'balance_after' => $user->token_balance,
+            'description'   => "AI শিক্ষক জিজ্ঞাসা (-{$cost} টোকেন)",
+        ]);
 
         $model = AppSetting::get('gemini_model', 'gemini-2.0-flash');
         $prompt = "তুমি একজন বাংলাদেশের প্রতিযোগিতামূলক পরীক্ষার বিশেষজ্ঞ শিক্ষক। শিক্ষার্থীর প্রশ্নের উত্তর সম্পূর্ণ ও স্পষ্টভাবে বাংলায় বুঝিয়ে দাও। বাক্য যেন অসম্পূর্ণ না থাকে।\n\nপ্রশ্নের প্রসঙ্গ: {$request->context}\n\nশিক্ষার্থীর জিজ্ঞাসা: {$request->question}\n\nসহজ ভাষায় ৩-৪ বাক্যে উত্তর দাও (সম্পূর্ণ বাক্যে শেষ করবে):";

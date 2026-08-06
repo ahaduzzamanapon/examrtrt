@@ -477,48 +477,81 @@
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
-   BACKWARD-COMPAT ALIASES (for existing pages using old class names)
+   BACKWARD-COMPAT ALIASES — plain CSS, no @apply in compound selectors
    ══════════════════════════════════════════════════════════════════════════ */
 
-/* Old: className="card glass" or className="card" */
-.card { @apply card-glass; }
-.card.glass { @apply card-glass; }
-.glass { @apply card-glass; }
+/* Old: className="card", "card glass", "glass" */
+.card, .card.glass, .glass {
+    border-radius: 1rem;
+    border: 1px solid var(--border-card);
+    background: var(--bg-card);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    box-shadow: var(--glass-shadow);
+    transition: background 0.25s ease, border-color 0.25s ease;
+}
+
+/* Old: className="btn" base */
+.btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    gap: 0.5rem; border-radius: 0.75rem; font-weight: 600; font-size: 0.875rem;
+    min-height: 44px; padding: 0.75rem 1.25rem; cursor: pointer;
+    background: var(--bg-card); border: 1px solid var(--border-card);
+    color: var(--text-secondary); transition: all 0.15s ease;
+}
+.btn:hover   { background: var(--bg-card-hover); }
+.btn:active  { transform: scale(0.96); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* Old: className="btn btn-primary" */
-.btn { @apply btn-secondary; }
-.btn.btn-primary { @apply btn-primary; }
+.btn.btn-primary {
+    background: linear-gradient(135deg, #4d6fff 0%, #7c3aed 100%);
+    color: white; border: none;
+    box-shadow: 0 4px 20px rgba(77,111,255,0.4);
+}
+.btn.btn-primary:hover { filter: brightness(1.1); transform: translateY(-1px); }
+
+/* Old: className="btn btn-success" */
 .btn.btn-success {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl font-semibold text-sm text-white;
-    @apply min-h-[44px] px-5 py-3 cursor-pointer;
     background: linear-gradient(135deg, #10b981, #059669);
+    color: white; border: none;
     box-shadow: 0 4px 16px rgba(16,185,129,0.35);
-    transition: all 0.15s ease;
 }
+
+/* Old: className="btn btn-warning" */
 .btn.btn-warning {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl font-semibold text-sm text-white;
-    @apply min-h-[44px] px-5 py-3 cursor-pointer;
     background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: white; border: none;
     box-shadow: 0 4px 16px rgba(245,158,11,0.35);
-    transition: all 0.15s ease;
 }
-.btn.btn-danger { @apply btn-danger; }
+
+/* Old: className="btn btn-danger" */
+.btn.btn-danger {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white; border: none;
+    box-shadow: 0 4px 16px rgba(239,68,68,0.3);
+}
 .btn.w-full { width: 100%; }
 
 /* Old: className="input" */
-.input { @apply input-glass; }
+.input {
+    width: 100%; border-radius: 0.75rem; padding: 0.75rem 1rem;
+    font-size: 0.875rem; min-height: 44px;
+    background: var(--bg-input); border: 1px solid var(--border-input);
+    color: var(--text-primary); outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.input::placeholder { color: var(--text-placeholder); }
+.input:focus {
+    border-color: rgba(77,111,255,0.6);
+    box-shadow: 0 0 0 3px rgba(77,111,255,0.15);
+}
 
 /* Old badge variants */
-.badge-info    { @apply badge-blue; }
-.badge-success { @apply badge-green; }
-.badge-warning { @apply badge-gold; }
-.badge-live {
-    @apply badge;
-    background: rgba(239,68,68,0.2);
-    color: #f87171;
-    border: 1px solid rgba(239,68,68,0.4);
-    animation: pulse 2s infinite;
-}
+.badge-info    { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.625rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; background: rgba(77,111,255,0.18);  color: #93b4ff; border: 1px solid rgba(77,111,255,0.3); }
+.badge-success { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.625rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; background: rgba(16,185,129,0.18);  color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
+.badge-warning { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.625rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; background: rgba(245,158,11,0.18);  color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
+.badge-live    { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.625rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; background: rgba(239,68,68,0.2); color: #f87171; border: 1px solid rgba(239,68,68,0.4); animation: pulse 2s infinite; }
 
 /* ══════════════════════════════════════════════════════════════════════════
    VISUAL POLISH — More prominent glassmorphism

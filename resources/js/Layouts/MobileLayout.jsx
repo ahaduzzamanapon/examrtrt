@@ -31,18 +31,20 @@ const NAV_ITEMS = [
 ];
 
 // ── Desktop Sidebar ───────────────────────────────────────────────────────────
-function DesktopSidebar({ auth }) {
+function DesktopSidebar({ auth, isDark, toggleTheme }) {
     const current = usePage().url;
 
     return (
         <aside style={{
             position: 'fixed', top: 0, left: 0, bottom: 0,
             width: 240,
-            background: 'rgba(10,14,35,0.97)',
-            borderRight: '1px solid rgba(255,255,255,0.07)',
-            backdropFilter: 'blur(20px)',
+            background: 'var(--bg-sidebar)',
+            borderRight: '1px solid var(--border-nav)',
+            backdropFilter: 'blur(24px)',
+            WebkitBackdropFilter: 'blur(24px)',
             display: 'flex', flexDirection: 'column',
             zIndex: 40, padding: '24px 12px',
+            transition: 'background 0.3s ease',
         }}>
             {/* Logo */}
             <div style={{ padding: '0 12px', marginBottom: 28 }}>
@@ -54,7 +56,6 @@ function DesktopSidebar({ auth }) {
             {/* Nav items */}
             <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 3 }}>
                 {NAV_ITEMS.map(({ href, icon: Icon, label }) => {
-                    const active = current.startsWith('/' + href.replace('.index','').replace('.show','').replace('dashboard',''));
                     const isDash = href === 'dashboard' && current === '/dashboard';
                     const isActive = isDash || (href !== 'dashboard' && current.startsWith('/' + href.split('.')[0]));
                     return (
@@ -63,7 +64,7 @@ function DesktopSidebar({ auth }) {
                             padding: '10px 14px', borderRadius: 12,
                             background: isActive ? 'rgba(77,111,255,0.18)' : 'transparent',
                             border: `1px solid ${isActive ? 'rgba(77,111,255,0.3)' : 'transparent'}`,
-                            color: isActive ? '#93b4ff' : 'rgba(255,255,255,0.6)',
+                            color: isActive ? '#4d6fff' : 'var(--text-secondary)',
                             fontWeight: isActive ? 700 : 500,
                             fontSize: 14, textDecoration: 'none',
                             transition: 'all 0.15s',
@@ -76,22 +77,37 @@ function DesktopSidebar({ auth }) {
             </nav>
 
             {/* Bottom section */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.07)' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, paddingTop: 12, borderTop: '1px solid var(--border-divider)' }}>
                 {/* Token + Wallet row */}
                 <div style={{ display: 'flex', gap: 6, marginBottom: 2 }}>
-                    {/* Token */}
-                    <div style={{ flex: 1, padding: '9px 12px', borderRadius: 12, background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.2)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <div style={{ flex: 1, padding: '9px 12px', borderRadius: 12, background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.22)', display: 'flex', alignItems: 'center', gap: 6 }}>
                         <span style={{ fontSize: 13 }}>🪙</span>
                         <span style={{ color: '#fcd34d', fontSize: 13, fontWeight: 700 }}>{auth.user?.token_balance ?? 0}</span>
-                        <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 10 }}>Token</span>
+                        <span style={{ color: 'var(--text-muted)', fontSize: 10 }}>Token</span>
                     </div>
-                    {/* Wallet */}
-                    <div style={{ flex: 1, padding: '9px 12px', borderRadius: 12, background: 'rgba(77,111,255,0.1)', border: '1px solid rgba(77,111,255,0.2)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <div style={{ flex: 1, padding: '9px 12px', borderRadius: 12, background: 'rgba(77,111,255,0.12)', border: '1px solid rgba(77,111,255,0.22)', display: 'flex', alignItems: 'center', gap: 6 }}>
                         <Wallet size={13} style={{ color: '#93b4ff' }} />
                         <span style={{ color: '#93b4ff', fontSize: 13, fontWeight: 700 }}>৳{parseFloat(auth.user?.wallet_balance ?? 0).toFixed(0)}</span>
-                        <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 10 }}>ওয়ালেট</span>
+                        <span style={{ color: 'var(--text-muted)', fontSize: 10 }}>ওয়ালেট</span>
                     </div>
                 </div>
+
+                {/* Theme toggle */}
+                <button
+                    onClick={toggleTheme}
+                    style={{
+                        display: 'flex', alignItems: 'center', gap: 10,
+                        padding: '9px 14px', borderRadius: 12, cursor: 'pointer',
+                        background: isDark ? 'rgba(251,191,36,0.10)' : 'rgba(124,58,237,0.10)',
+                        border: `1px solid ${isDark ? 'rgba(251,191,36,0.25)' : 'rgba(124,58,237,0.25)'}`,
+                        color: isDark ? '#fbbf24' : '#7c3aed',
+                        fontSize: 13, fontWeight: 600, width: '100%',
+                        transition: 'all 0.2s ease',
+                    }}
+                >
+                    {isDark ? <Sun size={15} /> : <Moon size={15} />}
+                    {isDark ? 'Light Glass' : 'Dark Glass'}
+                </button>
 
                 {/* Admin panel link */}
                 {auth.user?.role === 'ADMIN' && (
@@ -107,7 +123,7 @@ function DesktopSidebar({ auth }) {
                 {/* Logout */}
                 <Link href={route('logout')} method="post" as="button" style={{
                     display: 'flex', alignItems: 'center', gap: 10, padding: '9px 14px', borderRadius: 12,
-                    background: 'transparent', border: 'none', color: 'rgba(239,68,68,0.7)',
+                    background: 'transparent', border: 'none', color: 'rgba(239,68,68,0.75)',
                     fontSize: 13, fontWeight: 500, cursor: 'pointer', textDecoration: 'none', width: '100%',
                 }}>
                     <LogOut size={15} /> লগ আউট
@@ -149,11 +165,11 @@ export default function MobileLayout({ children, title = '' }) {
         <div style={{ fontFamily: "'Hind Siliguri','Inter',sans-serif" }}>
 
             {/* ── DESKTOP LAYOUT (lg+) ────────────────────────────────────── */}
-            <div className="hidden lg:flex" style={{ minHeight: '100vh', background: 'linear-gradient(135deg,#05071a 0%,#0a0e23 60%,#0f1730 100%)' }}>
-                <DesktopSidebar auth={auth} />
-                <main style={{ marginLeft: 240, flex: 1, minHeight: '100vh', padding: '32px 36px', overflowY: 'auto' }}>
+            <div className="hidden lg:flex" style={{ minHeight: '100vh', background: 'var(--bg-body)' }}>
+                <DesktopSidebar auth={auth} isDark={isDark} toggleTheme={toggleTheme} />
+                <main style={{ marginLeft: 240, flex: 1, minHeight: '100vh', padding: '32px 36px', overflowY: 'auto', color: 'var(--text-primary)' }}>
                     {title && (
-                        <h1 style={{ color: 'white', fontWeight: 800, fontSize: 22, marginBottom: 24 }}>{title}</h1>
+                        <h1 style={{ color: 'var(--text-primary)', fontWeight: 800, fontSize: 22, marginBottom: 24 }}>{title}</h1>
                     )}
                     {children}
                 </main>

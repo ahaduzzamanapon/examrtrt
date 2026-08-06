@@ -475,3 +475,101 @@
 @media (display-mode: standalone) {
     .hide-in-pwa { display: none; }
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   BACKWARD-COMPAT ALIASES (for existing pages using old class names)
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* Old: className="card glass" or className="card" */
+.card { @apply card-glass; }
+.card.glass { @apply card-glass; }
+.glass { @apply card-glass; }
+
+/* Old: className="btn btn-primary" */
+.btn { @apply btn-secondary; }
+.btn.btn-primary { @apply btn-primary; }
+.btn.btn-success {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl font-semibold text-sm text-white;
+    @apply min-h-[44px] px-5 py-3 cursor-pointer;
+    background: linear-gradient(135deg, #10b981, #059669);
+    box-shadow: 0 4px 16px rgba(16,185,129,0.35);
+    transition: all 0.15s ease;
+}
+.btn.btn-warning {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl font-semibold text-sm text-white;
+    @apply min-h-[44px] px-5 py-3 cursor-pointer;
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    box-shadow: 0 4px 16px rgba(245,158,11,0.35);
+    transition: all 0.15s ease;
+}
+.btn.btn-danger { @apply btn-danger; }
+.btn.w-full { width: 100%; }
+
+/* Old: className="input" */
+.input { @apply input-glass; }
+
+/* Old badge variants */
+.badge-info    { @apply badge-blue; }
+.badge-success { @apply badge-green; }
+.badge-warning { @apply badge-gold; }
+.badge-live {
+    @apply badge;
+    background: rgba(239,68,68,0.2);
+    color: #f87171;
+    border: 1px solid rgba(239,68,68,0.4);
+    animation: pulse 2s infinite;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   VISUAL POLISH — More prominent glassmorphism
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* Make glass cards more visible with a subtle gradient top edge */
+[data-theme="dark_glass"] .card-glass,
+[data-theme="dark_glass"] .card-glass-sm {
+    background: linear-gradient(
+        145deg,
+        rgba(255,255,255,0.08) 0%,
+        rgba(255,255,255,0.04) 100%
+    );
+}
+
+[data-theme="light_glass"] .card-glass,
+[data-theme="light_glass"] .card-glass-sm {
+    background: linear-gradient(
+        145deg,
+        rgba(255,255,255,0.88) 0%,
+        rgba(255,255,255,0.70) 100%
+    );
+}
+
+/* Touch feedback for all interactive elements */
+@media (hover: none) {
+    .card-glass:active { transform: scale(0.985); transition: transform 0.1s; }
+}
+
+/* Pulse animation for live badge */
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.7; }
+}
+
+/* ── Section title respects theme ─────────────────────────────────────── */
+.section-title    { color: var(--text-primary); }
+.section-subtitle { color: var(--text-muted); }
+
+/* ── Heading elements respect theme ──────────────────────────────────── */
+[data-theme="light_glass"] h1,
+[data-theme="light_glass"] h2,
+[data-theme="light_glass"] h3 {
+    color: var(--text-primary);
+}
+
+/* ── Touch target minimum size ───────────────────────────────────────── */
+.touch-target {
+    min-height: 44px;
+    min-width:  44px;
+    display:    flex;
+    align-items: center;
+    justify-content: center;
+}

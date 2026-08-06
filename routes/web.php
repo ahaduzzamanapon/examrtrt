@@ -143,8 +143,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/exams/{id}/submit',         [ExamController::class, 'submit'])->name('exams.submit');
     Route::get('/exams/{id}/result',          [ExamController::class, 'result'])->name('exams.result');
 
-    Route::get('/reel',                [\App\Http\Controllers\ReelController::class, 'index'])->name('reel.index');
-    Route::get('/api/reel/questions',  [\App\Http\Controllers\ReelController::class, 'fetchQuestions'])->name('reel.api');
     // ── 1v1 Battle ─────────────────────────────────────────────────────────────
     Route::get('/battle',                     [BattleController::class, 'index'])->name('battle.index');
     Route::post('/battle/create-invite',      [BattleController::class, 'createInvite'])->name('battle.create-invite');

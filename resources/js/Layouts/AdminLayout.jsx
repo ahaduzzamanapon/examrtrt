@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Head, Link, usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import {
-    LayoutDashboard, Bell, Users, FileText,
+    LayoutDashboard, Bell, Users, FileText, Flag,
     Settings, LogOut, ChevronRight, Menu, X, Zap, Wallet, ArrowDownCircle, ArrowUpCircle,
 } from 'lucide-react';
 
@@ -11,6 +11,7 @@ const ADMIN_NAV = [
     { href: 'admin.notifications',      icon: Bell,            label: 'Notifications' },
     { href: 'admin.users',              icon: Users,           label: 'Users' },
     { href: 'admin.questions',          icon: FileText,        label: 'Questions' },
+    { href: 'admin.disputes.index',     icon: Flag,            label: 'Disputes' },
     { href: 'admin.exams.index',        icon: Zap,             label: 'Exams' },
     { href: 'admin.wallet.deposits',    icon: ArrowDownCircle, label: 'Deposits' },
     { href: 'admin.wallet.withdrawals', icon: ArrowUpCircle,   label: 'Withdrawals' },

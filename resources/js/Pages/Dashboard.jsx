@@ -104,7 +104,7 @@ export default function Dashboard({ auth, upcomingExams = [] }) {
                         </div>
                         <div className="space-y-2">
                             {upcomingExams.slice(0, 3).map((exam) => (
-                                <Link key={exam.id} href={route('exams.show', exam.id)}
+                                <Link key={exam.id} href={route('exams.index')}
                                     className="card-glass-sm p-4 flex items-center gap-3 active:scale-[0.98] transition-transform block">
                                     <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
                                         style={{ background: exam.entry_fee > 0 ? 'rgba(245,158,11,0.18)' : 'rgba(16,185,129,0.18)' }}>

@@ -22,8 +22,11 @@ export default function BattleIndex({ invites = [], mySessions = [], tokenBalanc
 
     const handleCreateChallenge = (e) => {
         e.preventDefault();
-        form.setData('stake_amount', selectedStake);
-        form.post(route('battle.create-invite'));
+        router.post(route('battle.create-invite'), {
+            stake_amount: selectedStake,
+        }, {
+            onSuccess: () => setShowCreate(false),
+        });
     };
 
     const handleCancel = (inviteId) => {

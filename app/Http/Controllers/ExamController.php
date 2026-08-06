@@ -14,35 +14,49 @@ use Inertia\Inertia;
 
 class ExamController extends Controller
 {
-    // ── List upcoming / live exams ────────────────────────────────────────────
+    // ── List upcoming / live exams ────────────────────────────────────────────────────
     public function index()
     {
-        $user = auth()->user();
+        $user       = auth()->user();
+        $userStream = $user->stream ?? null; // science | arts | commerce | null
 
         $exams = Exam::whereIn('status', ['SCHEDULED', 'LIVE'])
             ->orderBy('scheduled_at')
             ->get()
+            ->filter(function ($exam) use ($userStream) {
+                // target_streams null or empty = open to everyone
+                $targets = $exam->target_streams ?? [];
+                if (empty($targets)) return true;
+
+                // user has no stream set = show open exams only
+                if (!$userStream) return false;
+
+                // show if exam targets user's stream
+                return in_array($userStream, $targets);
+            })
             ->map(function ($exam) use ($user) {
                 $joined = $user
                     ? ExamSubmission::where('exam_id', $exam->id)->where('user_id', $user->id)->exists()
                     : false;
 
                 return [
-                    'id'               => $exam->id,
-                    'title'            => $exam->title,
-                    'description'      => $exam->description,
-                    'type'             => $exam->type,
-                    'categories'       => $exam->categories,
-                    'entry_fee'        => $exam->entry_fee,
-                    'total_marks'      => $exam->total_marks,
-                    'duration_minutes' => $exam->duration_minutes,
-                    'scheduled_at'     => $exam->scheduled_at,
-                    'status'           => $exam->status,
-                    'participant_count'=> $exam->submissions()->count(),
-                    'prize_pool'       => $exam->prizePool(),
-                    'joined'           => $joined,
+                    'id'                => $exam->id,
+                    'title'             => $exam->title,
+                    'description'       => $exam->description,
+                    'type'              => $exam->type,
+                    'categories'        => $exam->categories,
+                    'target_streams'    => $exam->target_streams,
+                    'entry_fee'         => $exam->entry_fee,
+                    'total_marks'       => $exam->total_marks,
+                    'duration_minutes'  => $exam->duration_minutes,
+                    'scheduled_at'      => $exam->scheduled_at,
+                    'status'            => $exam->status,
+                    'participant_count' => $exam->submissions()->count(),
+                    'prize_pool'        => $exam->prizePool(),
+                    'joined'            => $joined,
                 ];
-            });
+            })
+            ->values();
 
         return Inertia::render('Exams/Index', ['exams' => $exams]);
     }

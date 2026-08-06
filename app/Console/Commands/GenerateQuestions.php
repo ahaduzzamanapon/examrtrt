@@ -12,70 +12,129 @@ class GenerateQuestions extends Command
 {
     protected $signature   = 'questions:generate
                                 {--goal= : Specific exam goal (bcs/hsc/ssc/...). Default: all}
+                                {--stream= : Specific stream (science/arts/commerce/general). Default: all}
                                 {--subject= : Specific subject. Default: all}
                                 {--count=5 : Questions per subject}
                                 {--difficulty=MEDIUM : LOW|MEDIUM|HIGH}
                                 {--force : Generate even if questions already exist}';
 
-    protected $description = 'Generate AI questions for every exam goal × subject. Skips combinations that already have questions.';
+    protected $description = 'Generate AI questions for every exam goal × subject × stream. Skips combinations that already have questions.';
 
-    /** PHP mirror of resources/js/data/subjects.js */
+    /**
+     * Subjects mapped with their stream.
+     * stream: science | arts | commerce | general
+     * 'general' = visible to all streams (common subjects)
+     */
     private const SUBJECTS = [
         'bcs' => [
-            'বাংলা ভাষা ও সাহিত্য',
-            'English Language & Literature',
-            'বাংলাদেশ বিষয়াবলী',
-            'আন্তর্জাতিক বিষয়াবলী',
-            'ভূগোল, পরিবেশ ও দুর্যোগ ব্যবস্থাপনা',
-            'সাধারণ বিজ্ঞান',
-            'কম্পিউটার ও তথ্যপ্রযুক্তি',
-            'গণিত',
-            'মানসিক দক্ষতা',
-            'নৈতিকতা, মূল্যবোধ ও সুশাসন',
+            ['subject' => 'বাংলা ভাষা ও সাহিত্য',              'stream' => 'general'],
+            ['subject' => 'English Language & Literature',       'stream' => 'general'],
+            ['subject' => 'বাংলাদেশ বিষয়াবলী',                  'stream' => 'general'],
+            ['subject' => 'আন্তর্জাতিক বিষয়াবলী',               'stream' => 'general'],
+            ['subject' => 'ভূগোল, পরিবেশ ও দুর্যোগ ব্যবস্থাপনা', 'stream' => 'general'],
+            ['subject' => 'সাধারণ বিজ্ঞান',                     'stream' => 'general'],
+            ['subject' => 'কম্পিউটার ও তথ্যপ্রযুক্তি',          'stream' => 'general'],
+            ['subject' => 'গণিত',                               'stream' => 'general'],
+            ['subject' => 'মানসিক দক্ষতা',                      'stream' => 'general'],
+            ['subject' => 'নৈতিকতা, মূল্যবোধ ও সুশাসন',         'stream' => 'general'],
         ],
         'ssc' => [
-            'বাংলা', 'ইংরেজি', 'গণিত', 'সাধারণ বিজ্ঞান',
-            'বাংলাদেশ ও বিশ্বপরিচয়', 'তথ্য ও যোগাযোগ প্রযুক্তি',
-            'ধর্ম ও নৈতিক শিক্ষা', 'পদার্থবিজ্ঞান', 'রসায়ন',
-            'জীববিজ্ঞান', 'উচ্চতর গণিত', 'ভূগোল ও পরিবেশ',
-            'অর্থনীতি', 'ইতিহাস ও বিশ্বসভ্যতা', 'হিসাববিজ্ঞান', 'ব্যবসায় উদ্যোগ',
+            // Common / General (visible to all streams)
+            ['subject' => 'বাংলা',                              'stream' => 'general'],
+            ['subject' => 'ইংরেজি',                             'stream' => 'general'],
+            ['subject' => 'গণিত',                               'stream' => 'general'],
+            ['subject' => 'বাংলাদেশ ও বিশ্বপরিচয়',             'stream' => 'general'],
+            ['subject' => 'তথ্য ও যোগাযোগ প্রযুক্তি',           'stream' => 'general'],
+            ['subject' => 'ধর্ম ও নৈতিক শিক্ষা',               'stream' => 'general'],
+            // Science stream
+            ['subject' => 'পদার্থবিজ্ঞান',                      'stream' => 'science'],
+            ['subject' => 'রসায়ন',                              'stream' => 'science'],
+            ['subject' => 'জীববিজ্ঞান',                         'stream' => 'science'],
+            ['subject' => 'উচ্চতর গণিত',                        'stream' => 'science'],
+            ['subject' => 'সাধারণ বিজ্ঞান',                     'stream' => 'science'],
+            // Arts stream
+            ['subject' => 'ভূগোল ও পরিবেশ',                     'stream' => 'arts'],
+            ['subject' => 'ইতিহাস ও বিশ্বসভ্যতা',               'stream' => 'arts'],
+            // Commerce stream
+            ['subject' => 'হিসাববিজ্ঞান',                       'stream' => 'commerce'],
+            ['subject' => 'ব্যবসায় উদ্যোগ',                     'stream' => 'commerce'],
+            ['subject' => 'অর্থনীতি',                           'stream' => 'commerce'],
         ],
         'hsc' => [
-            'বাংলা', 'ইংরেজি', 'পদার্থবিজ্ঞান', 'রসায়ন', 'জীববিজ্ঞান',
-            'গণিত', 'উচ্চতর গণিত', 'তথ্য ও যোগাযোগ প্রযুক্তি',
-            'অর্থনীতি', 'হিসাববিজ্ঞান', 'ব্যবসায় সংগঠন ও ব্যবস্থাপনা',
-            'ফিন্যান্স, ব্যাংকিং ও বিমা', 'মার্কেটিং', 'পৌরনীতি ও সুশাসন',
-            'ইসলামের ইতিহাস ও সংস্কৃতি', 'ইতিহাস', 'ভূগোল', 'সমাজকর্ম', 'মনোবিজ্ঞান',
+            // Common / General (visible to all streams)
+            ['subject' => 'বাংলা',                              'stream' => 'general'],
+            ['subject' => 'ইংরেজি',                             'stream' => 'general'],
+            ['subject' => 'তথ্য ও যোগাযোগ প্রযুক্তি',           'stream' => 'general'],
+            // Science stream
+            ['subject' => 'পদার্থবিজ্ঞান',                      'stream' => 'science'],
+            ['subject' => 'রসায়ন',                              'stream' => 'science'],
+            ['subject' => 'জীববিজ্ঞান',                         'stream' => 'science'],
+            ['subject' => 'গণিত',                               'stream' => 'science'],
+            ['subject' => 'উচ্চতর গণিত',                        'stream' => 'science'],
+            // Arts stream
+            ['subject' => 'পৌরনীতি ও সুশাসন',                   'stream' => 'arts'],
+            ['subject' => 'ইসলামের ইতিহাস ও সংস্কৃতি',          'stream' => 'arts'],
+            ['subject' => 'ইতিহাস',                              'stream' => 'arts'],
+            ['subject' => 'ভূগোল',                              'stream' => 'arts'],
+            ['subject' => 'সমাজকর্ম',                           'stream' => 'arts'],
+            ['subject' => 'মনোবিজ্ঞান',                         'stream' => 'arts'],
+            // Commerce stream
+            ['subject' => 'অর্থনীতি',                           'stream' => 'commerce'],
+            ['subject' => 'হিসাববিজ্ঞান',                       'stream' => 'commerce'],
+            ['subject' => 'ব্যবসায় সংগঠন ও ব্যবস্থাপনা',         'stream' => 'commerce'],
+            ['subject' => 'ফিন্যান্স, ব্যাংকিং ও বিমা',          'stream' => 'commerce'],
+            ['subject' => 'মার্কেটিং',                           'stream' => 'commerce'],
         ],
         'medical' => [
-            'জীববিজ্ঞান', 'রসায়ন', 'পদার্থবিজ্ঞান', 'English', 'সাধারণ জ্ঞান',
+            ['subject' => 'জীববিজ্ঞান',    'stream' => 'general'],
+            ['subject' => 'রসায়ন',         'stream' => 'general'],
+            ['subject' => 'পদার্থবিজ্ঞান', 'stream' => 'general'],
+            ['subject' => 'English',        'stream' => 'general'],
+            ['subject' => 'সাধারণ জ্ঞান',  'stream' => 'general'],
         ],
         'engineering' => [
-            'গণিত', 'পদার্থবিজ্ঞান', 'রসায়ন', 'English', 'বাংলা',
+            ['subject' => 'গণিত',          'stream' => 'general'],
+            ['subject' => 'পদার্থবিজ্ঞান', 'stream' => 'general'],
+            ['subject' => 'রসায়ন',         'stream' => 'general'],
+            ['subject' => 'English',        'stream' => 'general'],
+            ['subject' => 'বাংলা',          'stream' => 'general'],
         ],
         'bank' => [
-            'বাংলা', 'English', 'গণিত', 'সাধারণ জ্ঞান',
-            'বাংলাদেশ বিষয়াবলী', 'আন্তর্জাতিক বিষয়াবলী',
-            'কম্পিউটার ও তথ্যপ্রযুক্তি', 'মানসিক দক্ষতা',
+            ['subject' => 'বাংলা',                      'stream' => 'general'],
+            ['subject' => 'English',                    'stream' => 'general'],
+            ['subject' => 'গণিত',                       'stream' => 'general'],
+            ['subject' => 'সাধারণ জ্ঞান',               'stream' => 'general'],
+            ['subject' => 'বাংলাদেশ বিষয়াবলী',          'stream' => 'general'],
+            ['subject' => 'আন্তর্জাতিক বিষয়াবলী',       'stream' => 'general'],
+            ['subject' => 'কম্পিউটার ও তথ্যপ্রযুক্তি',  'stream' => 'general'],
+            ['subject' => 'মানসিক দক্ষতা',              'stream' => 'general'],
         ],
         'university' => [
-            'বাংলা', 'English', 'গণিত', 'সাধারণ জ্ঞান',
-            'আইকিউ ও মানসিক দক্ষতা', 'বিজ্ঞান',
+            ['subject' => 'বাংলা',                    'stream' => 'general'],
+            ['subject' => 'English',                  'stream' => 'general'],
+            ['subject' => 'গণিত',                     'stream' => 'general'],
+            ['subject' => 'সাধারণ জ্ঞান',             'stream' => 'general'],
+            ['subject' => 'আইকিউ ও মানসিক দক্ষতা',   'stream' => 'general'],
+            ['subject' => 'বিজ্ঞান',                  'stream' => 'general'],
         ],
         'primary' => [
-            'বাংলা', 'ইংরেজি', 'গণিত', 'সাধারণ জ্ঞান',
-            'বাংলাদেশ বিষয়াবলী', 'শিশু মনোবিজ্ঞান ও শিক্ষাবিজ্ঞান',
+            ['subject' => 'বাংলা',                              'stream' => 'general'],
+            ['subject' => 'ইংরেজি',                             'stream' => 'general'],
+            ['subject' => 'গণিত',                               'stream' => 'general'],
+            ['subject' => 'সাধারণ জ্ঞান',                       'stream' => 'general'],
+            ['subject' => 'বাংলাদেশ বিষয়াবলী',                  'stream' => 'general'],
+            ['subject' => 'শিশু মনোবিজ্ঞান ও শিক্ষাবিজ্ঞান',     'stream' => 'general'],
         ],
     ];
 
     public function handle(): int
     {
-        $model      = AppSetting::get('gemini_model', 'gemini-3.6-flash');
-        $count      = (int) $this->option('count');
-        $difficulty = strtoupper($this->option('difficulty'));
-        $force      = $this->option('force');
+        $model        = AppSetting::get('gemini_model', 'gemini-3.6-flash');
+        $count        = (int) $this->option('count');
+        $difficulty   = strtoupper($this->option('difficulty'));
+        $force        = $this->option('force');
 
-        $jobs = $this->buildJobs();
+        $jobs    = $this->buildJobs();
         $total   = count($jobs);
         $skipped = 0;
         $saved   = 0;
@@ -89,15 +148,17 @@ class GenerateQuestions extends Command
         $bar->start();
 
         foreach ($jobs as $index => $job) {
-            $step    = $index + 1;
-            $goal    = $job['goal'];
-            $subject = $job['subject'];
-            $currentLabel = strtoupper($goal) . " → {$subject}";
+            $step         = $index + 1;
+            $goal         = $job['goal'];
+            $subject      = $job['subject'];
+            $stream       = $job['stream'];
+            $currentLabel = strtoupper($goal) . " [{$stream}] → {$subject}";
 
             // Skip if questions already exist (unless --force)
             if (!$force) {
                 $existing = Question::where('exam_goal', $goal)
                     ->where('subject', $subject)
+                    ->where('stream', $stream)
                     ->count();
                 if ($existing > 0) {
                     $skipped++;
@@ -117,7 +178,7 @@ class GenerateQuestions extends Command
                     break;
                 }
 
-                $res = $this->callGeminiWithStatus($apiKey, $model, $goal, $subject, $count, $difficulty);
+                $res = $this->callGemini($apiKey, $model, $goal, $subject, $stream, $count, $difficulty);
 
                 if ($res['status'] === 200 && is_array($res['questions'])) {
                     $questions = $res['questions'];
@@ -125,11 +186,11 @@ class GenerateQuestions extends Command
                 }
 
                 if ($res['status'] === 429) {
-                    $logs[] = "⏳ [{$step}/{$total}] {$currentLabel}: Rate limit (429) hit! Waiting 12s for quota window reset (Attempt {$attempt}/5)...";
+                    $logs[] = "⏳ [{$step}/{$total}] {$currentLabel}: Rate limit (429) hit! Waiting 12s... (Attempt {$attempt}/5)";
                     $this->updateStatus('running', $total, $step, $currentLabel, $saved, $skipped, $failed, $logs);
                     sleep(12);
                 } else {
-                    $logs[] = "⚠️ [{$step}/{$total}] {$currentLabel}: Error HTTP {$res['status']}! Retrying with rotated key ({$attempt}/5)...";
+                    $logs[] = "⚠️ [{$step}/{$total}] {$currentLabel}: Error HTTP {$res['status']}! Retrying ({$attempt}/5)...";
                     $this->updateStatus('running', $total, $step, $currentLabel, $saved, $skipped, $failed, $logs);
                     sleep(3);
                 }
@@ -155,9 +216,12 @@ class GenerateQuestions extends Command
                         continue;
                     }
 
-                    $by = !empty($q['board_year']) && strtolower(trim($q['board_year'])) !== 'null' ? trim($q['board_year']) : 'NEW';
+                    $by = !empty($q['board_year']) && strtolower(trim($q['board_year'])) !== 'null'
+                        ? trim($q['board_year']) : 'NEW';
+
                     Question::create([
                         'exam_goal'        => $goal,
+                        'stream'           => $stream,   // ← NEW
                         'exam_type'        => strtoupper($goal),
                         'board_year'       => $by,
                         'subject'          => $subject,
@@ -181,7 +245,6 @@ class GenerateQuestions extends Command
             $bar->advance();
             $this->updateStatus('running', $total, $step, $currentLabel, $saved, $skipped, $failed, $logs);
 
-            // Delay 3 seconds between batch calls for rate-limit protection
             sleep(3);
         }
 
@@ -195,9 +258,33 @@ class GenerateQuestions extends Command
         return 0;
     }
 
+    private function buildJobs(): array
+    {
+        $goalFilter   = $this->option('goal');
+        $streamFilter = $this->option('stream');
+        $subjectFilter = $this->option('subject');
+        $jobs = [];
+
+        $goals = $goalFilter ? [$goalFilter] : array_keys(self::SUBJECTS);
+
+        foreach ($goals as $goal) {
+            $entries = self::SUBJECTS[$goal] ?? [];
+            foreach ($entries as $entry) {
+                if ($streamFilter && $entry['stream'] !== $streamFilter) continue;
+                if ($subjectFilter && $entry['subject'] !== $subjectFilter) continue;
+                $jobs[] = [
+                    'goal'    => $goal,
+                    'subject' => $entry['subject'],
+                    'stream'  => $entry['stream'],
+                ];
+            }
+        }
+
+        return $jobs;
+    }
+
     private function updateStatus(string $state, int $total, int $done, string $current, int $saved, int $skipped, int $failed, array $logs): void
     {
-        // Keep last 30 log lines
         $recentLogs = array_slice($logs, -30);
         AppSetting::set('ai_job_status', [
             'state'      => $state,
@@ -212,68 +299,51 @@ class GenerateQuestions extends Command
         ]);
     }
 
-    private function buildJobs(): array
+    private function callGemini(string $apiKey, string $model, string $goal, string $subject, string $stream, int $count, string $difficulty): array
     {
-        $goalFilter    = $this->option('goal');
-        $subjectFilter = $this->option('subject');
-        $jobs = [];
-
-        $goals = $goalFilter ? [$goalFilter] : array_keys(self::SUBJECTS);
-
-        foreach ($goals as $goal) {
-            $subjects = self::SUBJECTS[$goal] ?? [];
-            if ($subjectFilter) {
-                $subjects = array_filter($subjects, fn($s) => $s === $subjectFilter);
-            }
-            foreach ($subjects as $subject) {
-                $jobs[] = ['goal' => $goal, 'subject' => $subject];
-            }
-        }
-
-        return $jobs;
-    }
-
-    private function callGeminiWithStatus(string $apiKey, string $model, string $goal, string $subject, int $count, string $difficulty): array
-    {
-        $goalUpper = strtoupper($goal);
+        $goalUpper  = strtoupper($goal);
+        $streamNote = ($stream !== 'general')
+            ? "This subject is for the {$stream} stream/group."
+            : "This is a common subject visible to all streams.";
         $diffPrompt = ($difficulty === 'MIXED' || !$difficulty)
-            ? "Vary difficulty levels naturally (LOW, MEDIUM, HIGH) for realistic exam balance."
+            ? "Vary difficulty levels naturally (LOW, MEDIUM, HIGH)."
             : "Target Difficulty: {$difficulty}";
 
         $prompt = <<<PROMPT
 Generate {$count} MCQ questions for {$goalUpper} exam in Bangladesh.
 Subject: {$subject}
+{$streamNote}
 {$diffPrompt}
 
 IMPORTANT for fields:
-- "board_year": If this MCQ is an authentic question from a specific past exam in Bangladesh, set "board_year" to that exam session in Bengali (e.g. "৪৪তম বিসিএস প্রিলিমিনারি", "ঢাকা বোর্ড ২০২৩", "সমন্বিত ৮ ব্যাংক ২০২৩"). If it is a new model question, set "board_year" to "NEW".
-- "difficulty_level": Assign "LOW", "MEDIUM", or "HIGH" to each question based on its true difficulty level.
+- "board_year": Authentic past exam → set to that session in Bengali (e.g. "ঢাকা বোর্ড ২০২৩"). New question → set "NEW".
+- "difficulty_level": Assign "LOW", "MEDIUM", or "HIGH" per question.
+- All question text and options MUST be in Bengali.
 
 Return ONLY a valid JSON array (no markdown):
-[{"subject":"{$subject}","exam_type":"{$goalUpper}","board_year":"NEW or past exam name","difficulty_level":"LOW or MEDIUM or HIGH","question_text":"...Bengali...","image_url":null,"options":{"a":"...","b":"...","c":"...","d":"..."},"correct_answer":"a","explanation":"...Bengali..."}]
+[{"subject":"{$subject}","exam_type":"{$goalUpper}","board_year":"NEW","difficulty_level":"MEDIUM","question_text":"...Bengali...","image_url":null,"options":{"a":"...","b":"...","c":"...","d":"..."},"correct_answer":"a","explanation":"...Bengali..."}]
 PROMPT;
 
         try {
             $response = Http::withHeaders(['Content-Type' => 'application/json'])
                 ->timeout(45)
                 ->post("https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}", [
-                    'contents'        => [['parts' => [['text' => $prompt]]]],
+                    'contents'         => [['parts' => [['text' => $prompt]]]],
                     'generationConfig' => ['temperature' => 0.7, 'maxOutputTokens' => 4096],
                 ]);
 
             $status = $response->status();
-
             if (!$response->successful()) {
-                Log::warning("[GenerateQuestions] API {$status} for {$goal}/{$subject}: " . $response->body());
+                Log::warning("[GenerateQuestions] API {$status} for {$goal}/{$subject}/{$stream}: " . $response->body());
                 return ['status' => $status, 'questions' => null];
             }
 
-            $text = $response->json('candidates.0.content.parts.0.text') ?? '';
-            $text = trim(preg_replace('/```json\s*|\s*```/', '', $text));
-
+            $text   = $response->json('candidates.0.content.parts.0.text') ?? '';
+            $text   = trim(preg_replace('/```json\s*|\s*```/', '', $text));
             $parsed = json_decode($text, true);
+
             if (json_last_error() !== JSON_ERROR_NONE) {
-                Log::warning("[GenerateQuestions] JSON parse error: " . json_last_error_msg() . " | Text: " . substr($text, 0, 200));
+                Log::warning("[GenerateQuestions] JSON parse error: " . json_last_error_msg());
                 return ['status' => 500, 'questions' => null];
             }
 
@@ -282,7 +352,6 @@ PROMPT;
             }
 
             if (!is_array($parsed)) {
-                Log::warning("[GenerateQuestions] Parsed data is not an array for {$goal}/{$subject}");
                 return ['status' => 500, 'questions' => null];
             }
 

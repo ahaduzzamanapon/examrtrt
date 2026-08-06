@@ -36,13 +36,14 @@ return new class extends Migration
 
         Schema::create('failed_jobs', function (Blueprint $table) {
             $table->id();
-            $table->string('uuid')->unique();
-            $table->string('connection');
-            $table->string('queue');
+            $table->string('uuid', 100)->unique();
+            $table->string('connection', 100);  // limited for MariaDB index
+            $table->string('queue', 100);       // limited for MariaDB index
             $table->longText('payload');
             $table->longText('exception');
             $table->timestamp('failed_at')->useCurrent();
 
+            // Composite index — using shorter col lengths to fit MariaDB 1000-byte limit
             $table->index(['connection', 'queue', 'failed_at']);
         });
     }

@@ -55,7 +55,8 @@ jobs:
             echo "📦 Installing PHP dependencies..."
             $PHP $COMPOSER install --no-dev --optimize-autoloader --no-interaction
 
-            # ── Node.js via NVM ───────────────────────────────────────────────
+            # ── Node.js via NVM or direct binary ─────────────────────────────
+            export PATH="$HOME/bin:$PATH"
             export NVM_DIR="$HOME/.nvm"
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
             [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"

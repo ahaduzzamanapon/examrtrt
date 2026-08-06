@@ -72,6 +72,17 @@ export default function Onboarding() {
     const toggleGoal = (id) =>
         setGoals(prev => prev.includes(id) ? prev.filter(g => g !== id) : [...prev, id]);
 
+    // ── After goal selection: check permission ────────────────────────────────
+    const goNext = async () => {
+        // If browser already has permission → silently grab token, skip step 2
+        if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+            requestFcmToken().then(token => setFcmToken(token)); // fire and forget
+            setStep(3);
+        } else {
+            setStep(2);
+        }
+    };
+
     // ── Step 2: request notification ──────────────────────────────────────────
     const handleNotif = async (skip = false) => {
         setSaving(true);
@@ -79,7 +90,6 @@ export default function Onboarding() {
         if (!skip) {
             setNotifStatus('requesting');
             token = await requestFcmToken();
-            setNotifToken(token);
             setNotifStatus(token ? 'granted' : 'denied');
             await new Promise(r => setTimeout(r, 600));
         }
@@ -87,9 +97,6 @@ export default function Onboarding() {
         setSaving(false);
         setStep(3);
     };
-
-    // helper to fix ref above
-    const setNotifToken = (t) => {};
 
     // ── Step 3: pick avatar file ───────────────────────────────────────────────
     const handleFileChange = (e) => {
@@ -201,7 +208,7 @@ export default function Onboarding() {
                                     )}
 
                                     <motion.button type="button" whileTap={{ scale: 0.98 }}
-                                        disabled={goals.length === 0} onClick={() => setStep(2)}
+                                        disabled={goals.length === 0} onClick={goNext}
                                         style={{
                                             width: '100%', padding: '12px', borderRadius: 13, border: 'none',
                                             background: goals.length > 0 ? 'linear-gradient(135deg,#4d6fff,#7c3aed)' : 'rgba(77,111,255,0.2)',

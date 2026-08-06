@@ -51,19 +51,21 @@ class NotificationController extends Controller
 
         // ── Push ──────────────────────────────────────────────────────────────
         if (in_array($channel, ['push', 'both'])) {
-            $tokens = (clone $baseQuery)->whereNotNull('fcm_token')
-                ->pluck('fcm_token')->filter()->unique()->values()->toArray();
+            $pushUsers = (clone $baseQuery)->whereNotNull('fcm_token')
+                ->select('id', 'name', 'fcm_token')
+                ->get();
 
-            if (!empty($tokens)) {
+            if ($pushUsers->isNotEmpty()) {
                 $accessToken = $this->getAccessToken();
                 if (!$accessToken) {
-                    $failed += count($tokens);
+                    $failed += $pushUsers->count();
+                    \Log::error('[FCM] Access token null — Firebase Admin SDK key missing or invalid.');
                 } else {
-                    foreach ($tokens as $token) {
+                    foreach ($pushUsers as $pu) {
                         $resp = Http::withToken($accessToken)
                             ->post("https://fcm.googleapis.com/v1/projects/{$this->projectId}/messages:send", [
                                 'message' => [
-                                    'token'        => $token,
+                                    'token'        => $pu->fcm_token,
                                     'notification' => ['title' => $data['title'], 'body' => $data['body']],
                                     'webpush'      => [
                                         'notification' => array_filter([
@@ -79,11 +81,15 @@ class NotificationController extends Controller
 
                         if ($resp->successful()) {
                             $pushSent++;
+                            \Log::info("[FCM] ✅ Push sent to {$pu->name} (id={$pu->id})");
                         } else {
                             $failed++;
-                            $err = $resp->json('error.details.0.errorCode') ?? '';
-                            if (in_array($err, ['UNREGISTERED', 'INVALID_ARGUMENT'])) {
-                                User::where('fcm_token', $token)->update(['fcm_token' => null]);
+                            $errCode = $resp->json('error.details.0.errorCode')
+                                    ?? $resp->json('error.status')
+                                    ?? 'UNKNOWN';
+                            \Log::warning("[FCM] ❌ Push failed for {$pu->name} (id={$pu->id}): {$errCode} | " . $resp->body());
+                            if (in_array($errCode, ['UNREGISTERED', 'INVALID_ARGUMENT'])) {
+                                User::where('id', $pu->id)->update(['fcm_token' => null]);
                             }
                         }
                     }

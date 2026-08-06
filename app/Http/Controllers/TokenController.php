@@ -33,7 +33,7 @@ class TokenController extends Controller
         $referralLink = url("/register?ref={$referralCode}");
 
         $adViewActive  = (bool) \App\Models\AppSetting::get('ad_view_active', true);
-        $adViewAmount  = (int) \App\Models\AppSetting::get('token_ad_view_amount', 5);
+        $adViewAmount  = (int) \App\Models\AppSetting::get('token_ad_view_amount', 2);
 
         return Inertia::render('TokenStore/Index', [
             'tokenBalance' => (int) $user->token_balance,

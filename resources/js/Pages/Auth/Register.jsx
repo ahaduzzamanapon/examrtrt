@@ -205,7 +205,7 @@ export default function Register() {
                         {/* Logo */}
                         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }}
                             style={{ marginBottom: 32 }}>
-                            <img src="/logo.png" alt="Exam Arena" style={{ height: 48, width: 'auto', objectFit: 'contain' }} />
+                            <img src="/logo.png?v=1" alt="Exam Arena" style={{ height: 48, width: 'auto', objectFit: 'contain' }} />
                         </motion.div>
 
                         <motion.h2 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
@@ -268,7 +268,7 @@ export default function Register() {
                 }}>
                     {/* Mobile logo */}
                     <div className="flex lg:hidden" style={{ justifyContent: 'center', marginBottom: 20 }}>
-                        <img src="/logo.png" alt="Exam Arena" style={{ height: 40, width: 'auto', objectFit: 'contain' }} />
+                        <img src="/logo.png?v=1" alt="Exam Arena" style={{ height: 40, width: 'auto', objectFit: 'contain' }} />
                     </div>
 
                     <div style={{ width: '100%', maxWidth: 380 }}>

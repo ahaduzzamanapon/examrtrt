@@ -43,7 +43,7 @@ function DesktopSidebar({ auth }) {
             {/* Logo */}
             <div style={{ padding: '0 12px', marginBottom: 28 }}>
                 <Link href={route('dashboard')}>
-                    <img src="/logo.png" alt="Exam Arena" style={{ height: 38, objectFit: 'contain' }} />
+                    <img src="/logo.png?v=1" alt="Exam Arena" style={{ height: 38, objectFit: 'contain' }} />
                 </Link>
             </div>
 
@@ -144,7 +144,7 @@ export default function MobileLayout({ children, title = '' }) {
                         </motion.button>
 
                         <Link href={route('dashboard')}>
-                            <img src="/logo.png" alt="Exam Arena" style={{ height: 30, objectFit: 'contain' }} />
+                            <img src="/logo.png?v=1" alt="Exam Arena" style={{ height: 30, objectFit: 'contain' }} />
                         </Link>
 
                         <div className="flex items-center gap-1.5">
@@ -179,7 +179,7 @@ export default function MobileLayout({ children, title = '' }) {
                                     style={{ background: 'rgba(8,11,28,0.98)', backdropFilter: 'blur(30px)', borderRight: '1px solid rgba(255,255,255,0.08)', paddingTop: 'env(safe-area-inset-top,0px)', paddingBottom: 'calc(env(safe-area-inset-bottom,0px) + 80px)' }}>
 
                                     <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
-                                        <img src="/logo.png" alt="Exam Arena" style={{ height: 32, objectFit: 'contain' }} />
+                                        <img src="/logo.png?v=1" alt="Exam Arena" style={{ height: 32, objectFit: 'contain' }} />
                                         <motion.button whileTap={{ scale: 0.88 }} onClick={() => setDrawerOpen(false)}>
                                             <X size={20} className="text-white/50" />
                                         </motion.button>

@@ -41,7 +41,7 @@ export default function TokenStoreIndex({
     referralLink = '',
     status = {},
     adViewActive = true,
-    adViewAmount = 5,
+    adViewAmount = 2,
     adsterraScript = ''
 }) {
     const { errors, flash } = usePage().props;

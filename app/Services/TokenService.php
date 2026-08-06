@@ -21,7 +21,7 @@ class TokenService
     }
 
     public function dailyBonusAmount(): int  { return $this->rate('token_daily_bonus', 10); }
-    public function adViewAmount(): int      { return $this->rate('token_ad_view_amount', 5); }
+    public function adViewAmount(): int      { return $this->rate('token_ad_view_amount', 2); }
     public function adDailyLimit(): int      { return $this->rate('token_ad_daily_limit', 5); }
     public function referralAmount(): int    { return $this->rate('token_referral_bonus', 50); }
     public function streak7Amount(): int     { return $this->rate('token_streak_7_bonus', 30); }

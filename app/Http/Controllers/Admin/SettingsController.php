@@ -25,7 +25,7 @@ class SettingsController extends Controller
             'geminiKeys'         => $keys,
             'geminiModel'        => AppSetting::get('gemini_model', 'gemini-2.0-flash'),
             'adViewActive'       => (bool) AppSetting::get('ad_view_active', true),
-            'tokenAdViewAmount'  => (int) AppSetting::get('token_ad_view_amount', 5),
+            'tokenAdViewAmount'  => (int) AppSetting::get('token_ad_view_amount', 2),
             'tokenReferralBonus' => (int) AppSetting::get('token_referral_bonus', 10),
             'tokenDailyBonus'    => (int) AppSetting::get('token_daily_bonus', 10),
             'tokenModelTestCost' => (int) AppSetting::get('token_model_test_cost', 10),

@@ -156,7 +156,7 @@ export default function Onboarding() {
                 <div style={{ width: '100%', maxWidth: 520, position: 'relative', zIndex: 1 }}>
                     <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }}
                         style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
-                        <img src="/logo.png" alt="Exam Arena" style={{ height: 38, objectFit: 'contain' }} />
+                        <img src="/logo.png?v=1" alt="Exam Arena" style={{ height: 38, objectFit: 'contain' }} />
                     </motion.div>
 
                     <StepDots step={step} total={3} />

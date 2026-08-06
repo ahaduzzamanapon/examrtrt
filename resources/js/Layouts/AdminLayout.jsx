@@ -28,8 +28,10 @@ function Sidebar({ mobile = false, onClose }) {
         }}>
             {/* Logo */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingLeft: 10, marginBottom: 28 }}>
+                <Link href={route('admin.dashboard')}>
+                    <img src="/logo.png?v=1" alt="Exam Arena" style={{ height: 34, objectFit: 'contain' }} />
+                </Link>
                 <div>
-                    <img src="/logo.png" alt="Exam Arena" style={{ height: 34, objectFit: 'contain' }} />
                     <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginTop: 2, paddingLeft: 2 }}>Admin Panel</div>
                 </div>
                 {mobile && (

@@ -53,6 +53,11 @@ class PracticeController extends Controller
             return back()->withErrors(['limit' => "আজকের {$dailyLimit}টি প্র্যাকটিস শেষ। আগামীকাল আবার চেষ্টা করো!"]);
         }
 
+        $cost = (int) AppSetting::get('token_practice_cost', 2);
+        if ($user->token_balance < $cost) {
+            return back()->withErrors(['limit' => "প্র্যাকটিস সেশন শুরু করতে {$cost}টি টোকেন প্রয়োজন। আপনার বর্তমান ব্যালেন্স: {$user->token_balance} টোকেন।"]);
+        }
+
         $request->validate(['goal' => 'required|string', 'count' => 'integer|min:5|max:30']);
 
         $goal  = $request->goal;
@@ -72,6 +77,16 @@ class PracticeController extends Controller
         if (empty($questions)) {
             return back()->withErrors(['limit' => 'এই ক্যাটাগরিতে এখনো পর্যাপ্ত প্রশ্ন নেই।']);
         }
+
+        // Deduct 2 tokens for practice session
+        $user->decrement('token_balance', $cost);
+        \App\Models\TokenTransaction::create([
+            'user_id'       => $user->id,
+            'type'          => 'PRACTICE_SPEND',
+            'amount'        => -$cost,
+            'balance_after' => $user->token_balance,
+            'description'   => "প্র্যাকটিস সেশন — " . strtoupper($goal) . " (-{$cost} টোকেন)",
+        ]);
 
         // Record practice session
         PracticeTest::create([

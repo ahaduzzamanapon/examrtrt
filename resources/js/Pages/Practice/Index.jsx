@@ -155,18 +155,18 @@ export default function PracticeIndex({ goals = [], counts = {}, todayCount = 0,
                     <motion.button
                         whileTap={{ scale: 0.97 }}
                         type="submit"
-                        disabled={loading || remaining <= 0}
+                        disabled={loading}
                         style={{
                             width: '100%', padding: '16px', borderRadius: 16, border: 'none',
-                            background: remaining > 0 ? 'linear-gradient(135deg,#10b981,#059669)' : 'rgba(255,255,255,0.1)',
-                            color: remaining > 0 ? 'white' : 'rgba(255,255,255,0.3)',
-                            fontWeight: 800, fontSize: 16, cursor: remaining > 0 ? 'pointer' : 'not-allowed',
+                            background: 'linear-gradient(135deg,#10b981,#059669)',
+                            color: 'white',
+                            fontWeight: 800, fontSize: 16, cursor: 'pointer',
                             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                            boxShadow: remaining > 0 ? '0 6px 20px rgba(16,185,129,0.35)' : 'none',
+                            boxShadow: '0 6px 20px rgba(16,185,129,0.35)',
                         }}
                     >
                         <PlayCircle size={20} />
-                        {loading ? 'প্রশ্ন প্রস্তুত হচ্ছে...' : remaining > 0 ? 'প্র্যাকটিস শুরু করো' : 'আজকের লিমিট শেষ'}
+                        {loading ? 'প্রশ্ন প্রস্তুত হচ্ছে...' : '⚡২ টোকেন দিয়ে প্র্যাকটিস শুরু করো'}
                     </motion.button>
                 </form>
 

@@ -11,6 +11,7 @@ use App\Http\Controllers\LeaderboardController;
 use App\Http\Controllers\ModelTestController;
 use App\Http\Controllers\BattleController;
 use App\Http\Controllers\TokenController;
+use App\Http\Controllers\DisputeController;
 use App\Http\Controllers\Admin\NotificationController as AdminNotification;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Admin\QuestionController as AdminQuestionController;
@@ -163,6 +164,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/model-test/{id}/room',       [ModelTestController::class, 'room'])->name('model-test.room');
     Route::post('/model-test/{id}/submit',    [ModelTestController::class, 'submit'])->name('model-test.submit');
     Route::get('/model-test/{id}/result',     [ModelTestController::class, 'result'])->name('model-test.result');
+
+    // ── Question Disputes / Reports ───────────────────────────────────────────
+    Route::get('/disputes',                   [DisputeController::class, 'index'])->name('disputes.index');
+    Route::post('/disputes/store',            [DisputeController::class, 'store'])->name('disputes.store');
 
     // ── Token Store ────────────────────────────────────────────────────────────
     Route::get('/tokens',                     [TokenController::class, 'index'])->name('tokens.index');

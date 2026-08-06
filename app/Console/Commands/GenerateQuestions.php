@@ -192,14 +192,14 @@ PROMPT;
 
         try {
             $response = Http::withHeaders(['Content-Type' => 'application/json'])
-                ->timeout(30)
+                ->timeout(45)
                 ->post("https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}", [
                     'contents'        => [['parts' => [['text' => $prompt]]]],
-                    'generationConfig' => ['temperature' => 0.7, 'maxOutputTokens' => 2048],
+                    'generationConfig' => ['temperature' => 0.7, 'maxOutputTokens' => 4096],
                 ]);
 
             if (!$response->successful()) {
-                Log::warning("[GenerateQuestions] API {$response->status()} for {$goal}/{$subject}");
+                Log::warning("[GenerateQuestions] API {$response->status()} for {$goal}/{$subject}: " . $response->body());
                 return null;
             }
 
@@ -207,8 +207,17 @@ PROMPT;
             $text = trim(preg_replace('/```json\s*|\s*```/', '', $text));
 
             $parsed = json_decode($text, true);
-            if (json_last_error() !== JSON_ERROR_NONE || !is_array($parsed)) {
-                Log::warning("[GenerateQuestions] JSON parse failed for {$goal}/{$subject}");
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                Log::warning("[GenerateQuestions] JSON parse error: " . json_last_error_msg() . " | Text: " . substr($text, 0, 200));
+                return null;
+            }
+
+            if (isset($parsed['questions']) && is_array($parsed['questions'])) {
+                $parsed = $parsed['questions'];
+            }
+
+            if (!is_array($parsed)) {
+                Log::warning("[GenerateQuestions] Parsed data is not an array for {$goal}/{$subject}");
                 return null;
             }
 

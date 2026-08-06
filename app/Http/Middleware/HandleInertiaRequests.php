@@ -29,11 +29,29 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $user = $request->user();
+        $hasActiveContest = false;
+
+        if ($user) {
+            $goals = is_array($user->exam_goal) ? $user->exam_goal : [$user->exam_goal ?? 'bcs'];
+            $goals[] = 'all';
+
+            $hasActiveContest = \App\Models\Exam::whereIn('status', ['PUBLISHED', 'LIVE'])
+                ->where(function ($query) use ($goals) {
+                    foreach ($goals as $g) {
+                        $query->orWhereJsonContains('categories', $g);
+                    }
+                    $query->orWhereNull('categories');
+                })
+                ->exists();
+        }
+
         return [
             ...parent::share($request),
             'auth' => [
-                'user' => $request->user(),
+                'user' => $user,
             ],
+            'hasActiveContest' => $hasActiveContest,
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'error'   => fn () => $request->session()->get('error'),

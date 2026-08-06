@@ -47,14 +47,15 @@ function DesktopSidebar({ auth }) {
                 </Link>
             </div>
 
-            {/* Nav items */}
             <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 3, overflowY: 'auto', paddingRight: 4 }}>
                 {NAV_ITEMS.map(({ href, icon: Icon, label }) => {
-                    const isDash   = href === 'dashboard' && current === '/dashboard';
-                    const isActive = isDash || (href !== 'dashboard' && current.startsWith('/' + href.split('.')[0]));
+                    const isDash     = href === 'dashboard' && current === '/dashboard';
+                    const isActive   = isDash || (href !== 'dashboard' && current.startsWith('/' + href.split('.')[0]));
+                    const showBadge  = href === 'exams.index' && !!usePage().props.hasActiveContest;
+
                     return (
                         <Link key={href} href={route(href)} style={{
-                            display: 'flex', alignItems: 'center', gap: 11,
+                            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                             padding: '10px 14px', borderRadius: 12,
                             background: isActive ? 'rgba(77,111,255,0.18)' : 'transparent',
                             border: `1px solid ${isActive ? 'rgba(77,111,255,0.3)' : 'transparent'}`,
@@ -63,8 +64,18 @@ function DesktopSidebar({ auth }) {
                             fontSize: 14, textDecoration: 'none',
                             transition: 'all 0.15s',
                         }}>
-                            <Icon size={17} />
-                            {label}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
+                                <Icon size={17} />
+                                {label}
+                            </div>
+                            {showBadge && (
+                                <span style={{
+                                    padding: '2px 6px', borderRadius: 10, fontSize: 10, fontWeight: 800,
+                                    background: 'rgba(239,68,68,0.2)', color: '#f87171', border: '1px solid rgba(239,68,68,0.4)',
+                                }}>
+                                    🔴 LIVE
+                                </span>
+                            )}
                         </Link>
                     );
                 })}
@@ -200,17 +211,29 @@ export default function MobileLayout({ children, title = '' }) {
                                     </div>
 
                                     <nav className="flex-1 px-3 mt-3 space-y-1 overflow-y-auto">
-                                        {NAV_ITEMS.map(({ href, icon: Icon, label }) => (
-                                            <Link key={href} href={route(href)} onClick={() => setDrawerOpen(false)}
-                                                className="block rounded-xl"
-                                                style={{ minHeight: '44px' }}>
-                                                <div className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-medium"
-                                                    style={{ color: 'rgba(255,255,255,0.65)' }}>
-                                                    <Icon size={18} />
-                                                    <span>{label}</span>
-                                                </div>
-                                            </Link>
-                                        ))}
+                                        {NAV_ITEMS.map(({ href, icon: Icon, label }) => {
+                                            const isExamLink = href === 'exams.index';
+                                            const showBadge  = isExamLink && !!usePage().props.hasActiveContest;
+
+                                            return (
+                                                <Link key={href} href={route(href)} onClick={() => setDrawerOpen(false)}
+                                                    className="block rounded-xl"
+                                                    style={{ minHeight: '44px' }}>
+                                                    <div className="flex items-center justify-between w-full px-4 py-3 rounded-xl text-sm font-medium"
+                                                        style={{ color: 'rgba(255,255,255,0.65)' }}>
+                                                        <div className="flex items-center gap-3">
+                                                            <Icon size={18} />
+                                                            <span>{label}</span>
+                                                        </div>
+                                                        {showBadge && (
+                                                            <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-red-500/20 text-red-400 border border-red-500/40 flex items-center gap-1 animate-pulse">
+                                                                🔴 LIVE
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </Link>
+                                            );
+                                        })}
                                     </nav>
 
                                     <div className="px-4 mt-auto space-y-1 pb-4">

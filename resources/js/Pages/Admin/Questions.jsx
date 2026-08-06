@@ -465,11 +465,14 @@ export default function AdminQuestions({ questions, filters, stats }) {
                     <div style={{ marginBottom: 14, padding: '14px 16px', borderRadius: 12, background: 'rgba(77,111,255,0.06)', border: '1px solid rgba(77,111,255,0.15)', fontSize: 12, color: 'rgba(255,255,255,0.5)', lineHeight: 1.6 }}>
                         📌 JSON array paste করো অথবা <code style={{ color: '#93b4ff' }}>{`{"questions": [...]}`}</code> format এ।
                     </div>
-                    <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
-                        <select value={importGoal} onChange={e => setImportGoal(e.target.value)} style={{ ...SEL, width: 150 }}>
-                            {GOALS.map(g => <option key={g.value} value={g.value} style={{ background: '#0c1025' }}>{g.label}</option>)}
+                    <div style={{ display: 'flex', gap: 8, marginBottom: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+                        <select value={importGoal} onChange={e => setImportGoal(e.target.value)} style={{ ...SEL, width: 240 }}>
+                            <option value="" style={{ background: '#0c1025' }}>-- Auto-detect (JSON এর exam_type) --</option>
+                            {GOALS.map(g => <option key={g.value} value={g.value} style={{ background: '#0c1025' }}>Default: {g.label}</option>)}
                         </select>
-                        <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12, display: 'flex', alignItems: 'center' }}>← Exam Goal নির্বাচন করো</span>
+                        <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11 }}>
+                            💡 JSON-এ <code style={{ color: '#93b4ff' }}>exam_type</code> থাকলে স্বয়ংক্রিয়ভাবে সেখান থেকে নিয়ে নিবে।
+                        </span>
                     </div>
                     <textarea value={jsonText} onChange={e => setJsonText(e.target.value)} rows={18} placeholder='[{"question_text": "...", "options": {"a":"..","b":"..","c":"..","d":".."}, "correct_answer": "b", ...}]' style={{ ...INP, fontFamily: 'monospace', fontSize: 12, resize: 'vertical' }} />
                     <button onClick={doImport} disabled={importing || !jsonText.trim()} style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 8, padding: '11px 20px', borderRadius: 11, background: importing ? 'rgba(77,111,255,0.3)' : 'linear-gradient(135deg,#4d6fff,#7c3aed)', color: 'white', border: 'none', cursor: importing ? 'not-allowed' : 'pointer', fontWeight: 700, fontSize: 13 }}>

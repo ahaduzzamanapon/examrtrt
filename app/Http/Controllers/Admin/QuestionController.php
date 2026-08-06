@@ -124,7 +124,7 @@ class QuestionController extends Controller
 
         $imported = 0;
         $failed   = 0;
-        $examGoal = $request->get('exam_goal', 'bcs');
+        $defaultGoal = strtolower($request->get('exam_goal', 'bcs'));
 
         foreach ($items as $item) {
             try {
@@ -135,12 +135,14 @@ class QuestionController extends Controller
                     continue;
                 }
 
-                $correct = strtolower($item['correct_answer'] ?? $item['correct_option'] ?? 'a');
+                $correct  = strtolower($item['correct_answer'] ?? $item['correct_option'] ?? 'a');
+                $rawGoal  = $item['exam_type'] ?? $item['exam_goal'] ?? $defaultGoal;
+                $itemGoal = strtolower(trim($rawGoal));
 
                 Question::create([
-                    'exam_goal'       => $examGoal,
-                    'exam_type'       => $item['exam_type'] ?? null,
-                    'board_year'      => $item['board_year'] ?? null,
+                    'exam_goal'       => $itemGoal,
+                    'exam_type'       => strtoupper($rawGoal),
+                    'board_year'      => !empty($item['board_year']) && strtolower(trim($item['board_year'])) !== 'null' ? trim($item['board_year']) : 'NEW',
                     'subject'         => $item['subject'] ?? null,
                     'question_text'   => $item['question_text'] ?? $item['question'] ?? '',
                     'image_url'       => $item['image_url'] ?? null,

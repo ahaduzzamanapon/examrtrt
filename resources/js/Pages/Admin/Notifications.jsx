@@ -3,8 +3,9 @@ import { Head, useForm, usePage } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Bell, Send, Users, Image as ImageIcon, Link as LinkIcon,
-    CheckCircle, AlertCircle, Loader2, Zap, Target, ChevronDown,
+    CheckCircle, AlertCircle, Loader2, Zap, Target,
 } from 'lucide-react';
+import AdminLayout from '@/Layouts/AdminLayout';
 
 const GOALS = [
     { id: 'all',         emoji: '🌐', label: 'সবাই' },
@@ -58,36 +59,13 @@ export default function Notifications({ stats }) {
     };
 
     return (
-        <>
-            <Head title="Notification Sender — Admin" />
+        <AdminLayout title="Push Notifications">
             <style>{`
-                @import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&family=Inter:wght@400;500;600;700;800&display=swap');
-                * { box-sizing: border-box; }
                 input, textarea { font-family: inherit; }
                 input:-webkit-autofill { -webkit-box-shadow: 0 0 0 1000px rgba(255,255,255,0.06) inset !important; -webkit-text-fill-color: #fff !important; }
             `}</style>
 
-            <div style={{
-                minHeight: '100vh',
-                background: 'linear-gradient(135deg,#05071a 0%,#0a0e23 50%,#0f1730 100%)',
-                fontFamily: "'Hind Siliguri','Inter',sans-serif",
-                color: '#e2e8f0',
-                padding: '24px 16px',
-            }}>
-                <div style={{ maxWidth: 900, margin: '0 auto' }}>
-
-                    {/* Header */}
-                    <motion.div initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }}
-                        style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 32 }}>
-                        <div style={{ width: 48, height: 48, borderRadius: 14, background: 'linear-gradient(135deg,#4d6fff,#7c3aed)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 24px rgba(77,111,255,0.4)' }}>
-                            <Bell size={22} color="white" fill="white" />
-                        </div>
-                        <div>
-                            <h1 style={{ fontWeight: 900, fontSize: 24, color: 'white', margin: 0 }}>Push Notification Sender</h1>
-                            <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13, margin: 0 }}>সব শিক্ষার্থীকে বা নির্দিষ্ট গ্রুপকে notification পাঠাও</p>
-                        </div>
-                        <a href="/dashboard" style={{ marginLeft: 'auto', color: '#7c94ff', fontSize: 13, textDecoration: 'none' }}>← ড্যাশবোর্ড</a>
-                    </motion.div>
+            <div style={{ maxWidth: 900 }}>
 
                     {/* Flash messages */}
                     <AnimatePresence>
@@ -296,8 +274,6 @@ export default function Notifications({ stats }) {
                         </motion.div>
                     </div>
                 </div>
-            </div>
-            <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-        </>
+        </AdminLayout>
     );
 }

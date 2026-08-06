@@ -20,7 +20,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         $upcomingExams = \App\Models\Exam::where('status', 'SCHEDULED')
             ->where('scheduled_at', '>', now())
             ->orderBy('scheduled_at')->limit(5)
-            ->get(['id', 'title', 'entry_fee', 'scheduled_at', 'total_questions']);
+            ->get(['id', 'title', 'entry_fee', 'scheduled_at']);
         return Inertia::render('Dashboard', ['upcomingExams' => $upcomingExams]);
     })->name('dashboard');
 

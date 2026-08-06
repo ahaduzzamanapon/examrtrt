@@ -9,206 +9,223 @@ import BottomNav from './BottomNav';
 import ChatbotWidget from './ChatbotWidget';
 import { NotificationContainer, useNotifications } from './NotificationSystem';
 
-const drawerItems = [
-    { href: 'dashboard',          icon: Home,    label: 'হোম' },
-    { href: 'exams.index',        icon: Zap,     label: 'লাইভ কনটেস্ট' },
-    { href: 'battle.index',       icon: Sword,   label: '১ vs ১ ব্যাটেল' },
-    { href: 'practice.index',     icon: BookOpen, label: 'প্র্যাকটিস টেস্ট' },
-    { href: 'survival.index',     icon: Brain,   label: 'সারভাইভাল মোড' },
-    { href: 'leaderboard.index',  icon: Trophy,  label: 'লিডারবোর্ড' },
-    { href: 'wallet.index',       icon: Wallet,  label: 'ওয়ালেট' },
-    { href: 'profile.show',       icon: User,    label: 'প্রোফাইল' },
+const NAV_ITEMS = [
+    { href: 'dashboard',         icon: Home,     label: 'হোম' },
+    { href: 'exams.index',       icon: Zap,      label: 'লাইভ কনটেস্ট' },
+    { href: 'battle.index',      icon: Sword,    label: '১ vs ১ ব্যাটেল' },
+    { href: 'practice.index',    icon: BookOpen, label: 'প্র্যাকটিস' },
+    { href: 'survival.index',    icon: Brain,    label: 'সারভাইভাল' },
+    { href: 'leaderboard.index', icon: Trophy,   label: 'লিডারবোর্ড' },
+    { href: 'wallet.index',      icon: Wallet,   label: 'ওয়ালেট' },
+    { href: 'profile.show',      icon: User,     label: 'প্রোফাইল' },
 ];
 
+// ── Desktop Sidebar ───────────────────────────────────────────────────────────
+function DesktopSidebar({ auth }) {
+    const current = usePage().url;
+
+    return (
+        <aside style={{
+            position: 'fixed', top: 0, left: 0, bottom: 0,
+            width: 240,
+            background: 'rgba(10,14,35,0.97)',
+            borderRight: '1px solid rgba(255,255,255,0.07)',
+            backdropFilter: 'blur(20px)',
+            display: 'flex', flexDirection: 'column',
+            zIndex: 40, padding: '24px 12px',
+        }}>
+            {/* Logo */}
+            <div style={{ padding: '0 12px', marginBottom: 28 }}>
+                <Link href={route('dashboard')}>
+                    <img src="/logo.png" alt="Exam Arena" style={{ height: 38, objectFit: 'contain' }} />
+                </Link>
+            </div>
+
+            {/* Nav items */}
+            <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 3 }}>
+                {NAV_ITEMS.map(({ href, icon: Icon, label }) => {
+                    const active = current.startsWith('/' + href.replace('.index','').replace('.show','').replace('dashboard',''));
+                    const isDash = href === 'dashboard' && current === '/dashboard';
+                    const isActive = isDash || (href !== 'dashboard' && current.startsWith('/' + href.split('.')[0]));
+                    return (
+                        <Link key={href} href={route(href)} style={{
+                            display: 'flex', alignItems: 'center', gap: 11,
+                            padding: '10px 14px', borderRadius: 12,
+                            background: isActive ? 'rgba(77,111,255,0.18)' : 'transparent',
+                            border: `1px solid ${isActive ? 'rgba(77,111,255,0.3)' : 'transparent'}`,
+                            color: isActive ? '#93b4ff' : 'rgba(255,255,255,0.6)',
+                            fontWeight: isActive ? 700 : 500,
+                            fontSize: 14, textDecoration: 'none',
+                            transition: 'all 0.15s',
+                        }}>
+                            <Icon size={17} />
+                            {label}
+                        </Link>
+                    );
+                })}
+            </nav>
+
+            {/* Bottom section */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.07)' }}>
+                {/* Wallet balance */}
+                <div style={{ padding: '10px 14px', borderRadius: 12, background: 'rgba(77,111,255,0.1)', border: '1px solid rgba(77,111,255,0.2)', display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                    <Wallet size={14} style={{ color: '#93b4ff' }} />
+                    <span style={{ color: '#93b4ff', fontSize: 13, fontWeight: 700 }}>৳{parseFloat(auth.user?.wallet_balance ?? 0).toFixed(0)}</span>
+                    <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 11 }}>ওয়ালেট</span>
+                </div>
+
+                {/* Admin panel link */}
+                {auth.user?.role === 'ADMIN' && (
+                    <Link href={route('admin.dashboard')} style={{
+                        display: 'flex', alignItems: 'center', gap: 10, padding: '9px 14px', borderRadius: 12,
+                        background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.25)',
+                        color: '#fcd34d', fontSize: 13, fontWeight: 600, textDecoration: 'none',
+                    }}>
+                        <Settings size={15} /> অ্যাডমিন প্যানেল
+                    </Link>
+                )}
+
+                {/* Logout */}
+                <Link href={route('logout')} method="post" as="button" style={{
+                    display: 'flex', alignItems: 'center', gap: 10, padding: '9px 14px', borderRadius: 12,
+                    background: 'transparent', border: 'none', color: 'rgba(239,68,68,0.7)',
+                    fontSize: 13, fontWeight: 500, cursor: 'pointer', textDecoration: 'none', width: '100%',
+                }}>
+                    <LogOut size={15} /> লগ আউট
+                </Link>
+            </div>
+        </aside>
+    );
+}
+
+// ── Main Layout ───────────────────────────────────────────────────────────────
 export default function MobileLayout({ children, title = '' }) {
     const { auth } = usePage().props;
     const [drawerOpen, setDrawerOpen] = useState(false);
-
-    // Initialize Firebase FCM notifications
     const { notifications, removeNotification } = useNotifications();
 
     return (
-        <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #0a0e23 0%, #0f1a3e 50%, #0a1628 100%)' }}>
+        <div style={{ fontFamily: "'Hind Siliguri','Inter',sans-serif" }}>
 
-            {/* ── Top App Bar ───────────────────────────────────────────── */}
-            <header
-                className="fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-4 h-14"
-                style={{
-                    paddingTop: 'env(safe-area-inset-top, 0px)',
-                    background: 'rgba(10,14,35,0.88)',
-                    backdropFilter: 'blur(20px)',
-                    WebkitBackdropFilter: 'blur(20px)',
-                    borderBottom: '1px solid rgba(255,255,255,0.07)',
-                }}
-            >
-                {/* Hamburger */}
-                <motion.button
-                    whileTap={{ scale: 0.88 }}
-                    onClick={() => setDrawerOpen(true)}
-                    className="touch-target rounded-xl"
-                    aria-label="মেনু খুলুন"
-                >
-                    <Menu size={22} className="text-white/80" />
-                </motion.button>
+            {/* ── DESKTOP LAYOUT (lg+) ────────────────────────────────────── */}
+            <div className="hidden lg:flex" style={{ minHeight: '100vh', background: 'linear-gradient(135deg,#05071a 0%,#0a0e23 60%,#0f1730 100%)' }}>
+                <DesktopSidebar auth={auth} />
+                <main style={{ marginLeft: 240, flex: 1, minHeight: '100vh', padding: '32px 36px', overflowY: 'auto' }}>
+                    {title && (
+                        <h1 style={{ color: 'white', fontWeight: 800, fontSize: 22, marginBottom: 24 }}>{title}</h1>
+                    )}
+                    {children}
+                </main>
+                <NotificationContainer notifications={notifications} removeNotification={removeNotification} />
+            </div>
 
-                {/* Brand */}
-                <Link href={route('dashboard')} className="flex items-center gap-2">
-                    <div
-                        className="w-7 h-7 rounded-lg flex items-center justify-center text-white font-black text-xs"
-                        style={{ background: 'linear-gradient(135deg, #4d6fff, #7c3aed)' }}
-                    >
-                        N
-                    </div>
-                    <span className="font-bold text-white text-sm tracking-wide">
-                        NXLY <span className="text-gradient">Arena</span>
-                    </span>
-                </Link>
+            {/* ── MOBILE LAYOUT ───────────────────────────────────────────── */}
+            <div className="flex lg:hidden" style={{ minHeight: '100vh', background: 'linear-gradient(135deg,#0a0e23 0%,#0f1a3e 50%,#0a1628 100%)' }}>
+                <div style={{ width: '100%' }}>
 
-                {/* Right actions */}
-                <div className="flex items-center gap-1">
-                    <Link href={route('wallet.index')} className="touch-target rounded-xl">
-                        <div className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold"
-                            style={{ background: 'rgba(77,111,255,0.15)', border: '1px solid rgba(77,111,255,0.3)', color: '#93b4ff' }}>
-                            <Wallet size={12} />
-                            ৳{parseFloat(auth.user?.wallet_balance ?? 0).toFixed(0)}
+                    {/* Top App Bar */}
+                    <header className="fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-4 h-14"
+                        style={{ paddingTop: 'env(safe-area-inset-top,0px)', background: 'rgba(10,14,35,0.88)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+                        <motion.button whileTap={{ scale: 0.88 }} onClick={() => setDrawerOpen(true)} className="touch-target rounded-xl" aria-label="মেনু">
+                            <Menu size={22} className="text-white/80" />
+                        </motion.button>
+
+                        <Link href={route('dashboard')}>
+                            <img src="/logo.png" alt="Exam Arena" style={{ height: 30, objectFit: 'contain' }} />
+                        </Link>
+
+                        <div className="flex items-center gap-1">
+                            <Link href={route('wallet.index')} className="touch-target rounded-xl">
+                                <div className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold"
+                                    style={{ background: 'rgba(77,111,255,0.15)', border: '1px solid rgba(77,111,255,0.3)', color: '#93b4ff' }}>
+                                    <Wallet size={12} />
+                                    ৳{parseFloat(auth.user?.wallet_balance ?? 0).toFixed(0)}
+                                </div>
+                            </Link>
+                            <motion.button whileTap={{ scale: 0.88 }} className="touch-target rounded-xl" aria-label="নোটিফিকেশন">
+                                <Bell size={20} className="text-white/60" />
+                            </motion.button>
                         </div>
-                    </Link>
-                    <motion.button whileTap={{ scale: 0.88 }} className="touch-target rounded-xl" aria-label="নোটিফিকেশন">
-                        <Bell size={20} className="text-white/60" />
-                    </motion.button>
-                </div>
-            </header>
+                    </header>
 
-            {/* ── Slide-out Drawer ──────────────────────────────────────── */}
-            <AnimatePresence>
-                {drawerOpen && (
-                    <>
-                        {/* Backdrop */}
-                        <motion.div
-                            key="backdrop"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            onClick={() => setDrawerOpen(false)}
-                            className="fixed inset-0 z-50"
-                            style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
-                        />
-
-                        {/* Drawer panel */}
-                        <motion.aside
-                            key="drawer"
-                            initial={{ x: '-100%' }}
-                            animate={{ x: 0 }}
-                            exit={{ x: '-100%' }}
-                            transition={{ type: 'spring', stiffness: 380, damping: 38 }}
-                            className="fixed top-0 left-0 bottom-0 z-50 w-72 flex flex-col overflow-y-auto"
-                            style={{
-                                background: 'rgba(10,14,35,0.97)',
-                                backdropFilter: 'blur(30px)',
-                                WebkitBackdropFilter: 'blur(30px)',
-                                borderRight: '1px solid rgba(255,255,255,0.08)',
-                                paddingTop: 'env(safe-area-inset-top, 0px)',
-                                paddingBottom: 'env(safe-area-inset-bottom, 16px)',
-                            }}
-                        >
-                            {/* Drawer header */}
-                            <div className="flex items-center justify-between px-5 py-4 border-b border-white/8">
-                                <div className="flex items-center gap-3">
-                                    {auth.user?.avatar ? (
-                                        <img src={auth.user.avatar} alt="avatar" className="w-10 h-10 rounded-full object-cover border border-white/20" />
-                                    ) : (
-                                        <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm"
-                                            style={{ background: 'linear-gradient(135deg, #4d6fff, #7c3aed)' }}>
-                                            {auth.user?.name?.[0]?.toUpperCase() ?? 'U'}
-                                        </div>
-                                    )}
-                                    <div>
-                                        <p className="text-white text-sm font-semibold truncate max-w-[140px]">{auth.user?.name}</p>
-                                        <p className="text-white/40 text-xs">{auth.user?.role}</p>
-                                    </div>
-                                </div>
-                                <motion.button whileTap={{ scale: 0.88 }} onClick={() => setDrawerOpen(false)} className="touch-target rounded-xl">
-                                    <X size={20} className="text-white/50" />
-                                </motion.button>
-                            </div>
-
-                            {/* Wallet quick view */}
-                            <div className="mx-4 mt-4 p-4 rounded-2xl" style={{ background: 'linear-gradient(135deg, rgba(77,111,255,0.18), rgba(124,58,237,0.12))', border: '1px solid rgba(77,111,255,0.25)' }}>
-                                <p className="text-white/50 text-xs mb-1">ওয়ালেট ব্যালেন্স</p>
-                                <p className="text-2xl font-bold text-white">৳{parseFloat(auth.user?.wallet_balance ?? 0).toFixed(2)}</p>
-                                <div className="flex items-center gap-2 mt-2">
-                                    <span className="badge-gold text-[10px]">🎟 {auth.user?.free_contest_passes ?? 0} পাস</span>
-                                    <span className="badge-blue text-[10px]">🔥 {auth.user?.streak_count ?? 0} দিন</span>
-                                </div>
-                            </div>
-
-                            {/* Nav items */}
-                            <nav className="flex-1 px-3 mt-4 space-y-1">
-                                {drawerItems.map((item) => {
-                                    const Icon = item.icon;
-                                    return (
-                                        <Link
-                                            key={item.href}
-                                            href={route(item.href)}
-                                            onClick={() => setDrawerOpen(false)}
-                                            className="block rounded-xl"
-                                            style={{ minHeight: '44px' }}
-                                        >
-                                            <div
-                                                className="flex items-center gap-3 w-full px-4 py-3 rounded-xl transition-all text-sm font-medium"
-                                                style={{ color: 'rgba(255,255,255,0.6)' }}
-                                            >
-                                                <Icon size={18} />
-                                                <span>{item.label}</span>
-                                            </div>
-                                        </Link>
-                                    );
-                                })}
-                            </nav>
-
-                            {/* Bottom section */}
-                            <div className="px-4 mt-auto space-y-1">
-                                {auth.user?.role === 'ADMIN' && (
-                                    <Link href={route('admin.dashboard')} onClick={() => setDrawerOpen(false)}
-                                        className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium"
-                                        style={{ background: 'rgba(245,158,11,0.15)', color: '#fcd34d', border: '1px solid rgba(245,158,11,0.25)' }}>
-                                        <Settings size={16} />
-                                        অ্যাডমিন প্যানেল
-                                    </Link>
-                                )}
-                                <Link
-                                    href={route('logout')}
-                                    method="post"
-                                    as="button"
+                    {/* Slide-out Drawer */}
+                    <AnimatePresence>
+                        {drawerOpen && (
+                            <>
+                                <motion.div key="backdrop" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                                     onClick={() => setDrawerOpen(false)}
-                                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium"
-                                    style={{ color: 'rgba(239,68,68,0.8)' }}
-                                >
-                                    <LogOut size={16} />
-                                    লগ আউট
-                                </Link>
-                            </div>
-                        </motion.aside>
-                    </>
-                )}
-            </AnimatePresence>
+                                    className="fixed inset-0 z-50"
+                                    style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
+                                <motion.aside key="drawer"
+                                    initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }}
+                                    transition={{ type: 'spring', stiffness: 380, damping: 38 }}
+                                    className="fixed top-0 left-0 bottom-0 z-50 w-72 flex flex-col overflow-y-auto"
+                                    style={{ background: 'rgba(10,14,35,0.97)', backdropFilter: 'blur(30px)', borderRight: '1px solid rgba(255,255,255,0.08)', paddingTop: 'env(safe-area-inset-top,0px)', paddingBottom: 'env(safe-area-inset-bottom,16px)' }}>
 
-            {/* ── Page Content ──────────────────────────────────────────── */}
-            <main
-                className="pb-20"
-                style={{ paddingTop: 'calc(3.5rem + env(safe-area-inset-top, 0px))' }}
-            >
-                {children}
-            </main>
+                                    <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
+                                        <img src="/logo.png" alt="Exam Arena" style={{ height: 32, objectFit: 'contain' }} />
+                                        <motion.button whileTap={{ scale: 0.88 }} onClick={() => setDrawerOpen(false)}>
+                                            <X size={20} className="text-white/50" />
+                                        </motion.button>
+                                    </div>
 
-            {/* ── Bottom Navigation ─────────────────────────────────────── */}
-            <BottomNav />
+                                    {/* User info */}
+                                    <div className="px-5 py-4 border-b" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm"
+                                                style={{ background: 'linear-gradient(135deg,#4d6fff,#7c3aed)' }}>
+                                                {auth.user?.name?.[0]?.toUpperCase() ?? 'U'}
+                                            </div>
+                                            <div>
+                                                <div className="text-white font-semibold text-sm">{auth.user?.name}</div>
+                                                <div className="text-white/40 text-xs">{auth.user?.email}</div>
+                                            </div>
+                                        </div>
+                                    </div>
 
-            {/* ── Chatbot Widget ────────────────────────────────────────── */}
-            <ChatbotWidget />
+                                    <nav className="flex-1 px-3 mt-3 space-y-1">
+                                        {NAV_ITEMS.map(({ href, icon: Icon, label }) => (
+                                            <Link key={href} href={route(href)} onClick={() => setDrawerOpen(false)}
+                                                className="block rounded-xl"
+                                                style={{ minHeight: '44px' }}>
+                                                <div className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-medium"
+                                                    style={{ color: 'rgba(255,255,255,0.65)' }}>
+                                                    <Icon size={18} />
+                                                    <span>{label}</span>
+                                                </div>
+                                            </Link>
+                                        ))}
+                                    </nav>
 
-            {/* ── Firebase FCM Toast Notifications ─────────────────────── */}
-            <NotificationContainer notifications={notifications} removeNotification={removeNotification} />
+                                    <div className="px-4 mt-auto space-y-1">
+                                        {auth.user?.role === 'ADMIN' && (
+                                            <Link href={route('admin.dashboard')} onClick={() => setDrawerOpen(false)}
+                                                className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium"
+                                                style={{ background: 'rgba(245,158,11,0.15)', color: '#fcd34d', border: '1px solid rgba(245,158,11,0.25)' }}>
+                                                <Settings size={16} /> অ্যাডমিন প্যানেল
+                                            </Link>
+                                        )}
+                                        <Link href={route('logout')} method="post" as="button" onClick={() => setDrawerOpen(false)}
+                                            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium"
+                                            style={{ color: 'rgba(239,68,68,0.8)' }}>
+                                            <LogOut size={16} /> লগ আউট
+                                        </Link>
+                                    </div>
+                                </motion.aside>
+                            </>
+                        )}
+                    </AnimatePresence>
+
+                    {/* Page Content */}
+                    <main className="pb-20" style={{ paddingTop: 'calc(3.5rem + env(safe-area-inset-top,0px))' }}>
+                        {children}
+                    </main>
+
+                    <BottomNav />
+                    <ChatbotWidget />
+                    <NotificationContainer notifications={notifications} removeNotification={removeNotification} />
+                </div>
+            </div>
         </div>
     );
 }

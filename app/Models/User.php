@@ -20,6 +20,8 @@ class User extends Authenticatable
         'google_id',
         'avatar',
         'role',
+        'exam_goal',
+        'fcm_token',
         'wallet_balance',
         'free_contest_passes',
         'total_points',

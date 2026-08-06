@@ -4,6 +4,8 @@ use App\Http\Controllers\PushSubscriptionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\FcmTokenController;
 use App\Http\Controllers\Admin\NotificationController as AdminNotification;
+use App\Http\Controllers\Auth\OnboardingController;
+use App\Models\Exam;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -17,12 +19,28 @@ Route::get('/', function () {
 Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('/dashboard', function () {
-        $upcomingExams = \App\Models\Exam::where('status', 'SCHEDULED')
+        $user = auth()->user();
+
+        // Admin → admin panel
+        if ($user && $user->role === 'ADMIN') {
+            return redirect()->route('admin.dashboard');
+        }
+
+        // New user without exam_goal → onboarding
+        if ($user && !$user->exam_goal) {
+            return redirect()->route('onboarding');
+        }
+
+        $upcomingExams = Exam::where('status', 'SCHEDULED')
             ->where('scheduled_at', '>', now())
             ->orderBy('scheduled_at')->limit(5)
             ->get(['id', 'title', 'entry_fee', 'scheduled_at']);
         return Inertia::render('Dashboard', ['upcomingExams' => $upcomingExams]);
     })->name('dashboard');
+
+    // ── Onboarding (new users) ────────────────────────────────────────────────
+    Route::get('/onboarding',  [OnboardingController::class, 'show'])->name('onboarding');
+    Route::post('/onboarding', [OnboardingController::class, 'save'])->name('onboarding.save');
 
     // Profile
     Route::get('/profile',    [ProfileController::class, 'edit'])->name('profile.show');
@@ -41,7 +59,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // ── Admin ────────────────────────────────────────────────────────────────
     Route::prefix('admin')->name('admin.')->group(function () {
-        Route::get('/',              fn () => Inertia::render('Admin/Dashboard'))->name('dashboard');
+        Route::get('/', function () {
+            $stats = [
+                'total_users'     => \App\Models\User::count(),
+                'fcm_subscribers' => \App\Models\User::whereNotNull('fcm_token')->count(),
+                'total_exams'     => \App\Models\Exam::count(),
+                'today_logins'    => 0,
+            ];
+            return Inertia::render('Admin/Dashboard', compact('stats'));
+        })->name('dashboard');
         Route::get('/notifications', [AdminNotification::class, 'index'])->name('notifications');
         Route::post('/notifications',[AdminNotification::class, 'send'])->name('notifications.send');
     });

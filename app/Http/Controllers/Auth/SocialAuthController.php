@@ -64,6 +64,11 @@ class SocialAuthController extends Controller
 
         Auth::login($user, remember: true);
 
+        // New user (no exam_goal) → onboarding
+        if (!$user->exam_goal) {
+            return redirect()->route('onboarding');
+        }
+
         return redirect()->intended(route('dashboard'));
     }
 }

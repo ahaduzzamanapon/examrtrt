@@ -11,14 +11,20 @@ class ReelController extends Controller
     public function index(Request $request)
     {
         $user = auth()->user();
-        $goal = $request->get('goal', $user->exam_goal ?? 'bcs');
 
-        $questions = $this->getQuestions($goal, 10);
+        // exam_goal is stored as JSON array; pick first or default
+        $userGoal = is_array($user->exam_goal)
+            ? ($user->exam_goal[0] ?? 'bcs')
+            : ($user->exam_goal ?? 'bcs');
+
+        $goal = $request->get('goal', $userGoal);
+
+        $questions = $this->getQuestions($goal, 10, $user);
 
         return Inertia::render('Reel/Index', [
             'initialQuestions' => $questions,
             'currentGoal'      => $goal,
-            'userGoal'         => $user->exam_goal ?? 'bcs',
+            'userGoal'         => $userGoal,
         ]);
     }
 
@@ -34,12 +40,18 @@ class ReelController extends Controller
         ]);
     }
 
-    private function getQuestions(string $goal, int $limit = 10)
+    private function getQuestions(string $goal, int $limit = 10, $user = null)
     {
         $query = Question::query()->where('is_active', true);
 
         if ($goal && $goal !== 'all') {
             $query->where('exam_goal', $goal);
+        }
+
+        if (in_array($goal, ['hsc', 'ssc']) && $user && $user->stream) {
+            $query->where(function ($q) use ($user) {
+                $q->where('stream', $user->stream)->orWhere('stream', 'general');
+            });
         }
 
         return $query->inRandomOrder()

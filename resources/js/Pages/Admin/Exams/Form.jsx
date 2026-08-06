@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import MobileLayout from '@/Layouts/MobileLayout';
+import AdminLayout from '@/Layouts/AdminLayout';
 
 const PRIZE_PRESETS = [
     { label: 'শীর্ষ ৩ (60/30/10)', value: [
@@ -62,7 +62,7 @@ export default function ExamForm({ auth, exam, categories = [] }) {
         : null;
 
     return (
-        <MobileLayout auth={auth}>
+        <AdminLayout title={`${isEdit ? 'সম্পাদনা' : 'নতুন'} পরীক্ষা`}>
             <Head title={`${isEdit ? 'সম্পাদনা' : 'নতুন'} পরীক্ষা`} />
 
             <div className="px-4 pt-4 pb-24">
@@ -73,7 +73,6 @@ export default function ExamForm({ auth, exam, categories = [] }) {
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-5">
-
                     {/* ─── Exam Type ───────────────────────────────────── */}
                     <div className="card glass p-4">
                         <div className="text-white font-semibold mb-3">পরীক্ষার ধরন</div>
@@ -346,6 +345,6 @@ export default function ExamForm({ auth, exam, categories = [] }) {
                     )}
                 </form>
             </div>
-        </MobileLayout>
+        </AdminLayout>
     );
 }

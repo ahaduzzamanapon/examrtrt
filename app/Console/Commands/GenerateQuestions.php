@@ -108,27 +108,31 @@ class GenerateQuestions extends Command
                 }
             }
 
-            // Key rotation per request
-            $apiKey = AppSetting::nextGeminiKey();
-            if (!$apiKey) {
-                $failed++;
-                $bar->advance();
-                $logs[] = "❌ [{$step}/{$total}] {$currentLabel}: No Gemini API Key available!";
-                $this->updateStatus('running', $total, $step, $currentLabel, $saved, $skipped, $failed, $logs);
-                continue;
-            }
-
-            // Generate via Gemini with retries
+            // Generate via Gemini with smart rate-limit retries
             $questions = null;
-            for ($attempt = 1; $attempt <= 3; $attempt++) {
-                $questions = $this->callGemini($apiKey, $model, $goal, $subject, $count, $difficulty);
-                if ($questions !== null) {
+            for ($attempt = 1; $attempt <= 5; $attempt++) {
+                $apiKey = AppSetting::nextGeminiKey();
+                if (!$apiKey) {
+                    $logs[] = "❌ [{$step}/{$total}] {$currentLabel}: No Gemini API Key available!";
                     break;
                 }
-                // Rotate key on failure and retry after delay
-                $apiKey = AppSetting::nextGeminiKey() ?? $apiKey;
-                $logs[] = "⚠️ [{$step}/{$total}] {$currentLabel}: Retry {$attempt}/3 with rotated key...";
-                sleep(2);
+
+                $res = $this->callGeminiWithStatus($apiKey, $model, $goal, $subject, $count, $difficulty);
+
+                if ($res['status'] === 200 && is_array($res['questions'])) {
+                    $questions = $res['questions'];
+                    break;
+                }
+
+                if ($res['status'] === 429) {
+                    $logs[] = "⏳ [{$step}/{$total}] {$currentLabel}: Rate limit (429) hit! Waiting 12s for quota window reset (Attempt {$attempt}/5)...";
+                    $this->updateStatus('running', $total, $step, $currentLabel, $saved, $skipped, $failed, $logs);
+                    sleep(12);
+                } else {
+                    $logs[] = "⚠️ [{$step}/{$total}] {$currentLabel}: Error HTTP {$res['status']}! Retrying with rotated key ({$attempt}/5)...";
+                    $this->updateStatus('running', $total, $step, $currentLabel, $saved, $skipped, $failed, $logs);
+                    sleep(3);
+                }
             }
 
             if ($questions === null) {
@@ -169,8 +173,8 @@ class GenerateQuestions extends Command
             $bar->advance();
             $this->updateStatus('running', $total, $step, $currentLabel, $saved, $skipped, $failed, $logs);
 
-            // Delay 2 seconds between batch calls for rate-limit protection
-            sleep(2);
+            // Delay 3 seconds between batch calls for rate-limit protection
+            sleep(3);
         }
 
         $bar->finish();
@@ -221,7 +225,7 @@ class GenerateQuestions extends Command
         return $jobs;
     }
 
-    private function callGemini(string $apiKey, string $model, string $goal, string $subject, int $count, string $difficulty): ?array
+    private function callGeminiWithStatus(string $apiKey, string $model, string $goal, string $subject, int $count, string $difficulty): array
     {
         $goalUpper = strtoupper($goal);
         $diffPrompt = ($difficulty === 'MIXED' || !$difficulty)
@@ -249,9 +253,11 @@ PROMPT;
                     'generationConfig' => ['temperature' => 0.7, 'maxOutputTokens' => 4096],
                 ]);
 
+            $status = $response->status();
+
             if (!$response->successful()) {
-                Log::warning("[GenerateQuestions] API {$response->status()} for {$goal}/{$subject}: " . $response->body());
-                return null;
+                Log::warning("[GenerateQuestions] API {$status} for {$goal}/{$subject}: " . $response->body());
+                return ['status' => $status, 'questions' => null];
             }
 
             $text = $response->json('candidates.0.content.parts.0.text') ?? '';
@@ -260,7 +266,7 @@ PROMPT;
             $parsed = json_decode($text, true);
             if (json_last_error() !== JSON_ERROR_NONE) {
                 Log::warning("[GenerateQuestions] JSON parse error: " . json_last_error_msg() . " | Text: " . substr($text, 0, 200));
-                return null;
+                return ['status' => 500, 'questions' => null];
             }
 
             if (isset($parsed['questions']) && is_array($parsed['questions'])) {
@@ -269,13 +275,13 @@ PROMPT;
 
             if (!is_array($parsed)) {
                 Log::warning("[GenerateQuestions] Parsed data is not an array for {$goal}/{$subject}");
-                return null;
+                return ['status' => 500, 'questions' => null];
             }
 
-            return $parsed;
+            return ['status' => 200, 'questions' => $parsed];
         } catch (\Throwable $e) {
             Log::warning("[GenerateQuestions] Exception: {$e->getMessage()}");
-            return null;
+            return ['status' => 500, 'questions' => null];
         }
     }
 }

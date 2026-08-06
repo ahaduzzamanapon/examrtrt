@@ -1,12 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Flame, Heart, Skull, Trophy, Play, RotateCcw, AlertTriangle, Clock } from 'lucide-react';
 import axios from 'axios';
 import MobileLayout from '@/Layouts/MobileLayout';
 import Swal from 'sweetalert2';
 
-export default function SurvivalIndex({ topPlayers = [] }) {
+export default function SurvivalIndex({ topPlayers = [], auth = {} }) {
     const [gameState, setGameState]     = useState('idle'); // idle | playing | gameover
     const [questions, setQuestions]     = useState([]);
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -15,6 +15,8 @@ export default function SurvivalIndex({ topPlayers = [] }) {
     const [timeLeft, setTimeLeft]       = useState(12);
     const [selectedOpt, setSelectedOpt] = useState(null);
     const [loading, setLoading]         = useState(false);
+    const [tokenBalance, setTokenBalance] = useState(auth?.user?.token_balance ?? null);
+    const [tokenDeducted, setTokenDeducted] = useState(false);
 
     const timerRef = useRef(null);
     const currentQ = questions[currentIndex];
@@ -99,8 +101,14 @@ export default function SurvivalIndex({ topPlayers = [] }) {
     };
 
     const handleGameOver = (reason) => {
-        axios.post(route('survival.loss')).catch(() => {});
         setGameState('gameover');
+        setTokenDeducted(false);
+        axios.post(route('survival.loss')).then(res => {
+            if (res.data?.token_balance !== undefined) {
+                setTokenBalance(res.data.token_balance);
+                setTokenDeducted(true);
+            }
+        }).catch(() => {});
     };
 
     return (
@@ -308,6 +316,26 @@ export default function SurvivalIndex({ topPlayers = [] }) {
                                 <span style={{ color: 'white', fontSize: 42, fontWeight: 900, lineHeight: 1 }}>{score}</span>
                                 <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, marginTop: 4 }}>স্কোর</span>
                             </div>
+
+                            {/* Token deducted notice */}
+                            {tokenDeducted && (
+                                <div style={{
+                                    margin: '0 auto 20px', padding: '12px 18px',
+                                    borderRadius: 14, background: 'rgba(239,68,68,0.12)',
+                                    border: '1px solid rgba(239,68,68,0.35)',
+                                    display: 'inline-flex', alignItems: 'center', gap: 10,
+                                }}>
+                                    <span style={{ fontSize: 20 }}>🪙</span>
+                                    <div style={{ textAlign: 'left' }}>
+                                        <div style={{ color: '#f87171', fontWeight: 800, fontSize: 14 }}>
+                                            -১ টোকেন কাটা হয়েছে
+                                        </div>
+                                        <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 12, marginTop: 2 }}>
+                                            বর্তমান ব্যালেন্স: {tokenBalance} 🪙
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
 
                             <motion.button
                                 whileTap={{ scale: 0.96 }}

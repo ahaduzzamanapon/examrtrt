@@ -344,9 +344,10 @@ export default function PracticeSession({ questions = [], goal = '' }) {
 
                             {/* Answer Box */}
                             <div style={{
-                                minHeight: 100, maxHeight: 220, overflowY: 'auto', padding: 14, borderRadius: 14,
+                                minHeight: 120, maxHeight: 360, overflowY: 'auto', padding: 14, borderRadius: 14,
                                 background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)',
-                                color: 'rgba(255,255,255,0.85)', fontSize: 13, lineHeight: 1.6,
+                                color: 'rgba(255,255,255,0.9)', fontSize: 13, lineHeight: 1.6,
+                                whiteSpace: 'pre-line',
                             }}>
                                 {aiLoading ? (
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'rgba(255,255,255,0.4)' }}>

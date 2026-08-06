@@ -102,14 +102,14 @@ class PracticeController extends Controller
         }
 
         $model = AppSetting::get('gemini_model', 'gemini-2.0-flash');
-        $prompt = "তুমি একজন বাংলাদেশের প্রতিযোগিতামূলক পরীক্ষার বিশেষজ্ঞ শিক্ষক। শিক্ষার্থীর প্রশ্নের উত্তর বাংলায় সহজ ভাষায় দাও।\n\nপ্রশ্নের প্রসঙ্গ: {$request->context}\n\nশিক্ষার্থীর জিজ্ঞাসা: {$request->question}\n\nসংক্ষেপে ও স্পষ্টভাবে উত্তর দাও (৩-৫ বাক্যে):";
+        $prompt = "তুমি একজন বাংলাদেশের প্রতিযোগিতামূলক পরীক্ষার বিশেষজ্ঞ শিক্ষক। শিক্ষার্থীর প্রশ্নের উত্তর সম্পূর্ণ ও স্পষ্টভাবে বাংলায় বুঝিয়ে দাও। বাক্য যেন অসম্পূর্ণ না থাকে।\n\nপ্রশ্নের প্রসঙ্গ: {$request->context}\n\nশিক্ষার্থীর জিজ্ঞাসা: {$request->question}\n\nসহজ ভাষায় ৩-৪ বাক্যে উত্তর দাও (সম্পূর্ণ বাক্যে শেষ করবে):";
 
         try {
             $response = Http::withHeaders(['Content-Type' => 'application/json'])
-                ->timeout(20)
+                ->timeout(25)
                 ->post("https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}", [
                     'contents'         => [['parts' => [['text' => $prompt]]]],
-                    'generationConfig' => ['temperature' => 0.5, 'maxOutputTokens' => 512],
+                    'generationConfig' => ['temperature' => 0.5, 'maxOutputTokens' => 1500],
                 ]);
 
             $text = $response->json('candidates.0.content.parts.0.text') ?? 'উত্তর পাওয়া যায়নি।';

@@ -28,8 +28,16 @@ class AppSetting extends Model
     /** Get the next Gemini API key using round-robin */
     public static function nextGeminiKey(): ?string
     {
-        $keys = static::get('gemini_keys', []);
-        if (empty($keys)) return null;
+        $raw  = static::get('gemini_keys', []);
+
+        // If stored as plain string (single key), wrap in array
+        if (is_string($raw) && $raw !== '') {
+            $keys = [$raw];
+        } elseif (is_array($raw) && count($raw) > 0) {
+            $keys = $raw;
+        } else {
+            return null;
+        }
 
         $idx = (int) static::get('gemini_key_index', 0);
         $key = $keys[$idx % count($keys)] ?? $keys[0];

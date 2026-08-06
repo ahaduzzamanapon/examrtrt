@@ -169,7 +169,7 @@ class QuestionController extends Controller
             'subject'     => 'nullable|string',   // optional – Gemini picks topic if empty
             'board_year'  => 'nullable|string',
             'count'       => 'required|integer|min:1|max:20',
-            'difficulty'  => 'nullable|in:LOW,MEDIUM,HIGH',
+            'difficulty'  => 'nullable|in:MIXED,LOW,MEDIUM,HIGH',
         ]);
 
         $apiKey = AppSetting::nextGeminiKey();
@@ -181,24 +181,34 @@ class QuestionController extends Controller
         $subject    = $request->subject ?? '';
         $boardYear  = $request->board_year ?? '';
         $count      = $request->count;
-        $difficulty = $request->difficulty ?? 'MEDIUM';
+        $difficulty = $request->difficulty ?? 'MIXED';
 
         $subjectLine = $subject ? "Subject: {$subject}" : "Subject: Any relevant subject for {$goal} exam";
-        $boardLine   = $boardYear ? "Exam Year/Type: {$boardYear}" : '';
+        $boardLine   = $boardYear
+            ? "Exam Year/Type requirement: {$boardYear}"
+            : "If this is a real authentic past exam question in Bangladesh (e.g. 45th BCS, Dhaka Board 2023), set 'board_year' to that exam name in Bengali (e.g. '৪৫তম বিসিএস প্রিলিমিনারি'). If it is a new custom/model question, set 'board_year' to 'NEW'.";
+
+        $diffLine = ($difficulty === 'MIXED' || !$difficulty)
+            ? "Difficulty: Mix LOW, MEDIUM, and HIGH difficulty questions realistically for standard exam distribution."
+            : "Difficulty level target: {$difficulty}";
 
         $prompt = <<<PROMPT
 Generate {$count} multiple choice questions for {$goal} exam in Bangladesh.
 {$subjectLine}
 {$boardLine}
-Difficulty: {$difficulty}
+{$diffLine}
+
+IMPORTANT for fields:
+- "board_year": Exam name in Bengali or "NEW"
+- "difficulty_level": Must be "LOW", "MEDIUM", or "HIGH" based on how challenging the question is.
 
 Return ONLY a valid JSON array (no markdown, no explanation outside JSON):
 [
   {
     "subject": "the subject of the question",
     "exam_type": "{$goal}",
-    "board_year": "{$boardYear}",
-    "difficulty_level": "{$difficulty}",
+    "board_year": "Exam name in Bengali or 'NEW'",
+    "difficulty_level": "LOW or MEDIUM or HIGH",
     "question_text": "...(in Bengali)...",
     "image_url": null,
     "options": {"a": "...", "b": "...", "c": "...", "d": "..."},
@@ -228,8 +238,8 @@ PROMPT;
         $text = trim($text);
 
         $questions = json_decode($text, true);
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            return response()->json(['error' => 'Gemini দিয়ে valid JSON parse করা যায়নি।', 'raw' => substr($text, 0, 500)], 422);
+        if (json_last_error() !== JSON_ERROR_NONE || !is_array($questions)) {
+            return response()->json(['error' => 'JSON generate করতে ব্যর্থ হয়েছে। আবার চেষ্টা করো।'], 422);
         }
 
         return response()->json(['questions' => $questions]);
@@ -246,10 +256,11 @@ PROMPT;
         $saved = 0;
         foreach ($request->questions as $item) {
             try {
+                $by = !empty($item['board_year']) && strtolower(trim($item['board_year'])) !== 'null' ? trim($item['board_year']) : 'NEW';
                 Question::create([
                     'exam_goal'        => $request->exam_goal,
                     'exam_type'        => $item['exam_type'] ?? null,
-                    'board_year'       => $item['board_year'] ?? null,
+                    'board_year'       => $by,
                     'subject'          => $item['subject'] ?? null,
                     'question_text'    => $item['question_text'] ?? '',
                     'image_url'        => $item['image_url'] ?? null,

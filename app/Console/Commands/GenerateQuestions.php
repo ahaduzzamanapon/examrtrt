@@ -124,10 +124,11 @@ class GenerateQuestions extends Command
             // Save
             foreach ($questions as $q) {
                 try {
+                    $by = !empty($q['board_year']) && strtolower(trim($q['board_year'])) !== 'null' ? trim($q['board_year']) : 'NEW';
                     Question::create([
                         'exam_goal'        => $goal,
                         'exam_type'        => strtoupper($goal),
-                        'board_year'       => null,
+                        'board_year'       => $by,
                         'subject'          => $subject,
                         'question_text'    => $q['question_text'] ?? '',
                         'image_url'        => null,
@@ -181,13 +182,21 @@ class GenerateQuestions extends Command
     private function callGemini(string $apiKey, string $model, string $goal, string $subject, int $count, string $difficulty): ?array
     {
         $goalUpper = strtoupper($goal);
-        $prompt    = <<<PROMPT
+        $diffPrompt = ($difficulty === 'MIXED' || !$difficulty)
+            ? "Vary difficulty levels naturally (LOW, MEDIUM, HIGH) for realistic exam balance."
+            : "Target Difficulty: {$difficulty}";
+
+        $prompt = <<<PROMPT
 Generate {$count} MCQ questions for {$goalUpper} exam in Bangladesh.
 Subject: {$subject}
-Difficulty: {$difficulty}
+{$diffPrompt}
+
+IMPORTANT for fields:
+- "board_year": If this MCQ is an authentic question from a specific past exam in Bangladesh, set "board_year" to that exam session in Bengali (e.g. "৪৪তম বিসিএস প্রিলিমিনারি", "ঢাকা বোর্ড ২০২৩", "সমন্বিত ৮ ব্যাংক ২০২৩"). If it is a new model question, set "board_year" to "NEW".
+- "difficulty_level": Assign "LOW", "MEDIUM", or "HIGH" to each question based on its true difficulty level.
 
 Return ONLY a valid JSON array (no markdown):
-[{"subject":"{$subject}","exam_type":"{$goalUpper}","board_year":null,"difficulty_level":"{$difficulty}","question_text":"...Bengali...","image_url":null,"options":{"a":"...","b":"...","c":"...","d":"..."},"correct_answer":"a","explanation":"...Bengali..."}]
+[{"subject":"{$subject}","exam_type":"{$goalUpper}","board_year":"NEW or past exam name","difficulty_level":"LOW or MEDIUM or HIGH","question_text":"...Bengali...","image_url":null,"options":{"a":"...","b":"...","c":"...","d":"..."},"correct_answer":"a","explanation":"...Bengali..."}]
 PROMPT;
 
         try {

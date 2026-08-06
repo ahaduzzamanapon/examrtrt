@@ -12,7 +12,7 @@ const GOALS = [
     { value: 'bank', label: 'Bank' }, { value: 'university', label: 'University' },
     { value: 'primary', label: 'Primary' }, { value: 'other', label: 'Other' },
 ];
-const DIFFICULTIES = ['LOW', 'MEDIUM', 'HIGH'];
+const DIFFICULTIES = ['MIXED', 'LOW', 'MEDIUM', 'HIGH'];
 const INP = { width: '100%', padding: '9px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontSize: 13, outline: 'none' };
 const SEL = { ...INP, cursor: 'pointer' };
 
@@ -89,6 +89,13 @@ function Paginator({ meta, filters }) {
 function DiffBadge({ level }) {
     const colors = { LOW: '#34d399', MEDIUM: '#fbbf24', HIGH: '#f87171' };
     return <span style={{ padding: '2px 8px', borderRadius: 10, fontSize: 10, fontWeight: 700, background: `${colors[level] ?? '#94a3b8'}22`, color: colors[level] ?? '#94a3b8', border: `1px solid ${colors[level] ?? '#94a3b8'}44` }}>{level}</span>;
+}
+
+function YearBadge({ year }) {
+    if (year && year.toUpperCase() !== 'NEW') {
+        return <span style={{ padding: '2px 8px', borderRadius: 8, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.7)', fontSize: 10 }}>{year}</span>;
+    }
+    return <span style={{ padding: '2px 8px', borderRadius: 8, background: 'rgba(52,211,153,0.15)', border: '1px solid rgba(52,211,153,0.3)', color: '#34d399', fontSize: 10, fontWeight: 700 }}>NEW</span>;
 }
 
 // ── Question Form Modal ───────────────────────────────────────────────────────
@@ -178,7 +185,7 @@ export default function AdminQuestions({ questions, filters, stats }) {
     const [importing, setImporting]   = useState(false);
 
     // AI Generate
-    const [aiForm, setAiForm]         = useState({ exam_goal: '', subject: '', board_year: '', count: 1, difficulty: 'MEDIUM' });
+    const [aiForm, setAiForm]         = useState({ exam_goal: '', subject: '', board_year: '', count: 1, difficulty: 'MIXED' });
     const [generating, setGenerating] = useState(false);
     const [aiResult, setAiResult]     = useState(null);
     const [aiError, setAiError]       = useState('');
@@ -273,7 +280,7 @@ export default function AdminQuestions({ questions, filters, stats }) {
             setQDone(i); setQCurrent(`${exam_goal.toUpperCase()} → ${subject}`);
             saveQueueProgress(items, i, savedCount);
             try {
-                const res = await fetch(route('admin.questions.ai'), { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf() }, body: JSON.stringify({ exam_goal, subject, count: aiForm.count || 1, difficulty: aiForm.difficulty || 'MEDIUM', board_year: aiForm.board_year }) });
+                const res = await fetch(route('admin.questions.ai'), { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf() }, body: JSON.stringify({ exam_goal, subject, count: aiForm.count || 1, difficulty: aiForm.difficulty || 'MIXED', board_year: aiForm.board_year }) });
                 const data = await res.json().catch(() => ({}));
                 if (res.ok && data.questions?.length > 0) {
                     await fetch(route('admin.questions.bulk'), { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf() }, body: JSON.stringify({ questions: data.questions, exam_goal }) });
@@ -374,8 +381,8 @@ export default function AdminQuestions({ questions, filters, stats }) {
                                             <span style={{ padding: '2px 8px', borderRadius: 8, background: 'rgba(77,111,255,0.1)', color: '#93b4ff', fontSize: 10, fontWeight: 700 }}>{q.exam_goal?.toUpperCase()}</span>
                                             <DiffBadge level={q.difficulty_level} />
                                             {q.is_ai_generated && <span style={{ padding: '2px 8px', borderRadius: 8, background: 'rgba(124,58,237,0.12)', color: '#c084fc', fontSize: 10 }}>✨ AI</span>}
+                                            <YearBadge year={q.board_year} />
                                             {q.subject && <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 10 }}>{q.subject}</span>}
-                                            {q.board_year && <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: 10 }}>{q.board_year}</span>}
                                         </div>
                                         <div style={{ color: 'rgba(255,255,255,0.85)', fontSize: 13, lineHeight: 1.5, marginBottom: 8 }}>{q.question_text.length > 120 ? q.question_text.slice(0, 120) + '...' : q.question_text}</div>
                                         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -567,8 +574,9 @@ function QuestionPreviewList({ items, selected, toggle, difficulty }) {
                             {selected.includes(i) && <CheckCircle size={12} color="white" />}
                         </div>
                         <div style={{ flex: 1 }}>
-                            <div style={{ display: 'flex', gap: 6, marginBottom: 6, flexWrap: 'wrap' }}>
+                            <div style={{ display: 'flex', gap: 6, marginBottom: 6, flexWrap: 'wrap', alignItems: 'center' }}>
                                 <DiffBadge level={q.difficulty_level ?? difficulty} />
+                                <YearBadge year={q.board_year} />
                                 {q.subject && <span style={{ color: '#93b4ff', fontSize: 10 }}>{q.subject}</span>}
                             </div>
                             <div style={{ color: 'rgba(255,255,255,0.85)', fontSize: 13, lineHeight: 1.55, marginBottom: 8 }}>{q.question_text}</div>

@@ -88,6 +88,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/questions/import',        [AdminQuestionController::class, 'import'])->name('questions.import');
         Route::post('/questions/ai-generate',   [AdminQuestionController::class, 'aiGenerate'])->name('questions.ai');
         Route::post('/questions/bulk-save',     [AdminQuestionController::class, 'bulkSave'])->name('questions.bulk');
+        Route::post('/questions/image',         [AdminQuestionController::class, 'extractFromImage'])->name('questions.image');
 
         // Settings
         Route::get('/settings',  [AdminSettingsController::class, 'index'])->name('settings');

@@ -166,10 +166,10 @@ class QuestionController extends Controller
     {
         $request->validate([
             'exam_goal'   => 'required|string',
-            'subject'     => 'required|string',
+            'subject'     => 'nullable|string',   // optional – Gemini picks topic if empty
             'board_year'  => 'nullable|string',
             'count'       => 'required|integer|min:1|max:20',
-            'difficulty'  => 'required|in:LOW,MEDIUM,HIGH',
+            'difficulty'  => 'nullable|in:LOW,MEDIUM,HIGH',
         ]);
 
         $apiKey = AppSetting::nextGeminiKey();
@@ -178,21 +178,24 @@ class QuestionController extends Controller
         }
 
         $goal       = strtoupper($request->exam_goal);
-        $subject    = $request->subject;
+        $subject    = $request->subject ?? '';
         $boardYear  = $request->board_year ?? '';
         $count      = $request->count;
-        $difficulty = $request->difficulty;
+        $difficulty = $request->difficulty ?? 'MEDIUM';
+
+        $subjectLine = $subject ? "Subject: {$subject}" : "Subject: Any relevant subject for {$goal} exam";
+        $boardLine   = $boardYear ? "Exam Year/Type: {$boardYear}" : '';
 
         $prompt = <<<PROMPT
 Generate {$count} multiple choice questions for {$goal} exam in Bangladesh.
-Subject: {$subject}
-{$boardYear}
+{$subjectLine}
+{$boardLine}
 Difficulty: {$difficulty}
 
 Return ONLY a valid JSON array (no markdown, no explanation outside JSON):
 [
   {
-    "subject": "{$subject}",
+    "subject": "the subject of the question",
     "exam_type": "{$goal}",
     "board_year": "{$boardYear}",
     "difficulty_level": "{$difficulty}",
@@ -260,5 +263,84 @@ PROMPT;
         }
 
         return response()->json(['saved' => $saved]);
+    }
+
+    // ── Extract Questions from Image (Gemini Vision) ──────────────────────────
+    public function extractFromImage(Request $request)
+    {
+        $request->validate([
+            'image'     => 'required|image|max:10240',  // max 10 MB
+            'exam_goal' => 'nullable|string',
+        ]);
+
+        $apiKey = AppSetting::nextGeminiKey();
+        if (!$apiKey) {
+            return response()->json(['error' => 'Gemini API key নেই। Settings এ যোগ করো।'], 422);
+        }
+
+        $model    = AppSetting::get('gemini_model', 'gemini-2.0-flash');
+        $goal     = $request->exam_goal ?? 'bcs';
+        $goalUp   = strtoupper($goal);
+
+        // Encode image as base64
+        $imgPath  = $request->file('image')->path();
+        $mimeType = $request->file('image')->getMimeType();
+        $imgBase64 = base64_encode(file_get_contents($imgPath));
+
+        $prompt = <<<PROMPT
+Look at this image carefully. Extract ALL multiple choice questions (MCQ) visible in the image.
+This is likely a Bengali exam question paper (exam type: {$goalUp}).
+
+For each question found, return a JSON object. Return ONLY a valid JSON array, no markdown:
+[
+  {
+    "subject": "subject name in Bengali if visible, else null",
+    "exam_type": "{$goalUp}",
+    "board_year": "year or exam session if visible, else null",
+    "difficulty_level": "MEDIUM",
+    "question_text": "full question text (in Bengali or English as shown)",
+    "image_url": null,
+    "options": {"a": "...", "b": "...", "c": "...", "d": "..."},
+    "correct_answer": "a",
+    "explanation": null
+  }
+]
+
+If no MCQ questions are found in the image, return an empty array: []
+PROMPT;
+
+        try {
+            $response = Http::withHeaders(['Content-Type' => 'application/json'])
+                ->timeout(60)
+                ->post("https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}", [
+                    'contents' => [[
+                        'parts' => [
+                            ['text' => $prompt],
+                            ['inline_data' => [
+                                'mime_type' => $mimeType,
+                                'data'      => $imgBase64,
+                            ]],
+                        ],
+                    ]],
+                    'generationConfig' => ['temperature' => 0.2, 'maxOutputTokens' => 4096],
+                ]);
+
+            if (!$response->successful()) {
+                return response()->json(['error' => 'Gemini API error: ' . $response->status()], 422);
+            }
+
+            $text = $response->json('candidates.0.content.parts.0.text') ?? '';
+            $text = trim(preg_replace('/```json\s*|\s*```/', '', $text));
+
+            $questions = json_decode($text, true);
+            if (json_last_error() !== JSON_ERROR_NONE || !is_array($questions)) {
+                return response()->json(['error' => 'ছবিতে কোনো প্রশ্ন খুঁজে পাওয়া যায়নি বা JSON parse হয়নি।', 'raw' => substr($text, 0, 300)], 422);
+            }
+
+            return response()->json(['questions' => $questions, 'count' => count($questions)]);
+
+        } catch (\Throwable $e) {
+            return response()->json(['error' => 'Error: ' . $e->getMessage()], 500);
+        }
     }
 }

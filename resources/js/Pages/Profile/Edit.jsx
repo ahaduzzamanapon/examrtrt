@@ -1,19 +1,26 @@
 import { useState } from 'react';
 import { Head, useForm, usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import { User, Lock, Trash2, Save, Camera, CheckCircle, AlertCircle, Loader2, Eye, EyeOff } from 'lucide-react';
+import { User, Lock, Trash2, Save, Camera, CheckCircle, Loader2, Eye, EyeOff, GraduationCap } from 'lucide-react';
+import axios from 'axios';
 import MobileLayout from '@/Layouts/MobileLayout';
 
 const GOALS = [
-    { id: 'bcs', emoji: '🏛️', label: 'BCS' },
-    { id: 'hsc', emoji: '📘', label: 'HSC' },
-    { id: 'ssc', emoji: '📗', label: 'SSC' },
-    { id: 'medical', emoji: '⚕️', label: 'Medical' },
-    { id: 'engineering', emoji: '⚙️', label: 'Engineering' },
-    { id: 'bank', emoji: '🏦', label: 'Bank Job' },
-    { id: 'university', emoji: '🎓', label: 'University' },
-    { id: 'primary', emoji: '✏️', label: 'Primary' },
-    { id: 'other', emoji: '📋', label: 'Other' },
+    { id: 'bcs',         emoji: '🏛️', label: 'BCS' },
+    { id: 'hsc',         emoji: '📘', label: 'HSC' },
+    { id: 'ssc',         emoji: '📗', label: 'SSC' },
+    { id: 'medical',     emoji: '⚕️', label: 'মেডিকেল' },
+    { id: 'engineering', emoji: '⚙️', label: 'ইঞ্জিনিয়ারিং' },
+    { id: 'bank',        emoji: '🏦', label: 'ব্যাংক জব' },
+    { id: 'university',  emoji: '🎓', label: 'ভার্সিটি' },
+    { id: 'primary',     emoji: '✏️', label: 'প্রাইমারি' },
+    { id: 'other',       emoji: '📋', label: 'অন্যান্য' },
+];
+
+const STREAMS = [
+    { id: 'science',  emoji: '🔬', label: 'বিজ্ঞান (Science)' },
+    { id: 'arts',     emoji: '📜', label: 'মানবিক (Arts)' },
+    { id: 'commerce', emoji: '💼', label: 'বাণিজ্য (Commerce)' },
 ];
 
 const card = {
@@ -85,8 +92,31 @@ export default function Edit({ mustVerifyEmail, status }) {
         setUploadingAvatar(false);
     };
 
-    // ── Exam goals ───────────────────────────────────────────────────────────
-    const currentGoals = Array.isArray(user.exam_goal) ? user.exam_goal : [];
+    // ── Exam goal & stream setup ─────────────────────────────────────────────
+    const currentGoals  = Array.isArray(user.exam_goal) ? user.exam_goal : [];
+    const currentGoal   = currentGoals[0] ?? null;
+    const [selGoal,   setSelGoal]   = useState(currentGoal);
+    const [selStream, setSelStream] = useState(user.stream ?? null);
+    const [setupSaving,   setSetupSaving]   = useState(false);
+    const [setupSaved,    setSetupSaved]    = useState(false);
+
+    const needsStream = selGoal === 'hsc' || selGoal === 'ssc';
+
+    const saveSetup = async () => {
+        if (!selGoal) return;
+        setSetupSaving(true);
+        try {
+            await axios.post(route('profile.setup'), {
+                exam_goal: selGoal,
+                stream:    needsStream ? selStream : null,
+            });
+            setSetupSaved(true);
+            setTimeout(() => setSetupSaved(false), 2500);
+        } catch (e) {
+            // silent
+        }
+        setSetupSaving(false);
+    };
 
     return (
         <MobileLayout title="প্রোফাইল">
@@ -139,23 +169,80 @@ export default function Edit({ mustVerifyEmail, status }) {
                 </div>
             </div>
 
-            {/* ── Exam Goals ────────────────────────────────────────────────── */}
-            {currentGoals.length > 0 && (
-                <div style={card}>
-                    <SectionLabel icon={CheckCircle} text="আমার পরীক্ষার লক্ষ্য" />
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                        {currentGoals.map(gid => {
-                            const g = GOALS.find(x => x.id === gid);
-                            if (!g) return null;
-                            return (
-                                <span key={gid} style={{ padding: '5px 12px', borderRadius: 20, background: 'rgba(77,111,255,0.15)', border: '1px solid rgba(77,111,255,0.3)', color: '#93b4ff', fontSize: 12, fontWeight: 600 }}>
-                                    {g.emoji} {g.label}
-                                </span>
-                            );
-                        })}
-                    </div>
+            {/* ── Exam Goal & Stream ─────────────────────────────────────────── */}
+            <div style={card}>
+                <SectionLabel icon={GraduationCap} text="পরীক্ষার লক্ষ্য ও বিভাগ" />
+
+                {/* Goal selector */}
+                <label style={labelStyle}>আমার লক্ষ্য</label>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
+                    {GOALS.map(g => (
+                        <motion.button
+                            key={g.id}
+                            whileTap={{ scale: 0.93 }}
+                            onClick={() => { setSelGoal(g.id); setSelStream(null); }}
+                            style={{
+                                padding: '7px 14px', borderRadius: 20, cursor: 'pointer',
+                                fontSize: 13, fontWeight: 600, border: '1px solid',
+                                background: selGoal === g.id ? 'rgba(77,111,255,0.2)' : 'rgba(255,255,255,0.04)',
+                                borderColor: selGoal === g.id ? 'rgba(77,111,255,0.5)' : 'rgba(255,255,255,0.1)',
+                                color: selGoal === g.id ? '#93b4ff' : 'rgba(255,255,255,0.55)',
+                                transition: 'all 0.15s',
+                            }}
+                        >
+                            {g.emoji} {g.label}
+                        </motion.button>
+                    ))}
                 </div>
-            )}
+
+                {/* Stream selector — only for HSC/SSC */}
+                {needsStream && (
+                    <>
+                        <label style={labelStyle}>বিভাগ (Stream)</label>
+                        <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
+                            {STREAMS.map(s => (
+                                <motion.button
+                                    key={s.id}
+                                    whileTap={{ scale: 0.93 }}
+                                    onClick={() => setSelStream(s.id)}
+                                    style={{
+                                        padding: '7px 16px', borderRadius: 20, cursor: 'pointer',
+                                        fontSize: 13, fontWeight: 600, border: '1px solid',
+                                        background: selStream === s.id ? 'rgba(16,185,129,0.2)' : 'rgba(255,255,255,0.04)',
+                                        borderColor: selStream === s.id ? 'rgba(16,185,129,0.5)' : 'rgba(255,255,255,0.1)',
+                                        color: selStream === s.id ? '#34d399' : 'rgba(255,255,255,0.55)',
+                                        transition: 'all 0.15s',
+                                    }}
+                                >
+                                    {s.emoji} {s.label}
+                                </motion.button>
+                            ))}
+                        </div>
+                    </>
+                )}
+
+                {/* Save button */}
+                <motion.button
+                    whileTap={{ scale: 0.96 }}
+                    onClick={saveSetup}
+                    disabled={setupSaving || !selGoal || (needsStream && !selStream)}
+                    style={{
+                        padding: '10px 20px', borderRadius: 10, border: 'none', cursor: 'pointer',
+                        background: setupSaved
+                            ? 'linear-gradient(135deg,#10b981,#059669)'
+                            : 'linear-gradient(135deg,#4d6fff,#7c3aed)',
+                        color: 'white', fontWeight: 700, fontSize: 13,
+                        display: 'flex', alignItems: 'center', gap: 6,
+                        opacity: (!selGoal || (needsStream && !selStream)) ? 0.5 : 1,
+                    }}
+                >
+                    {setupSaving
+                        ? <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} />
+                        : <CheckCircle size={14} />
+                    }
+                    {setupSaved ? 'সেভ হয়েছে! ✓' : 'লক্ষ্য সেভ করো'}
+                </motion.button>
+            </div>
 
             {/* ── Update info ───────────────────────────────────────────────── */}
             <div style={card}>

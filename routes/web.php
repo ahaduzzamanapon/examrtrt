@@ -53,6 +53,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::post('/profile/avatar', [ProfileController::class, 'uploadAvatar'])->name('profile.avatar');
     Route::post('/profile/theme',  [ProfileController::class, 'saveTheme'])->name('profile.theme');
+    Route::post('/profile/setup',  [ProfileController::class, 'saveSetup'])->name('profile.setup');
 
     // ── FCM Token save ────────────────────────────────────────────────────────
     Route::post('/fcm-token', [FcmTokenController::class, 'store'])->name('fcm.token');

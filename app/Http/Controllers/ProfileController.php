@@ -72,6 +72,27 @@ class ProfileController extends Controller
     }
 
     /**
+     * Save exam goal & stream (from profile edit or onboarding popup).
+     */
+    public function saveSetup(Request $request)
+    {
+        $request->validate([
+            'exam_goal' => 'required|string|max:50',
+            'stream'    => 'nullable|in:science,arts,commerce,general',
+        ]);
+
+        $goal   = $request->exam_goal;
+        $stream = in_array($goal, ['hsc', 'ssc']) ? ($request->stream ?? null) : null;
+
+        $request->user()->update([
+            'exam_goal' => [$goal],   // stored as JSON array
+            'stream'    => $stream,
+        ]);
+
+        return response()->json(['ok' => true]);
+    }
+
+    /**
      * Delete the user's account.
      */
     public function destroy(Request $request): RedirectResponse

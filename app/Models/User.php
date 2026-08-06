@@ -21,6 +21,7 @@ class User extends Authenticatable
         'avatar',
         'role',
         'exam_goal',
+        'stream',
         'fcm_token',
         'token_balance',
         'wallet_balance',

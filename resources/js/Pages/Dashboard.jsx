@@ -1,10 +1,12 @@
+import { useState } from 'react';
 import MobileLayout from '@/Layouts/MobileLayout';
 import { motion } from 'framer-motion';
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import {
     Zap, Sword, BookOpen, Brain, Trophy, TrendingUp,
     ChevronRight, Clock, Star, Flame,
 } from 'lucide-react';
+import ProfileSetupModal from '@/Components/ProfileSetupModal';
 
 const container = {
     hidden: {},
@@ -23,10 +25,20 @@ const quickActions = [
 ];
 
 export default function Dashboard({ auth, upcomingExams = [] }) {
-    const user = auth.user;
+    const user = auth?.user ?? usePage().props.auth?.user;
+
+    // Show setup modal if exam_goal missing OR hsc/ssc without stream
+    const goals = Array.isArray(user?.exam_goal) ? user.exam_goal : [];
+    const firstGoal = goals[0] ?? null;
+    const needsStream = firstGoal === 'hsc' || firstGoal === 'ssc';
+    const needsSetup = !firstGoal || (needsStream && !user?.stream);
+    const [showSetup, setShowSetup] = useState(needsSetup);
 
     return (
         <MobileLayout title="হোম">
+            {showSetup && (
+                <ProfileSetupModal onDone={() => setShowSetup(false)} />
+            )}
             <div className="px-4 space-y-5">
 
                 {/* ── Hero greeting ─────────────────────────────────────── */}

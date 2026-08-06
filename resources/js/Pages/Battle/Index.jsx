@@ -26,6 +26,22 @@ export default function BattleIndex({ invites = [], mySessions = [], tokenBalanc
             stake_amount: selectedStake,
         }, {
             onSuccess: () => setShowCreate(false),
+            onError: (errs) => {
+                const msg = errs.token || errs.stake_amount || 'আপনার অ্যাকাউন্টে পর্যাপ্ত টোকেন নেই।';
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'টোকেন শেষ!',
+                    text: msg,
+                    showCancelButton: true,
+                    confirmButtonText: '⚡ টোকেন আয় করুন (Token Store)',
+                    cancelButtonText: 'বাতিল',
+                    confirmButtonColor: '#10b981',
+                }).then((res) => {
+                    if (res.isConfirmed) {
+                        router.visit(route('tokens.index'));
+                    }
+                });
+            },
         });
     };
 

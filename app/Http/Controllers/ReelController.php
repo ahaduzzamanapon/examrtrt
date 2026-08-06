@@ -55,10 +55,13 @@ class ReelController extends Controller
             });
         }
 
-        return $query->inRandomOrder()
-            ->limit($limit)
-            ->get()
-            ->map(function ($q) {
+        $list = $query->inRandomOrder()->limit($limit)->get();
+
+        if ($list->isEmpty()) {
+            $list = Question::query()->where('is_active', true)->inRandomOrder()->limit($limit)->get();
+        }
+
+        return $list->map(function ($q) {
                 return [
                     'id'               => $q->id,
                     'exam_goal'        => $q->exam_goal,

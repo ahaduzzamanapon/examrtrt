@@ -60,7 +60,23 @@ export default function PracticeSession({ questions = [], goal = '' }) {
             });
             setAiAnswer(res.data.answer);
         } catch (err) {
-            setAiAnswer(err.response?.data?.error || 'AI সংযোগে কোনো সমস্যা হয়েছে।');
+            const errorMsg = err.response?.data?.error || 'AI সংযোগে কোনো সমস্যা হয়েছে।';
+            setAiAnswer(errorMsg);
+            if (err.response?.status === 422 || errorMsg.includes('টোকেন')) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'টোকেন শেষ!',
+                    text: errorMsg,
+                    showCancelButton: true,
+                    confirmButtonText: '⚡ টোকেন আয় করুন (Token Store)',
+                    cancelButtonText: 'পরে করব',
+                    confirmButtonColor: '#10b981',
+                }).then((res) => {
+                    if (res.isConfirmed) {
+                        router.visit(route('tokens.index'));
+                    }
+                });
+            }
         }
         setAiLoading(false);
     };

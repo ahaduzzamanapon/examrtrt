@@ -89,12 +89,19 @@ export default function ReelIndex({ initialQuestions = [], currentGoal = 'bcs', 
 
     const currentQ = questions[currentIndex];
 
+    // Auto-fetch if initialQuestions is empty
+    useEffect(() => {
+        if (!questions || questions.length === 0) {
+            fetchMore(selectedGoal);
+        }
+    }, [selectedGoal]);
+
     // Fetch more questions when approaching end
     const fetchMore = async (goal) => {
         if (loadingMore) return;
         setLoadingMore(true);
         try {
-            const res = await fetch(`/api/reel/questions?goal=${goal}&count=10`);
+            const res = await fetch(`/api/reel/questions?goal=${goal || 'bcs'}&count=10`);
             const data = await res.json();
             if (data.questions?.length) {
                 setQuestions(prev => [...prev, ...data.questions]);
@@ -331,6 +338,16 @@ export default function ReelIndex({ initialQuestions = [], currentGoal = 'bcs', 
                 </div>
 
                 {/* ── QUESTION CARD ──────────────────────────────────────────────── */}
+                {!currentQ && (
+                    <div style={{ textAlign: 'center', padding: '60px 20px', color: 'white', background: 'rgba(255,255,255,0.03)', borderRadius: 24, border: '1px solid rgba(255,255,255,0.08)' }}>
+                        <Sparkles size={36} color="#93b4ff" style={{ margin: '0 auto 12px' }} />
+                        <h3 style={{ fontSize: 16, fontWeight: 700, margin: 0 }}>প্রশ্ন লোড হচ্ছে...</h3>
+                        <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, marginTop: 4 }}>অনুগ্রহ করে অপেক্ষা করুন অথবা রিফ্রেশ বাটনে চাপ দিন</p>
+                        <button onClick={() => fetchMore(selectedGoal)} style={{ marginTop: 14, padding: '10px 20px', borderRadius: 12, background: 'linear-gradient(135deg,#4d6fff,#7c3aed)', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: 13 }}>
+                            প্রশ্ন রিফ্রেশ করো
+                        </button>
+                    </div>
+                )}
                 <AnimatePresence mode="wait">
                     {currentQ && (
                         <motion.div

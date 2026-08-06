@@ -79,12 +79,27 @@ export default function PracticeIndex({ goals = [], counts = {}, todayCount = 0,
 
                 {errors.limit && (
                     <div style={{
-                        padding: '12px 14px', borderRadius: 12, marginBottom: 16,
+                        padding: '14px 16px', borderRadius: 14, marginBottom: 16,
                         background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)',
-                        color: '#f87171', fontSize: 13, display: 'flex', alignItems: 'center', gap: 8,
+                        color: '#f87171', fontSize: 13, display: 'flex', flexDirection: 'column', gap: 10,
                     }}>
-                        <AlertCircle size={16} />
-                        {errors.limit}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <AlertCircle size={18} />
+                            <span>{errors.limit}</span>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => router.visit(route('tokens.index'))}
+                            style={{
+                                padding: '8px 14px', borderRadius: 10, border: 'none',
+                                background: 'linear-gradient(135deg,#10b981,#059669)',
+                                color: 'white', fontWeight: 800, fontSize: 12, cursor: 'pointer',
+                                display: 'inline-flex', alignItems: 'center', gap: 6,
+                                alignSelf: 'flex-start', boxShadow: '0 4px 12px rgba(16,185,129,0.3)',
+                            }}
+                        >
+                            ⚡ টোকেন আয় করুন (Token Store) →
+                        </button>
                     </div>
                 )}
 

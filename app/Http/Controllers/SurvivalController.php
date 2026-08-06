@@ -34,6 +34,10 @@ class SurvivalController extends Controller
 
         $query = Question::where('is_active', true);
 
+        if ($goal && $goal !== 'all') {
+            $query->where('exam_goal', $goal);
+        }
+
         if (in_array($goal, ['hsc', 'ssc']) && $user->stream) {
             $query->where(function ($q) use ($user) {
                 $q->where('stream', $user->stream)->orWhere('stream', 'general');

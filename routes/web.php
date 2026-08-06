@@ -6,6 +6,7 @@ use App\Http\Controllers\FcmTokenController;
 use App\Http\Controllers\ExamController;
 use App\Http\Controllers\WalletController;
 use App\Http\Controllers\PracticeController;
+use App\Http\Controllers\ReelController;
 use App\Http\Controllers\SurvivalController;
 use App\Http\Controllers\LeaderboardController;
 use App\Http\Controllers\ModelTestController;
@@ -152,6 +153,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/battle/heartbeat/{id}',     [BattleController::class, 'heartbeat'])->name('battle.heartbeat');
     Route::get('/battle/room/{id}',           [BattleController::class, 'room'])->name('battle.room');
     Route::post('/battle/room/{id}/submit',    [BattleController::class, 'submitAnswer'])->name('battle.submit-answer');
+
+    // ── MCQ Reel ─────────────────────────────────────────────────────────────
+    Route::get('/reel',               [ReelController::class, 'index'])->name('reel.index');
+    Route::get('/api/reel/questions', [ReelController::class, 'fetchQuestions'])->name('reel.questions');
 
     // ── Practice & Survival ───────────────────────────────────────────────────
     Route::get('/practice',            [PracticeController::class, 'index'])->name('practice.index');

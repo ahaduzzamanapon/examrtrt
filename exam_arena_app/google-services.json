@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "165082016850",
+    "project_id": "exam-arena-6148c",
+    "storage_bucket": "exam-arena-6148c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:165082016850:android:04d78f53fe81b630b4038b",
+        "android_client_info": {
+          "package_name": "com.examarena.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyATD0cSkHkFM82ZIxQ5_Ox6ijC9CjXK2iA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -4,6 +4,7 @@ use App\Http\Controllers\PushSubscriptionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\FcmTokenController;
 use App\Http\Controllers\Admin\NotificationController as AdminNotification;
+use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Auth\OnboardingController;
 use App\Models\Exam;
 use Illuminate\Support\Facades\Route;
@@ -71,6 +72,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         })->name('dashboard');
         Route::get('/notifications', [AdminNotification::class, 'index'])->name('notifications');
         Route::post('/notifications', [AdminNotification::class, 'send'])->name('notifications.send');
+
+        Route::get('/users',           [AdminUserController::class, 'index'])->name('users');
+        Route::patch('/users/{user}/role',  [AdminUserController::class, 'updateRole'])->name('users.role');
+        Route::patch('/users/{user}/tokens',[AdminUserController::class, 'updateTokens'])->name('users.tokens');
+        Route::delete('/users/{user}', [AdminUserController::class, 'destroy'])->name('users.destroy');
     });
 
     // ── Feature pages ─────────────────────────────────────────────────────────

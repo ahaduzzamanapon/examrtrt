@@ -35,7 +35,8 @@ class OnboardingController extends Controller
 
         $user = Auth::user();
 
-        $data = ['exam_goal' => json_encode($request->exam_goals)];
+        $data = ['exam_goal' => $request->exam_goals]; // model cast → auto JSON encode
+
 
         if ($request->filled('fcm_token')) {
             $data['fcm_token'] = $request->fcm_token;

@@ -25,7 +25,7 @@ export default function MobileLayout({ children, title = '' }) {
     const [drawerOpen, setDrawerOpen] = useState(false);
 
     // Initialize Firebase FCM notifications
-    useNotifications();
+    const { notifications, removeNotification } = useNotifications();
 
     return (
         <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #0a0e23 0%, #0f1a3e 50%, #0a1628 100%)' }}>
@@ -208,7 +208,7 @@ export default function MobileLayout({ children, title = '' }) {
             <ChatbotWidget />
 
             {/* ── Firebase FCM Toast Notifications ─────────────────────── */}
-            <NotificationContainer />
+            <NotificationContainer notifications={notifications} removeNotification={removeNotification} />
         </div>
     );
 }

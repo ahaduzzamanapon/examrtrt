@@ -7,6 +7,32 @@ import {
 } from 'lucide-react';
 import MobileLayout from '@/Layouts/MobileLayout';
 
+function AdsterraBanner({ scriptCode }) {
+    const defaultCode = `
+        <style>body{margin:0;padding:0;display:flex;justify-content:center;align-items:center;background:transparent;}</style>
+        <script>
+          atOptions = {
+            'key' : 'b7c4685fce9282287defd9cd0dd99097',
+            'format' : 'iframe',
+            'height' : 250,
+            'width' : 300,
+            'params' : {}
+          };
+        </script>
+        <script src="https://www.highperformanceformat.com/b7c4685fce9282287defd9cd0dd99097/invoke.js"></script>
+    `;
+    const codeToRender = scriptCode || defaultCode;
+
+    return (
+        <iframe
+            title="Adsterra Banner"
+            srcDoc={codeToRender}
+            style={{ width: 300, height: 250, border: 'none', overflow: 'hidden', margin: '0 auto', borderRadius: 12 }}
+            scrolling="no"
+        />
+    );
+}
+
 export default function TokenStoreIndex({
     tokenBalance = 0,
     walletBalance = 0,
@@ -15,7 +41,8 @@ export default function TokenStoreIndex({
     referralLink = '',
     status = {},
     adViewActive = true,
-    adViewAmount = 5
+    adViewAmount = 5,
+    adsterraScript = ''
 }) {
     const { errors, flash } = usePage().props;
     const [copied, setCopied] = useState(false);
@@ -75,75 +102,66 @@ export default function TokenStoreIndex({
 
             <div style={{ padding: '16px', maxWidth: 520, margin: '0 auto', paddingBottom: 80 }}>
 
-                {/* Balances Card */}
+                {/* ── HEADER BALANCE CARD ───────────────────────────────────────── */}
                 <div style={{
-                    background: 'linear-gradient(135deg, rgba(245,158,11,0.2), rgba(124,58,237,0.15))',
-                    border: '1px solid rgba(245,158,11,0.3)', borderRadius: 20, padding: '20px',
-                    marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                    boxShadow: '0 8px 24px rgba(245,158,11,0.15)',
+                    background: 'linear-gradient(135deg, rgba(77,111,255,0.2), rgba(124,58,237,0.2))',
+                    border: '1px solid rgba(77,111,255,0.3)', borderRadius: 22, padding: '20px',
+                    marginBottom: 20, boxShadow: '0 8px 24px rgba(77,111,255,0.15)',
                 }}>
-                    <div>
-                        <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                            আপনার টোকেন ব্যালেন্স
-                        </div>
-                        <div style={{ color: '#fbbf24', fontWeight: 900, fontSize: 32, marginTop: 2, display: 'flex', alignItems: 'center', gap: 8 }}>
-                            ⚡ {tokenBalance} <span style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>টোকেন</span>
-                        </div>
-                    </div>
-                    <div style={{ textAlign: 'right', borderLeft: '1px solid rgba(255,255,255,0.1)', paddingLeft: 16 }}>
-                        <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase' }}>
-                            ওয়ালেট ব্যালেন্স
-                        </div>
-                        <div style={{ color: 'white', fontWeight: 800, fontSize: 20, marginTop: 4 }}>
-                            ৳{parseFloat(walletBalance).toFixed(2)}
-                        </div>
-                        <Link href={route('wallet.index')} style={{ color: '#93b4ff', fontSize: 11, fontWeight: 700, textDecoration: 'none', marginTop: 2, display: 'block' }}>
-                            + রিচার্জ করো →
-                        </Link>
-                    </div>
-                </div>
-
-                {errors.wallet && (
-                    <div style={{ padding: '12px 14px', borderRadius: 12, marginBottom: 16, background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171', fontSize: 13, display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <AlertCircle size={16} /> {errors.wallet}
-                    </div>
-                )}
-                {errors.bonus && (
-                    <div style={{ padding: '12px 14px', borderRadius: 12, marginBottom: 16, background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.3)', color: '#fbbf24', fontSize: 13, display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <Clock size={16} /> {errors.bonus}
-                    </div>
-                )}
-
-                {/* ── REFER & EARN FREE TOKENS ─────────────────────────────────── */}
-                <div style={{
-                    background: 'linear-gradient(135deg, rgba(77,111,255,0.15), rgba(124,58,237,0.1))',
-                    border: '1px solid rgba(77,111,255,0.25)', borderRadius: 20, padding: '18px',
-                    marginBottom: 24,
-                }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                        <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(77,111,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <Gift size={20} color="#93b4ff" />
-                        </div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
                         <div>
-                            <h3 style={{ color: 'white', fontWeight: 800, fontSize: 15, margin: 0 }}>
-                                রেফার করে ফ্রিতে টোকেন আয় করুন!
-                            </h3>
-                            <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11, margin: 0 }}>
-                                প্রতিটি সফল রেফারে আপনি এবং আপনার বন্ধু দুজনেই পাবেন +১০টি টোকেন ⚡
-                            </p>
+                            <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12, fontWeight: 600 }}>বর্তমান ব্যালেন্স</div>
+                            <div style={{ color: '#fbbf24', fontWeight: 900, fontSize: 32, display: 'flex', alignItems: 'center', gap: 8 }}>
+                                ⚡ {tokenBalance} <span style={{ fontSize: 14, color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>টোকেন</span>
+                            </div>
+                        </div>
+                        <div style={{
+                            width: 52, height: 52, borderRadius: '50%', background: 'rgba(245,158,11,0.2)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(245,158,11,0.4)',
+                        }}>
+                            <Zap size={26} color="#fbbf24" />
                         </div>
                     </div>
 
                     <div style={{
-                        display: 'flex', alignItems: 'center', gap: 8, marginTop: 12,
-                        background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)',
-                        borderRadius: 12, padding: '8px 12px',
+                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                        padding: '10px 14px', borderRadius: 12, background: 'rgba(0,0,0,0.25)',
+                    }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'white', fontSize: 13, fontWeight: 600 }}>
+                            <Wallet size={15} color="#34d399" /> ওয়ালেট ব্যালেন্স: ৳{walletBalance.toFixed(2)}
+                        </div>
+                        <Link href={route('wallet.index')} style={{ color: '#93b4ff', fontSize: 12, fontWeight: 700, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>
+                            রিচার্জ করো <ArrowRight size={13} />
+                        </Link>
+                    </div>
+                </div>
+
+                {errors.bonus && (
+                    <div style={{ padding: '12px 14px', borderRadius: 12, marginBottom: 16, background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171', fontSize: 13 }}>
+                        ⚠️ {errors.bonus}
+                    </div>
+                )}
+
+                {/* ── REFERRAL CARD ───────────────────────────────────────────── */}
+                <div style={{
+                    background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)',
+                    borderRadius: 20, padding: '18px 20px', marginBottom: 20,
+                }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                        <Gift size={22} color="#a78bfa" />
+                        <div>
+                            <div style={{ color: 'white', fontWeight: 800, fontSize: 15 }}>রেফারেল বোনাস</div>
+                            <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12 }}>প্রতি সফল রেফারে উভয়ে পাবে +১০ টোকেন!</div>
+                        </div>
+                    </div>
+
+                    <div style={{
+                        display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px',
+                        background: 'rgba(255,255,255,0.05)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.09)',
                     }}>
                         <input
-                            type="text"
-                            readOnly
-                            value={referralLink}
-                            style={{ flex: 1, background: 'none', border: 'none', color: 'rgba(255,255,255,0.7)', fontSize: 12, outline: 'none' }}
+                            type="text" readOnly value={referralLink}
+                            style={{ background: 'none', border: 'none', color: '#93b4ff', fontSize: 12, width: '100%', outline: 'none', fontWeight: 600 }}
                         />
                         <button
                             onClick={copyReferral}
@@ -162,7 +180,7 @@ export default function TokenStoreIndex({
                 {/* ── DAILY FREE BONUS ───────────────────────────────────────── */}
                 <div style={{
                     background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)',
-                    borderRadius: 18, padding: '16px', marginBottom: 24,
+                    borderRadius: 18, padding: '16px', marginBottom: 14,
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -185,6 +203,35 @@ export default function TokenStoreIndex({
                         {status.daily_claimed ? 'ক্লেইমড ✓' : 'ক্লেইম করো 🎁'}
                     </button>
                 </div>
+
+                {/* ── REWARDED AD WATCH CARD ──────────────────────────────────── */}
+                {adViewActive && (
+                    <div style={{
+                        background: 'linear-gradient(135deg, rgba(16,185,129,0.15), rgba(5,150,105,0.08))',
+                        border: '1px solid rgba(16,185,129,0.3)',
+                        borderRadius: 18, padding: '16px', marginBottom: 24,
+                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                            <PlayCircle size={26} color="#34d399" />
+                            <div>
+                                <div style={{ color: 'white', fontWeight: 800, fontSize: 14 }}>ভিডিও বিজ্ঞাপন ফ্রি টোকেন 🎬</div>
+                                <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11 }}>বিজ্ঞাপন দেখে সহজে পেয়ে যান +{adViewAmount} টোকেন</div>
+                            </div>
+                        </div>
+                        <button
+                            onClick={startWatchAd}
+                            style={{
+                                padding: '9px 16px', borderRadius: 12, border: 'none',
+                                background: 'linear-gradient(135deg,#10b981,#059669)',
+                                color: 'white', fontWeight: 800, fontSize: 12, cursor: 'pointer',
+                                boxShadow: '0 4px 14px rgba(16,185,129,0.3)', flexShrink: 0,
+                            }}
+                        >
+                            বিজ্ঞাপন দেখুন 🎬
+                        </button>
+                    </div>
+                )}
 
                 {/* ── BUY TOKEN PACKAGES ──────────────────────────────────────── */}
                 <div style={{ color: 'white', fontWeight: 800, fontSize: 16, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -241,6 +288,68 @@ export default function TokenStoreIndex({
                 </div>
 
             </div>
+
+            {/* ── ADSTERRA REWARDED AD MODAL ────────────────────────────────────── */}
+            <AnimatePresence>
+                {adModal && (
+                    <div style={{
+                        position: 'fixed', inset: 0, zIndex: 999, background: 'rgba(0,0,0,0.85)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
+                        backdropFilter: 'blur(10px)',
+                    }}>
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            style={{
+                                width: '100%', maxWidth: 360, borderRadius: 24, padding: 20,
+                                background: '#0d1127', border: '1px solid rgba(52,211,153,0.4)',
+                                color: 'white', textAlign: 'center', boxShadow: '0 10px 40px rgba(0,0,0,0.5)',
+                            }}
+                        >
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+                                <span style={{ color: '#34d399', fontWeight: 800, fontSize: 14, display: 'flex', alignItems: 'center', gap: 6 }}>
+                                    🎬 স্পন্সরড বিজ্ঞাপন
+                                </span>
+                                {adClaimable && (
+                                    <button onClick={() => setAdModal(false)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer' }}>
+                                        <X size={20} />
+                                    </button>
+                                )}
+                            </div>
+
+                            {/* Banner container */}
+                            <div style={{ background: 'rgba(255,255,255,0.02)', borderRadius: 14, padding: '10px 0', marginBottom: 16, minHeight: 255 }}>
+                                <AdsterraBanner scriptCode={adsterraScript} />
+                            </div>
+
+                            {/* Timer / Claim Button */}
+                            {!adClaimable ? (
+                                <div style={{
+                                    padding: '12px', borderRadius: 14, background: 'rgba(255,255,255,0.05)',
+                                    color: 'rgba(255,255,255,0.7)', fontSize: 13, fontWeight: 700,
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                                }}>
+                                    <Clock size={16} color="#fbbf24" />
+                                    টোকেন আনলক হতে বাকি: <span style={{ color: '#fbbf24', fontSize: 16, fontWeight: 900 }}>{adTimer}s</span>
+                                </div>
+                            ) : (
+                                <button
+                                    onClick={claimAdReward}
+                                    style={{
+                                        width: '100%', padding: '14px', borderRadius: 14, border: 'none',
+                                        background: 'linear-gradient(135deg,#10b981,#059669)',
+                                        color: 'white', fontWeight: 900, fontSize: 15, cursor: 'pointer',
+                                        boxShadow: '0 4px 18px rgba(16,185,129,0.4)',
+                                    }}
+                                >
+                                    🎁 +{adViewAmount} টোকেন ক্লেইম করুন!
+                                </button>
+                            )}
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </MobileLayout>
     );
 }

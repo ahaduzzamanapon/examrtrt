@@ -29,6 +29,7 @@ class SettingsController extends Controller
             'tokenReferralBonus' => (int) AppSetting::get('token_referral_bonus', 10),
             'tokenDailyBonus'    => (int) AppSetting::get('token_daily_bonus', 10),
             'tokenModelTestCost' => (int) AppSetting::get('token_model_test_cost', 10),
+            'adsterraScript'     => (string) AppSetting::get('adsterra_script', ''),
         ]);
     }
 
@@ -43,6 +44,7 @@ class SettingsController extends Controller
             'token_referral_bonus'   => 'integer|min:1|max:100',
             'token_daily_bonus'      => 'integer|min:1|max:100',
             'token_model_test_cost'  => 'integer|min:1|max:100',
+            'adsterra_script'        => 'nullable|string',
         ]);
 
         $keys = array_values(array_filter(array_map('trim', $request->gemini_keys ?? [])));
@@ -53,6 +55,7 @@ class SettingsController extends Controller
         AppSetting::set('token_referral_bonus',   (int) ($request->token_referral_bonus ?? 10));
         AppSetting::set('token_daily_bonus',      (int) ($request->token_daily_bonus ?? 10));
         AppSetting::set('token_model_test_cost',  (int) ($request->token_model_test_cost ?? 10));
+        AppSetting::set('adsterra_script',        (string) $request->adsterra_script);
 
         // Reset round-robin index when keys change
         AppSetting::set('gemini_key_index', 0);

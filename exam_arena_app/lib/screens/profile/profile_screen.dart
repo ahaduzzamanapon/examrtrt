@@ -138,7 +138,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                   // Menu items
                   ...[
-                    _MenuItem(icon: Icons.account_wallet_outlined, label: 'ওয়ালেট', subtitle: 'টাকা জমা/তোলা',
+                    _MenuItem(icon: Icons.account_balance_wallet_outlined, label: 'ওয়ালেট', subtitle: 'টাকা জমা/তোলা',
                       onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const WalletScreen()))),
                     _MenuItem(icon: Icons.token_outlined, label: 'টোকেন স্টোর', subtitle: 'টোকেন কিনুন বা অর্জন করুন',
                       onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TokenStoreScreen()))),

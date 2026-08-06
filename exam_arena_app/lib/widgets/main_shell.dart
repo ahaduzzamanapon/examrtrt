@@ -3,11 +3,11 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import '../../config/app_config.dart';
 import '../../providers/auth_provider.dart';
-import '../dashboard/dashboard_screen.dart';
-import '../reel/reel_screen.dart';
-import '../practice/practice_screen.dart';
-import '../survival/survival_screen.dart';
-import '../profile/profile_screen.dart';
+import '../screens/dashboard/dashboard_screen.dart';
+import '../screens/reel/reel_screen.dart';
+import '../screens/practice/practice_screen.dart';
+import '../screens/survival/survival_screen.dart';
+import '../screens/profile/profile_screen.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});

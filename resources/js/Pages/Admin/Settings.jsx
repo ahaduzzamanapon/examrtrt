@@ -72,8 +72,8 @@ const GEMINI_MODELS = [
 
 export default function AdminSettings({ geminiKeys, geminiModel }) {
     const { flash } = usePage().props;
-    const [keys, setKeys]   = useState(geminiKeys ?? []);
-    const [model, setModel] = useState(geminiModel ?? 'gemini-2.0-flash');
+    const [keys, setKeys]   = useState(Array.isArray(geminiKeys) ? geminiKeys : []);
+    const [model, setModel] = useState(geminiModel ?? 'gemini-2.5-flash');
     const [newKey, setNewKey] = useState('');
     const [saving, setSaving] = useState(false);
 

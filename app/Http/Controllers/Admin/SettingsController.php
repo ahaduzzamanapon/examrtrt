@@ -11,8 +11,18 @@ class SettingsController extends Controller
 {
     public function index()
     {
+        $raw = AppSetting::get('gemini_keys', []);
+        // Normalize: always send array to frontend
+        if (is_string($raw) && $raw !== '') {
+            $keys = [$raw];
+        } elseif (is_array($raw)) {
+            $keys = array_values(array_filter($raw));
+        } else {
+            $keys = [];
+        }
+
         return Inertia::render('Admin/Settings', [
-            'geminiKeys'  => AppSetting::get('gemini_keys', []),
+            'geminiKeys'  => $keys,
             'geminiModel' => AppSetting::get('gemini_model', 'gemini-2.0-flash'),
         ]);
     }

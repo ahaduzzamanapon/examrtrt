@@ -96,10 +96,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     // ── Feature pages ─────────────────────────────────────────────────────────
-    Route::get('/exams',       fn () => Inertia::render('Exams/Index'))->name('exams.index');
-    Route::get('/exams/{id}',  fn ($id) => Inertia::render('Exams/Show', ['examId' => $id]))->name('exams.show');
-    Route::get('/reel',        fn () => Inertia::render('Reel/Index'))->name('reel.index');
-    Route::get('/battle',      fn () => Inertia::render('Battle/Index'))->name('battle.index');
+    Route::get('/exams',               fn () => Inertia::render('Exams/Index'))->name('exams.index');
+    Route::get('/exams/{id}',          fn ($id) => Inertia::render('Exams/Show', ['examId' => $id]))->name('exams.show');
+    Route::get('/reel',                [\App\Http\Controllers\ReelController::class, 'index'])->name('reel.index');
+    Route::get('/api/reel/questions',  [\App\Http\Controllers\ReelController::class, 'fetchQuestions'])->name('reel.api');
+    Route::get('/battle',              fn () => Inertia::render('Battle/Index'))->name('battle.index');
     Route::get('/practice',    fn () => Inertia::render('Practice/Index'))->name('practice.index');
     Route::get('/survival',    fn () => Inertia::render('Survival/Index'))->name('survival.index');
     Route::get('/leaderboard', fn () => Inertia::render('Leaderboard/Index'))->name('leaderboard.index');

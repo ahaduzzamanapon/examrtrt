@@ -135,6 +135,14 @@ class QuestionController extends Controller
                     continue;
                 }
 
+                $qText = trim($item['question_text'] ?? $item['question'] ?? '');
+                if (empty($qText)) continue;
+
+                // Skip if exact question text already exists in DB
+                if (Question::where('question_text', $qText)->exists()) {
+                    continue;
+                }
+
                 $correct  = strtolower($item['correct_answer'] ?? $item['correct_option'] ?? 'a');
                 $rawGoal  = $item['exam_type'] ?? $item['exam_goal'] ?? $defaultGoal;
                 $itemGoal = strtolower(trim($rawGoal));
@@ -144,7 +152,7 @@ class QuestionController extends Controller
                     'exam_type'       => strtoupper($rawGoal),
                     'board_year'      => !empty($item['board_year']) && strtolower(trim($item['board_year'])) !== 'null' ? trim($item['board_year']) : 'NEW',
                     'subject'         => $item['subject'] ?? null,
-                    'question_text'   => $item['question_text'] ?? $item['question'] ?? '',
+                    'question_text'   => $qText,
                     'image_url'       => $item['image_url'] ?? null,
                     'options'         => $options,
                     'correct_answer'  => in_array($correct, ['a','b','c','d']) ? $correct : 'a',
@@ -258,6 +266,14 @@ PROMPT;
         $saved = 0;
         foreach ($request->questions as $item) {
             try {
+                $qText = trim($item['question_text'] ?? '');
+                if (empty($qText)) continue;
+
+                // Skip if exact question text already exists in DB
+                if (Question::where('question_text', $qText)->exists()) {
+                    continue;
+                }
+
                 $by = !empty($item['board_year']) && strtolower(trim($item['board_year'])) !== 'null' ? trim($item['board_year']) : 'NEW';
                 Question::create([
                     'exam_goal'        => $request->exam_goal,

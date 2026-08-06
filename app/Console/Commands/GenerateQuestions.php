@@ -147,13 +147,21 @@ class GenerateQuestions extends Command
             $itemSaved = 0;
             foreach ($questions as $q) {
                 try {
+                    $qText = trim($q['question_text'] ?? '');
+                    if (empty($qText)) continue;
+
+                    // Skip duplicate question text
+                    if (Question::where('question_text', $qText)->exists()) {
+                        continue;
+                    }
+
                     $by = !empty($q['board_year']) && strtolower(trim($q['board_year'])) !== 'null' ? trim($q['board_year']) : 'NEW';
                     Question::create([
                         'exam_goal'        => $goal,
                         'exam_type'        => strtoupper($goal),
                         'board_year'       => $by,
                         'subject'          => $subject,
-                        'question_text'    => $q['question_text'] ?? '',
+                        'question_text'    => $qText,
                         'image_url'        => null,
                         'options'          => $q['options'] ?? ['a'=>'','b'=>'','c'=>'','d'=>''],
                         'correct_answer'   => $q['correct_answer'] ?? 'a',

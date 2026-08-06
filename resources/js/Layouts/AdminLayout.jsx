@@ -9,10 +9,7 @@ import {
 const ADMIN_NAV = [
     { href: 'admin.dashboard',     icon: LayoutDashboard, label: 'Dashboard' },
     { href: 'admin.notifications', icon: Bell,            label: 'Notifications' },
-    // Future items:
-    // { href: 'admin.users',       icon: Users,      label: 'Users' },
-    // { href: 'admin.exams',       icon: FileText,   label: 'Exams' },
-    // { href: 'admin.settings',    icon: Settings,   label: 'Settings' },
+    { href: 'admin.users',         icon: Users,           label: 'Users' },
 ];
 
 function Sidebar({ mobile = false, onClose }) {

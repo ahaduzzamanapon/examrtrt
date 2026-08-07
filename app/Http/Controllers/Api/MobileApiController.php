@@ -226,7 +226,7 @@ class MobileApiController extends Controller
         $query = $this->applySubjectFilter($query, $subjects);
 
         $questions = $query->inRandomOrder()->limit(30)
-            ->get(['id', 'question_text', 'options', 'correct_answer', 'explanation', 'subject', 'exam_name', 'year', 'board_year', 'tag', 'exam_tag'])
+            ->get(['id', 'question_text', 'options', 'correct_answer', 'explanation', 'subject', 'exam_type', 'board_year'])
             ->map(function ($q) {
                 return [
                     'id'            => $q->id,
@@ -235,10 +235,10 @@ class MobileApiController extends Controller
                     'correct_answer'=> $q->correct_answer,
                     'explanation'   => $q->explanation,
                     'subject'       => $q->subject,
-                    'exam_name'     => $q->exam_name,
-                    'year'          => $q->year,
-                    'board_year'    => $q->board_year,
-                    'tag'           => $q->tag ?? $q->exam_tag,
+                    'exam_name'     => $q->exam_type ?? '',
+                    'year'          => $q->board_year ?? '',
+                    'board_year'    => $q->board_year ?? '',
+                    'tag'           => $q->subject ?? '',
                 ];
             });
 
@@ -246,7 +246,7 @@ class MobileApiController extends Controller
             $fallbackQuery = Question::where('is_active', true);
             $fallbackQuery = $this->applySubjectFilter($fallbackQuery, $subjects);
             $questions = $fallbackQuery->inRandomOrder()->limit(30)
-                ->get(['id', 'question_text', 'options', 'correct_answer', 'explanation', 'subject', 'exam_name', 'year', 'board_year', 'tag', 'exam_tag'])
+                ->get(['id', 'question_text', 'options', 'correct_answer', 'explanation', 'subject', 'exam_type', 'board_year'])
                 ->map(function ($q) {
                     return [
                         'id'            => $q->id,
@@ -255,10 +255,10 @@ class MobileApiController extends Controller
                         'correct_answer'=> $q->correct_answer,
                         'explanation'   => $q->explanation,
                         'subject'       => $q->subject,
-                        'exam_name'     => $q->exam_name,
-                        'year'          => $q->year,
-                        'board_year'    => $q->board_year,
-                        'tag'           => $q->tag ?? $q->exam_tag,
+                        'exam_name'     => $q->exam_type ?? '',
+                        'year'          => $q->board_year ?? '',
+                        'board_year'    => $q->board_year ?? '',
+                        'tag'           => $q->subject ?? '',
                     ];
                 });
         }
@@ -287,7 +287,7 @@ class MobileApiController extends Controller
         $query = $this->applySubjectFilter($query, $subjects);
 
         $questions = $query->inRandomOrder()->limit($count)
-            ->get(['id', 'question_text', 'options', 'correct_answer', 'explanation', 'subject', 'exam_name', 'year', 'board_year', 'tag', 'exam_tag'])
+            ->get(['id', 'question_text', 'options', 'correct_answer', 'explanation', 'subject', 'exam_type', 'board_year'])
             ->map(function ($q) {
                 return [
                     'id'            => $q->id,
@@ -296,10 +296,10 @@ class MobileApiController extends Controller
                     'correct_answer'=> $q->correct_answer,
                     'explanation'   => $q->explanation,
                     'subject'       => $q->subject,
-                    'exam_name'     => $q->exam_name,
-                    'year'          => $q->year,
-                    'board_year'    => $q->board_year,
-                    'tag'           => $q->tag ?? $q->exam_tag,
+                    'exam_name'     => $q->exam_type ?? '',
+                    'year'          => $q->board_year ?? '',
+                    'board_year'    => $q->board_year ?? '',
+                    'tag'           => $q->subject ?? '',
                 ];
             });
 
@@ -307,7 +307,7 @@ class MobileApiController extends Controller
             $fallbackQuery = Question::where('is_active', true);
             $fallbackQuery = $this->applySubjectFilter($fallbackQuery, $subjects);
             $questions = $fallbackQuery->inRandomOrder()->limit($count)
-                ->get(['id', 'question_text', 'options', 'correct_answer', 'explanation', 'subject', 'exam_name', 'year', 'board_year', 'tag', 'exam_tag'])
+                ->get(['id', 'question_text', 'options', 'correct_answer', 'explanation', 'subject', 'exam_type', 'board_year'])
                 ->map(function ($q) {
                     return [
                         'id'            => $q->id,
@@ -316,10 +316,10 @@ class MobileApiController extends Controller
                         'correct_answer'=> $q->correct_answer,
                         'explanation'   => $q->explanation,
                         'subject'       => $q->subject,
-                        'exam_name'     => $q->exam_name,
-                        'year'          => $q->year,
-                        'board_year'    => $q->board_year,
-                        'tag'           => $q->tag ?? $q->exam_tag,
+                        'exam_name'     => $q->exam_type ?? '',
+                        'year'          => $q->board_year ?? '',
+                        'board_year'    => $q->board_year ?? '',
+                        'tag'           => $q->subject ?? '',
                     ];
                 });
         }

@@ -42,11 +42,19 @@ class MobileAuthController extends Controller
     public function register(Request $request)
     {
         $request->validate([
-            'name'     => 'required|string|max:255',
-            'email'    => 'required|email|unique:users,email',
-            'password' => 'required|min:8|confirmed',
-            'phone'    => 'nullable|string|max:20',
+            'name'          => 'required|string|max:255',
+            'email'         => 'required|email|unique:users,email',
+            'password'      => 'required|min:8|confirmed',
+            'phone'         => 'nullable|string|max:20',
+            'referral_code' => 'nullable|string',
         ]);
+
+        $referrer = null;
+        if (!empty($request->referral_code)) {
+            $referrer = User::where('referral_code', trim($request->referral_code))->first();
+        }
+
+        $referralCode = strtoupper(substr(md5(uniqid(rand(), true)), 0, 8));
 
         $user = User::create([
             'name'              => $request->name,
@@ -54,11 +62,19 @@ class MobileAuthController extends Controller
             'phone'             => $request->phone,
             'password'          => Hash::make($request->password),
             'role'              => 'STUDENT',
+            'referred_by'       => $referrer ? $referrer->id : null,
+            'referral_code'     => $referralCode,
             'email_verified_at' => now(),
         ]);
 
-        // 50 welcome tokens
+        // Welcome bonus (50 tokens)
         app(TokenService::class)->transact($user, 'ADMIN_GRANT', 50, 'নিবন্ধন বোনাস — স্বাগতম! 🎉');
+
+        // Referral bonus (+20 tokens for each)
+        if ($referrer) {
+            app(TokenService::class)->transact($referrer, 'REFERRAL_BONUS', 20, "রেফারেল বোনাস — {$user->name} যোগদান করেছেন! 🎁");
+            app(TokenService::class)->transact($user, 'REFERRAL_BONUS', 20, 'রেফারেল কোড ব্যবহার বোনাস! 🎁');
+        }
 
         $token = $user->createToken('mobile-app')->plainTextToken;
 
@@ -75,31 +91,61 @@ class MobileAuthController extends Controller
             'id_token' => 'required|string',
         ]);
 
+        $googleUser = null;
+
+        // Try verifying ID Token via Google oauth2 tokeninfo endpoint
         try {
-            // Verify Google id_token via Socialite stateless
-            $googleUser = Socialite::driver('google')
-                ->stateless()
-                ->userFromToken($request->id_token);
-        } catch (\Exception $e) {
-            return response()->json(['message' => 'Google token যাচাই ব্যর্থ হয়েছে।'], 401);
+            $resp = \Illuminate\Support\Facades\Http::get('https://oauth2.googleapis.com/tokeninfo', [
+                'id_token' => $request->id_token,
+            ]);
+
+            if ($resp->successful() && !empty($resp->json()['email'])) {
+                $data = $resp->json();
+                $googleUser = (object) [
+                    'id'     => $data['sub'],
+                    'name'   => $data['name'] ?? explode('@', $data['email'])[0],
+                    'email'  => $data['email'],
+                    'avatar' => $data['picture'] ?? null,
+                ];
+            }
+        } catch (\Exception $e) {}
+
+        // Fallback: Try Socialite with access_token or id_token
+        if (!$googleUser) {
+            try {
+                $token = $request->access_token ?? $request->id_token;
+                $socUser = Socialite::driver('google')->stateless()->userFromToken($token);
+                $googleUser = (object) [
+                    'id'     => $socUser->getId(),
+                    'name'   => $socUser->getName() ?? $socUser->getEmail(),
+                    'email'  => $socUser->getEmail(),
+                    'avatar' => $socUser->getAvatar(),
+                ];
+            } catch (\Exception $e) {
+                return response()->json(['message' => 'Google token যাচাই ব্যর্থ হয়েছে।'], 401);
+            }
         }
 
-        $user = User::where('google_id', $googleUser->getId())->first()
-             ?? User::where('email', $googleUser->getEmail())->first();
+        if (!$googleUser || empty($googleUser->email)) {
+            return response()->json(['message' => 'Google অ্যাকাউন্ট থেকে ইমেইল পাওয়া যায়নি।'], 422);
+        }
+
+        $user = User::where('google_id', $googleUser->id)->first()
+             ?? User::where('email', $googleUser->email)->first();
 
         if ($user) {
             if (!$user->google_id) {
                 $user->update([
-                    'google_id' => $googleUser->getId(),
-                    'avatar'    => $googleUser->getAvatar() ?? $user->avatar,
+                    'google_id' => $googleUser->id,
+                    'avatar'    => $googleUser->avatar ?? $user->avatar,
                 ]);
             }
         } else {
             $user = User::create([
-                'name'              => $googleUser->getName(),
-                'email'             => $googleUser->getEmail(),
-                'google_id'         => $googleUser->getId(),
-                'avatar'            => $googleUser->getAvatar(),
+                'name'              => $googleUser->name,
+                'email'             => $googleUser->email,
+                'google_id'         => $googleUser->id,
+                'avatar'            => $googleUser->avatar,
                 'email_verified_at' => now(),
                 'password'          => null,
                 'role'              => 'STUDENT',
@@ -180,8 +226,9 @@ class MobileAuthController extends Controller
         ]);
 
         $user = $request->user();
+        $cleanGoal = str_replace(['[', ']', '"', "'", '\\'], '', $request->exam_goal);
         $user->update([
-            'exam_goal' => $request->exam_goal,
+            'exam_goal' => $cleanGoal,
             'stream'    => $request->stream,
         ]);
 
@@ -191,6 +238,7 @@ class MobileAuthController extends Controller
     // ── Helper: User data array ───────────────────────────────────────────────
     private function userData(User $user): array
     {
+        $cleanGoal = str_replace(['[', ']', '"', "'", '\\'], '', (string)$user->exam_goal);
         return [
             'id'            => $user->id,
             'name'          => $user->name,
@@ -198,7 +246,7 @@ class MobileAuthController extends Controller
             'phone'         => $user->phone,
             'avatar'        => $user->avatar,
             'role'          => $user->role,
-            'exam_goal'     => $user->exam_goal,
+            'exam_goal'     => $cleanGoal,
             'stream'        => $user->stream,
             'token_balance' => (int) $user->token_balance,
             'wallet_balance'=> (float) $user->wallet_balance,

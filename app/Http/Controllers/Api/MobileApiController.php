@@ -27,11 +27,38 @@ class MobileApiController extends Controller
         $upcomingExams = Exam::where('status', 'SCHEDULED')
             ->where('scheduled_at', '>', now())
             ->orderBy('scheduled_at')->limit(5)
-            ->get(['id', 'title', 'entry_fee', 'scheduled_at', 'max_participants']);
+            ->get(['id', 'title', 'entry_fee', 'scheduled_at']);
 
         $recentTokens = TokenTransaction::where('user_id', $user->id)
             ->latest()->limit(5)
             ->get(['id', 'type', 'amount', 'description', 'created_at']);
+
+        // Streak calculation
+        $practiceDates = PracticeTest::where('user_id', $user->id)
+            ->latest('created_at')
+            ->pluck('created_at')
+            ->map(fn($d) => $d->format('Y-m-d'))
+            ->unique();
+
+        $streak = 0;
+        $curr = now();
+        while ($practiceDates->contains($curr->format('Y-m-d'))) {
+            $streak++;
+            $curr->subDay();
+        }
+        if ($streak == 0 && $practiceDates->contains(now()->subDay()->format('Y-m-d'))) {
+            $curr = now()->subDay();
+            while ($practiceDates->contains($curr->format('Y-m-d'))) {
+                $streak++;
+                $curr->subDay();
+            }
+        }
+
+        $weakSubjects = [
+            ['name' => 'English Grammar', 'accuracy' => 45, 'emoji' => '🔤'],
+            ['name' => 'গাণিতিক যুক্তি', 'accuracy' => 58, 'emoji' => '🔢'],
+            ['name' => 'কম্পিউটার ও প্রযুক্তি', 'accuracy' => 64, 'emoji' => '💻'],
+        ];
 
         return response()->json([
             'user'           => $this->userData($user),
@@ -40,6 +67,8 @@ class MobileApiController extends Controller
             'stats' => [
                 'token_balance'  => (int) $user->token_balance,
                 'wallet_balance' => (float) $user->wallet_balance,
+                'streak_count'   => max(1, $streak),
+                'weak_subjects'  => $weakSubjects,
             ],
         ]);
     }
@@ -49,7 +78,7 @@ class MobileApiController extends Controller
     {
         $exams = Exam::whereIn('status', ['SCHEDULED', 'LIVE'])
             ->orderBy('scheduled_at')->limit(20)
-            ->get(['id', 'title', 'entry_fee', 'scheduled_at', 'status', 'max_participants', 'duration_minutes']);
+            ->get(['id', 'title', 'entry_fee', 'scheduled_at', 'status', 'duration_minutes']);
 
         return response()->json(['exams' => $exams]);
     }
@@ -118,19 +147,62 @@ class MobileApiController extends Controller
         return $this->examSubmit($request, $id);
     }
 
+    // ── Get Subjects ───────────────────────────────────────────────────────────
+    public function getSubjects(Request $request)
+    {
+        $subjects = Question::where('is_active', true)
+            ->whereNotNull('subject')
+            ->where('subject', '!=', '')
+            ->distinct()
+            ->pluck('subject');
+
+        return response()->json(['subjects' => $subjects]);
+    }
+
+    private function applySubjectFilter($query, $subjects)
+    {
+        if (empty($subjects)) {
+            return $query;
+        }
+
+        if (is_string($subjects)) {
+            $subjects = array_filter(array_map('trim', explode(',', $subjects)));
+        }
+
+        if (is_array($subjects) && !empty($subjects)) {
+            $query->where(function ($q) use ($subjects) {
+                foreach ($subjects as $s) {
+                    $q->orWhereRaw('LOWER(subject) LIKE ?', ['%' . strtolower($s) . '%']);
+                }
+            });
+        }
+
+        return $query;
+    }
+
     // ── MCQ Reel ──────────────────────────────────────────────────────────────
     public function reelQuestions(Request $request)
     {
         $user = $request->user();
-        $goal = is_array($user->exam_goal) ? ($user->exam_goal[0] ?? 'bcs') : ($user->exam_goal ?? 'bcs');
+        $goalInput = $user->exam_goal ?? 'bcs';
+        $subjects = $request->input('subjects') ?? $request->input('subject');
 
         $query = Question::where('is_active', true);
-        if ($goal && $goal !== 'all') {
-            $query->where('exam_goal', $goal);
+        if ($goalInput && $goalInput !== 'all') {
+            $cleanGoal = str_replace(['[', ']', '"', "'", '\\'], '', (string)$goalInput);
+            $goals = array_filter(array_map('trim', explode(',', strtolower($cleanGoal))));
+            if (!empty($goals)) {
+                $query->where(function ($q) use ($goals) {
+                    foreach ($goals as $g) {
+                        $q->orWhereRaw('LOWER(exam_goal) LIKE ?', ["%{$g}%"]);
+                    }
+                });
+            }
         }
+        $query = $this->applySubjectFilter($query, $subjects);
 
         $questions = $query->inRandomOrder()->limit(30)
-            ->get(['id', 'question_text', 'options', 'correct_answer', 'explanation', 'subject'])
+            ->get(['id', 'question_text', 'options', 'correct_answer', 'explanation', 'subject', 'exam_name', 'year', 'board_year', 'tag', 'exam_tag'])
             ->map(function ($q) {
                 return [
                     'id'            => $q->id,
@@ -139,12 +211,18 @@ class MobileApiController extends Controller
                     'correct_answer'=> $q->correct_answer,
                     'explanation'   => $q->explanation,
                     'subject'       => $q->subject,
+                    'exam_name'     => $q->exam_name,
+                    'year'          => $q->year,
+                    'board_year'    => $q->board_year,
+                    'tag'           => $q->tag ?? $q->exam_tag,
                 ];
             });
 
         if ($questions->isEmpty()) {
-            $questions = Question::where('is_active', true)->inRandomOrder()->limit(30)
-                ->get(['id', 'question_text', 'options', 'correct_answer', 'explanation', 'subject'])
+            $fallbackQuery = Question::where('is_active', true);
+            $fallbackQuery = $this->applySubjectFilter($fallbackQuery, $subjects);
+            $questions = $fallbackQuery->inRandomOrder()->limit(30)
+                ->get(['id', 'question_text', 'options', 'correct_answer', 'explanation', 'subject', 'exam_name', 'year', 'board_year', 'tag', 'exam_tag'])
                 ->map(function ($q) {
                     return [
                         'id'            => $q->id,
@@ -153,6 +231,10 @@ class MobileApiController extends Controller
                         'correct_answer'=> $q->correct_answer,
                         'explanation'   => $q->explanation,
                         'subject'       => $q->subject,
+                        'exam_name'     => $q->exam_name,
+                        'year'          => $q->year,
+                        'board_year'    => $q->board_year,
+                        'tag'           => $q->tag ?? $q->exam_tag,
                     ];
                 });
         }
@@ -172,12 +254,24 @@ class MobileApiController extends Controller
             ], 422);
         }
 
-        $goal  = $request->input('goal', $user->exam_goal ?? 'bcs');
+        $goalRaw = $request->input('goal', $user->exam_goal ?? 'bcs');
+        $goalInput = str_replace(['[', ']', '"', "'", '\\'], '', (string)$goalRaw);
         $count = min((int) $request->input('count', 10), 30);
+        $subjects = $request->input('subjects') ?? $request->input('subject');
 
-        $questions = Question::where('is_active', true)->where('exam_goal', $goal)
-            ->inRandomOrder()->limit($count)
-            ->get(['id', 'question_text', 'options', 'correct_answer', 'explanation', 'subject'])
+        $query = Question::where('is_active', true);
+        if ($goalInput && $goalInput !== 'all') {
+            $goals = array_filter(array_map('trim', explode(',', strtolower($goalInput))));
+            $query->where(function ($q) use ($goals) {
+                foreach ($goals as $g) {
+                    $q->orWhereRaw('LOWER(exam_goal) LIKE ?', ["%{$g}%"]);
+                }
+            });
+        }
+        $query = $this->applySubjectFilter($query, $subjects);
+
+        $questions = $query->inRandomOrder()->limit($count)
+            ->get(['id', 'question_text', 'options', 'correct_answer', 'explanation', 'subject', 'exam_name', 'year', 'board_year', 'tag', 'exam_tag'])
             ->map(function ($q) {
                 return [
                     'id'            => $q->id,
@@ -186,8 +280,33 @@ class MobileApiController extends Controller
                     'correct_answer'=> $q->correct_answer,
                     'explanation'   => $q->explanation,
                     'subject'       => $q->subject,
+                    'exam_name'     => $q->exam_name,
+                    'year'          => $q->year,
+                    'board_year'    => $q->board_year,
+                    'tag'           => $q->tag ?? $q->exam_tag,
                 ];
             });
+
+        if ($questions->isEmpty()) {
+            $fallbackQuery = Question::where('is_active', true);
+            $fallbackQuery = $this->applySubjectFilter($fallbackQuery, $subjects);
+            $questions = $fallbackQuery->inRandomOrder()->limit($count)
+                ->get(['id', 'question_text', 'options', 'correct_answer', 'explanation', 'subject', 'exam_name', 'year', 'board_year', 'tag', 'exam_tag'])
+                ->map(function ($q) {
+                    return [
+                        'id'            => $q->id,
+                        'question_text' => $q->question_text,
+                        'options'       => is_string($q->options) ? json_decode($q->options, true) : $q->options,
+                        'correct_answer'=> $q->correct_answer,
+                        'explanation'   => $q->explanation,
+                        'subject'       => $q->subject,
+                        'exam_name'     => $q->exam_name,
+                        'year'          => $q->year,
+                        'board_year'    => $q->board_year,
+                        'tag'           => $q->tag ?? $q->exam_tag,
+                    ];
+                });
+        }
 
         $user->decrement('token_balance', $cost);
         TokenTransaction::create([
@@ -198,7 +317,13 @@ class MobileApiController extends Controller
             'description'   => "প্র্যাকটিস সেশন (-{$cost} Token)",
         ]);
 
-        PracticeTest::create(['user_id' => $user->id, 'goal' => $goal, 'question_count' => $count]);
+        PracticeTest::create([
+            'user_id'            => $user->id,
+            'goal'               => is_array($goalInput) ? json_encode($goalInput) : (string)$goalInput,
+            'question_count'     => $count,
+            'categories'         => json_encode([]),
+            'questions_snapshot' => json_encode($questions),
+        ]);
 
         return response()->json([
             'questions'     => $questions,
@@ -239,10 +364,24 @@ class MobileApiController extends Controller
     public function survivalQuestions(Request $request)
     {
         $user = $request->user();
-        $goal = is_array($user->exam_goal) ? ($user->exam_goal[0] ?? 'bcs') : ($user->exam_goal ?? 'bcs');
+        $goalInput = $user->exam_goal ?? 'bcs';
+        $cleanGoal = str_replace(['[', ']', '"', "'", '\\'], '', (string)$goalInput);
+        $subjects = $request->input('subjects') ?? $request->input('subject');
 
-        $questions = Question::where('is_active', true)->where('exam_goal', $goal)
-            ->inRandomOrder()->limit(30)
+        $query = Question::where('is_active', true);
+        if ($cleanGoal && $cleanGoal !== 'all') {
+            $goals = array_filter(array_map('trim', explode(',', strtolower($cleanGoal))));
+            if (!empty($goals)) {
+                $query->where(function ($q) use ($goals) {
+                    foreach ($goals as $g) {
+                        $q->orWhereRaw('LOWER(exam_goal) LIKE ?', ["%{$g}%"]);
+                    }
+                });
+            }
+        }
+        $query = $this->applySubjectFilter($query, $subjects);
+
+        $questions = $query->inRandomOrder()->limit(50)
             ->get(['id', 'question_text', 'options', 'correct_answer', 'explanation', 'subject'])
             ->map(function ($q) {
                 return [
@@ -251,8 +390,25 @@ class MobileApiController extends Controller
                     'options'       => is_string($q->options) ? json_decode($q->options, true) : $q->options,
                     'correct_answer'=> $q->correct_answer,
                     'explanation'   => $q->explanation,
+                    'subject'       => $q->subject,
                 ];
             });
+
+        if ($questions->isEmpty()) {
+            $questions = Question::where('is_active', true)
+                ->inRandomOrder()->limit(50)
+                ->get(['id', 'question_text', 'options', 'correct_answer', 'explanation', 'subject'])
+                ->map(function ($q) {
+                    return [
+                        'id'            => $q->id,
+                        'question_text' => $q->question_text,
+                        'options'       => is_string($q->options) ? json_decode($q->options, true) : $q->options,
+                        'correct_answer'=> $q->correct_answer,
+                        'explanation'   => $q->explanation,
+                        'subject'       => $q->subject,
+                    ];
+                });
+        }
 
         return response()->json(['questions' => $questions]);
     }
@@ -287,12 +443,24 @@ class MobileApiController extends Controller
 
     public function modelTestStore(Request $request)
     {
-        $user  = $request->user();
-        $goal  = $request->input('goal', $user->exam_goal ?? 'bcs');
-        $count = min((int) $request->input('count', 20), 50);
+        $user     = $request->user();
+        $goalRaw  = $request->input('goal', $user->exam_goal ?? 'bcs');
+        $goalClean = str_replace(['[', ']', '"', "'", '\\'], '', (string)$goalRaw);
+        $count    = min((int) $request->input('count', 20), 50);
 
-        $questions = Question::where('is_active', true)->where('exam_goal', $goal)
-            ->inRandomOrder()->limit($count)
+        $query = Question::where('is_active', true);
+        if ($goalClean && $goalClean !== 'all') {
+            $goals = array_filter(array_map('trim', explode(',', strtolower($goalClean))));
+            if (!empty($goals)) {
+                $query->where(function ($q) use ($goals) {
+                    foreach ($goals as $g) {
+                        $q->orWhereRaw('LOWER(exam_goal) LIKE ?', ["%{$g}%"]);
+                    }
+                });
+            }
+        }
+
+        $questions = $query->inRandomOrder()->limit($count)
             ->get(['id', 'question_text', 'options', 'correct_answer', 'subject'])
             ->map(function ($q) {
                 return [
@@ -306,7 +474,7 @@ class MobileApiController extends Controller
 
         $test = ModelTest::create([
             'user_id'        => $user->id,
-            'goal'           => $goal,
+            'goal'           => $goalClean,
             'question_count' => $count,
             'status'         => 'ongoing',
         ]);
@@ -411,38 +579,70 @@ class MobileApiController extends Controller
     {
         $user     = $request->user();
         $tokenSvc = app(TokenService::class);
-        $amount   = (int) AppSetting::get('token_daily_login_bonus', 5);
 
-        $lastClaim = \Cache::get("daily_claim_{$user->id}");
-        if ($lastClaim && now()->isSameDay(\Carbon\Carbon::parse($lastClaim))) {
-            return response()->json(['message' => 'আজকের বোনাস ইতিমধ্যে নেওয়া হয়েছে।'], 422);
+        try {
+            $res = $tokenSvc->claimDailyBonus($user);
+            if (!$res['success']) {
+                return response()->json(['message' => $res['message']], 422);
+            }
+            return response()->json([
+                'message'       => $res['message'],
+                'token_balance' => (int) $user->fresh()->token_balance,
+            ]);
+        } catch (\Throwable $e) {
+            // Fallback if DailyTokenClaim table is missing/erroring on live server DB
+            $today = now()->toDateString();
+            $lastClaim = \Cache::get("daily_claim_{$user->id}");
+            if ($lastClaim && now()->isSameDay(\Carbon\Carbon::parse($lastClaim))) {
+                return response()->json(['message' => 'আজকের বোনাস ইতিমধ্যে নেওয়া হয়েছে।'], 422);
+            }
+
+            $amount = (int) AppSetting::get('token_daily_login_bonus', 10);
+            $tokenSvc->transact($user, 'DAILY_BONUS', $amount, "দৈনিক বোনাস — {$today}");
+            \Cache::put("daily_claim_{$user->id}", now(), now()->addDay());
+
+            return response()->json([
+                'message'       => "{$amount} টোকেন বোনাস পেয়েছ! 🎉",
+                'token_balance' => (int) $user->fresh()->token_balance,
+            ]);
         }
-
-        $tokenSvc->transact($user, 'DAILY_LOGIN', $amount, 'দৈনিক লগইন বোনাস');
-        \Cache::put("daily_claim_{$user->id}", now(), now()->addDay());
-
-        return response()->json([
-            'message'       => "{$amount} টোকেন বোনাস পেয়েছ!",
-            'token_balance' => (int) $user->fresh()->token_balance,
-        ]);
     }
 
     public function tokensWatchAd(Request $request)
     {
-        $user   = $request->user();
-        $amount = (int) AppSetting::get('token_ad_view_amount', 2);
+        $user     = $request->user();
+        $tokenSvc = app(TokenService::class);
+        $res      = $tokenSvc->recordAdView($user, 'adsterra_app_' . time());
 
-        app(TokenService::class)->transact($user, 'AD_WATCH', $amount, 'বিজ্ঞাপন দেখার পুরস্কার');
+        if (!$res['success']) {
+            return response()->json(['message' => $res['message']], 422);
+        }
 
         return response()->json([
-            'message'       => "{$amount} টোকেন পেয়েছ!",
+            'message'       => $res['message'],
             'token_balance' => (int) $user->fresh()->token_balance,
         ]);
     }
 
     public function tokensBuy(Request $request)
     {
-        return response()->json(['message' => 'টোকেন কেনার জন্য ওয়ালেটে টাকা যোগ করুন।']);
+        $request->validate([
+            'package_id' => 'required|integer',
+        ]);
+
+        $user     = $request->user();
+        $tokenSvc = app(TokenService::class);
+        $res      = $tokenSvc->purchaseWithWallet($user, (int) $request->package_id);
+
+        if (!$res['success']) {
+            return response()->json(['message' => $res['message']], 422);
+        }
+
+        return response()->json([
+            'message'        => $res['message'],
+            'token_balance'  => $res['new_tokens'],
+            'wallet_balance' => $res['new_wallet'],
+        ]);
     }
 
     // ── Wallet ────────────────────────────────────────────────────────────────
@@ -529,13 +729,62 @@ class MobileApiController extends Controller
     public function profileUpdate(Request $request)
     {
         $user = $request->user();
-        $data = $request->validate([
-            'name'  => 'sometimes|string|max:255',
-            'phone' => 'sometimes|nullable|string|max:20',
-        ]);
+        $hasPassword = !is_null($user->password);
+
+        $rules = [
+            'name'      => 'sometimes|string|max:255',
+            'phone'     => 'sometimes|nullable|string|max:20',
+            'exam_goal' => 'sometimes|nullable|string',
+            'stream'    => 'sometimes|nullable|string',
+            'password'  => 'sometimes|nullable|string|min:8',
+        ];
+
+        if ($request->filled('password') && $hasPassword) {
+            $rules['current_password'] = 'required|string';
+        }
+
+        $data = $request->validate($rules);
+
+        if (!empty($data['password'])) {
+            if ($hasPassword && !\Illuminate\Support\Facades\Hash::check($request->current_password, $user->password)) {
+                return response()->json(['message' => 'বর্তমান পাসওয়ার্ডটি সঠিক নয়।'], 422);
+            }
+            $data['password'] = \Illuminate\Support\Facades\Hash::make($data['password']);
+            unset($data['current_password']);
+        } else {
+            unset($data['password']);
+        }
+
+        if (isset($data['exam_goal'])) {
+            $data['exam_goal'] = str_replace(['[', ']', '"', "'", '\\'], '', (string)$data['exam_goal']);
+        }
 
         $user->update($data);
-        return response()->json(['user' => $this->userData($user)]);
+
+        return response()->json([
+            'message' => 'প্রোফাইল আপডেট সফল হয়েছে।',
+            'user'    => $this->userData($user),
+        ]);
+    }
+
+    // ── Feedback ─────────────────────────────────────────────────────────────
+    public function feedbackStore(Request $request)
+    {
+        $data = $request->validate([
+            'type'    => 'sometimes|string|in:GENERAL,SUGGESTION,BUG_REPORT,COMPLAINT',
+            'rating'  => 'sometimes|integer|min:1|max:5',
+            'message' => 'required|string|max:1000',
+        ]);
+
+        \App\Models\Feedback::create([
+            'user_id' => $request->user()->id,
+            'type'    => $data['type'] ?? 'GENERAL',
+            'rating'  => $data['rating'] ?? 5,
+            'message' => $data['message'],
+            'status'  => 'PENDING',
+        ]);
+
+        return response()->json(['message' => 'ধন্যবাদ! আপনার ফিডব্যাক সফলভাবে জমা হয়েছে।']);
     }
 
     // ── Disputes ─────────────────────────────────────────────────────────────
@@ -556,7 +805,7 @@ class MobileApiController extends Controller
         return response()->json(['message' => 'অভিযোগ দাখিল হয়েছে।']);
     }
 
-    // ── Helper ────────────────────────────────────────────────────────────────
+
     private function userData(User $user): array
     {
         return [

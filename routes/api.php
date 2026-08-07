@@ -28,7 +28,8 @@ Route::prefix('mobile')->middleware('auth:sanctum')->group(function () {
     Route::get('user',            [MobileAuthController::class, 'user']);
     Route::post('onboarding',     [MobileAuthController::class, 'saveOnboarding']);
 
-    // Dashboard
+    // Dashboard & Subjects
+    Route::get('subjects',        [MobileApiController::class, 'getSubjects']);
     Route::get('dashboard',       [MobileApiController::class, 'dashboard']);
 
     // Exams
@@ -84,6 +85,7 @@ Route::prefix('mobile')->middleware('auth:sanctum')->group(function () {
     Route::get('profile',                        [MobileApiController::class, 'profile']);
     Route::patch('profile',                      [MobileApiController::class, 'profileUpdate']);
 
-    // Disputes
+    // Feedback & Disputes
+    Route::post('feedback',                      [MobileApiController::class, 'feedbackStore']);
     Route::post('disputes',                      [MobileApiController::class, 'disputeStore']);
 });

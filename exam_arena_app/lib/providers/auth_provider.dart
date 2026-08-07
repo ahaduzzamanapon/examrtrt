@@ -49,21 +49,26 @@ class AuthProvider extends ChangeNotifier {
     required String email,
     required String password,
     String? phone,
+    String? referralCode,
   }) async {
     final dio = _dio();
     final res = await dio.post('/register', data: {
       'name': name, 'email': email,
       'password': password, 'password_confirmation': password,
       'phone': phone,
+      if (referralCode != null && referralCode.trim().isNotEmpty) 'referral_code': referralCode.trim(),
     });
     await _storeAuth(res.data);
     return res.data;
   }
 
   // ── Google Login ──────────────────────────────────────────────────────────
-  Future<Map<String, dynamic>> googleLogin(String idToken) async {
+  Future<Map<String, dynamic>> googleLogin(String idToken, {String? accessToken}) async {
     final dio = _dio();
-    final res = await dio.post('/google-login', data: {'id_token': idToken});
+    final res = await dio.post('/google-login', data: {
+      'id_token': idToken,
+      if (accessToken != null) 'access_token': accessToken,
+    });
     await _storeAuth(res.data);
     return res.data;
   }

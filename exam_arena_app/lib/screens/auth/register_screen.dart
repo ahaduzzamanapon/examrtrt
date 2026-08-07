@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import 'package:dio/dio.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import '../../config/app_config.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/app_button.dart';
 import '../../widgets/app_text_field.dart';
 import '../../widgets/glass_card.dart';
+import '../../widgets/google_sign_in_button.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -20,7 +22,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _emailCtrl = TextEditingController();
   final _phoneCtrl = TextEditingController();
   final _passCtrl  = TextEditingController();
+  final _refCtrl   = TextEditingController();
   bool _loading = false;
+  bool _googleLoading = false;
   bool _passVisible = false;
   String? _error;
 
@@ -28,6 +32,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   void dispose() {
     _nameCtrl.dispose(); _emailCtrl.dispose();
     _phoneCtrl.dispose(); _passCtrl.dispose();
+    _refCtrl.dispose();
     super.dispose();
   }
 
@@ -40,6 +45,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         email: _emailCtrl.text.trim(),
         password: _passCtrl.text,
         phone: _phoneCtrl.text.trim().isEmpty ? null : _phoneCtrl.text.trim(),
+        referralCode: _refCtrl.text.trim().isEmpty ? null : _refCtrl.text.trim(),
       );
       if (!mounted) return;
       Navigator.pushReplacementNamed(context, '/onboarding');
@@ -51,6 +57,44 @@ class _RegisterScreenState extends State<RegisterScreen> {
       });
     } finally {
       if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _googleSignIn() async {
+    setState(() { _googleLoading = true; _error = null; });
+    try {
+      final googleSignIn = GoogleSignIn(
+        scopes: ['email', 'profile'],
+        serverClientId: '165082016850-cfgpm4jfeoloug7fdhf5rrbbl066lnl2.apps.googleusercontent.com',
+      );
+      final account = await googleSignIn.signIn();
+      if (account == null) { setState(() => _googleLoading = false); return; }
+      final auth = await account.authentication;
+      final idToken = auth.idToken;
+      final accessToken = auth.accessToken;
+      print('GOOGLE SIGN IN OK: email=${account.email}, idToken=${idToken != null}, accessToken=${accessToken != null}');
+
+      if (idToken == null && accessToken == null) {
+        throw Exception('Google token পাওয়া যায়নি।');
+      }
+
+      if (!mounted) return;
+      await context.read<AuthProvider>().googleLogin(idToken ?? '', accessToken: accessToken);
+      if (!mounted) return;
+      final authProv = context.read<AuthProvider>();
+      if (authProv.needsOnboarding) {
+        Navigator.pushReplacementNamed(context, '/onboarding');
+      } else {
+        Navigator.pushReplacementNamed(context, '/home');
+      }
+    } on DioException catch (e) {
+      print('GOOGLE API ERROR: ${e.response?.data}');
+      setState(() => _error = e.response?.data['message'] ?? 'Google রেজিস্ট্রেশন ব্যর্থ।');
+    } catch (e) {
+      print('GOOGLE SIGN IN EXCEPTION: $e');
+      setState(() => _error = 'Google রেজিস্ট্রেশন ব্যর্থ: ${e.toString().replaceAll("Exception: ", "")}');
+    } finally {
+      if (mounted) setState(() => _googleLoading = false);
     }
   }
 
@@ -110,10 +154,32 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             ),
                             validator: (v) => v!.length < 8 ? 'কমপক্ষে ৮ অক্ষর দিন' : null,
                           ),
+                          const SizedBox(height: 12),
+                          AppTextField(
+                            controller: _refCtrl,
+                            label: 'রেফারেল কোড (ঐচ্ছিক)',
+                            hint: 'যেমন: X8K29A (+২০ টোকেন বোনাস)',
+                            icon: Icons.card_giftcard_outlined,
+                          ),
                           const SizedBox(height: 20),
                           AppButton(label: 'রেজিস্ট্রেশন করুন', loading: _loading, onPressed: _register,
                             gradient: const LinearGradient(
                               colors: [Color(AppConfig.accentGreen), Color(AppConfig.accentBlue)])),
+                          const SizedBox(height: 16),
+                          Row(children: [
+                            Expanded(child: Divider(color: Colors.white.withOpacity(0.1))),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 12),
+                              child: Text('অথবা', style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 12)),
+                            ),
+                            Expanded(child: Divider(color: Colors.white.withOpacity(0.1))),
+                          ]),
+                          const SizedBox(height: 8),
+                          GoogleSignInButton(
+                            loading: _googleLoading,
+                            onTap: _googleSignIn,
+                            label: 'Google দিয়ে রেজিস্ট্রেশন',
+                          ),
                         ],
                       ),
                     ),

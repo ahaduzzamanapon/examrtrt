@@ -5,14 +5,14 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-
 import 'config/app_config.dart';
 import 'providers/auth_provider.dart';
+import 'screens/welcome/get_started_screen.dart';
 import 'screens/splash/splash_screen.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/register_screen.dart';
 import 'screens/auth/onboarding_screen.dart';
-import 'screens/dashboard/dashboard_screen.dart';
+
 import 'screens/reel/reel_screen.dart';
 import 'screens/practice/practice_screen.dart';
 import 'screens/survival/survival_screen.dart';
@@ -109,6 +109,7 @@ class ExamArenaApp extends StatelessWidget {
       initialRoute: '/',
       routes: {
         '/':           (_) => const SplashScreen(),
+        '/get-started':(_) => const GetStartedScreen(),
         '/login':      (_) => const LoginScreen(),
         '/register':   (_) => const RegisterScreen(),
         '/onboarding': (_) => const OnboardingScreen(),

@@ -140,7 +140,7 @@ export default function ExamForm({ auth, exam, categories = [] }) {
 
                         <div>
                             <label className="text-muted text-sm mb-1 block">বিষয়/ক্যাটাগরি *</label>
-                            <div className="flex flex-wrap gap-2">
+                            <div className="flex flex-wrap gap-2 mb-3">
                                 {['bcs', 'primary', 'bank', 'ssc', 'hsc', 'medical', 'university'].map(cat => (
                                     <button
                                         key={cat}
@@ -162,6 +162,32 @@ export default function ExamForm({ auth, exam, categories = [] }) {
                                 ))}
                             </div>
                             {errors.categories && <p className="text-red-400 text-xs mt-1">{errors.categories}</p>}
+                        </div>
+
+                        <div>
+                            <label className="text-muted text-sm mb-1 block">📚 নির্দিষ্ট বিষয় সিলেক্ট করুন (১ বা একাধিক — ঐচ্ছিক)</label>
+                            <div className="text-xs text-white/40 mb-2">খালি রাখলে সিলেক্টেড ক্যাটাগরির সকল বিষয় থেকে র্যান্ডম প্রশ্ন সিলেক্ট হবে</div>
+                            <div className="flex flex-wrap gap-2">
+                                {['বাংলা', 'English', 'গণিত', 'বিজ্ঞান', 'বাংলাদেশ', 'আন্তর্জাতিক', 'কম্পিউটার', 'মানসিক', 'ভূগোল', 'নৈতিকতা'].map(sub => (
+                                    <button
+                                        key={sub}
+                                        type="button"
+                                        onClick={() => {
+                                            const arr = (data.subjects || []).includes(sub)
+                                                ? (data.subjects || []).filter(s => s !== sub)
+                                                : [...(data.subjects || []), sub];
+                                            setData('subjects', arr);
+                                        }}
+                                        className={`px-3 py-1 rounded-full text-xs font-semibold border transition-all ${
+                                            (data.subjects || []).includes(sub)
+                                                ? 'bg-blue-500 border-blue-500 text-white'
+                                                : 'border-white/20 text-muted'
+                                        }`}
+                                    >
+                                        {sub}
+                                    </button>
+                                ))}
+                            </div>
                         </div>
 
                         {/* Target streams — only relevant for hsc/ssc categories */}

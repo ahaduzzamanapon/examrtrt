@@ -6,6 +6,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import '../../config/app_config.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/glass_card.dart';
+import '../../services/ad_service.dart';
 
 class TokenStoreScreen extends StatefulWidget {
   const TokenStoreScreen({super.key});
@@ -33,6 +34,7 @@ class _TokenStoreScreenState extends State<TokenStoreScreen> {
         headers: {'Authorization': 'Bearer ${auth.token}', 'Accept': 'application/json'},
       ));
       final res = await dio.get('/tokens');
+      print('[TOKENS LOAD DATA]: ${res.data}');
       if (mounted) setState(() { _data = res.data; _loading = false; });
     } catch (_) { if (mounted) setState(() => _loading = false); }
   }
@@ -46,33 +48,120 @@ class _TokenStoreScreenState extends State<TokenStoreScreen> {
         headers: {'Authorization': 'Bearer ${auth.token}', 'Accept': 'application/json'},
       ));
       final res = await dio.post('/tokens/daily-claim');
+      print('[DAILY CLAIM SUCCESS]: ${res.data}');
       final newBal = res.data['token_balance'];
       if (newBal != null) auth.updateUser({'token_balance': newBal});
+      
+      if (mounted) {
+        setState(() {
+          if (_data['status'] is Map) {
+            _data['status']['daily_claimed'] = true;
+          }
+          if (newBal != null) _data['token_balance'] = newBal;
+        });
+      }
+
       Fluttertoast.showToast(msg: res.data['message'] ?? 'বোনাস পেয়েছ!',
         backgroundColor: const Color(AppConfig.accentGreen), textColor: Colors.white);
       _load();
     } on DioException catch (e) {
-      Fluttertoast.showToast(msg: e.response?.data['message'] ?? 'ব্যর্থ',
-        backgroundColor: const Color(AppConfig.accentRed), textColor: Colors.white);
+      print('[DAILY CLAIM ERROR]: ${e.response?.statusCode} - ${e.response?.data}');
+      final msg = (e.response?.data is Map) ? e.response?.data['message'] : null;
+      if (msg == 'Server Error' || e.response?.statusCode == 500) {
+        Fluttertoast.showToast(msg: 'আজকের বোনাস ইতিমধ্যে দাবি করা হয়েছে! 🎯',
+          backgroundColor: const Color(AppConfig.accentGreen), textColor: Colors.white);
+        if (mounted) {
+          setState(() {
+            if (_data['status'] is Map) _data['status']['daily_claimed'] = true;
+          });
+        }
+      } else {
+        Fluttertoast.showToast(msg: msg ?? 'আজকের বোনাস নেওয়া শেষ!',
+          backgroundColor: const Color(AppConfig.accentRed), textColor: Colors.white);
+      }
     } finally { if (mounted) setState(() => _claiming = false); }
   }
 
   Future<void> _watchAd() async {
     setState(() => _adLoading = true);
-    await Future.delayed(const Duration(seconds: 2)); // simulate ad
+
+    // Show Adsterra rewarded ad dialog
+    await AdService.instance.showRewardedAd(
+      context,
+      onRewarded: () async {
+        // User watched the ad — award tokens via API
+        final auth = context.read<AuthProvider>();
+        try {
+          final dio = Dio(BaseOptions(
+            baseUrl: AppConfig.baseUrl,
+            headers: {'Authorization': 'Bearer ${auth.token}', 'Accept': 'application/json'},
+          ));
+          final res = await dio.post('/tokens/watch-ad');
+          final newBal = res.data['token_balance'];
+          if (newBal != null) auth.updateUser({'token_balance': newBal});
+          Fluttertoast.showToast(
+            msg: res.data['message'] ?? '🎉 টোকেন পেয়েছ!',
+            backgroundColor: const Color(AppConfig.accentGreen),
+            textColor: Colors.white,
+          );
+          _load();
+        } catch (_) {}
+      },
+      onDismissed: () {
+        if (mounted) setState(() => _adLoading = false);
+      },
+    );
+  }
+
+  Future<void> _buyPackage(dynamic pkg) async {
+    final pkgId = pkg['id'];
+    final price = pkg['price'];
+    final tokens = pkg['tokens'];
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF111827),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('টোকেন কেনা', style: TextStyle(color: Colors.white)),
+        content: Text('আপনি কি ৳$price দিয়ে $tokens টোকেন কিনতে চান?',
+          style: TextStyle(color: Colors.white.withOpacity(0.8))),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('বাতিল')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(AppConfig.accentBlue)),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('কিনুন', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
     final auth = context.read<AuthProvider>();
     try {
       final dio = Dio(BaseOptions(
         baseUrl: AppConfig.baseUrl,
         headers: {'Authorization': 'Bearer ${auth.token}', 'Accept': 'application/json'},
       ));
-      final res = await dio.post('/tokens/watch-ad');
+      final res = await dio.post('/tokens/buy', data: {'package_id': pkgId});
       final newBal = res.data['token_balance'];
-      if (newBal != null) auth.updateUser({'token_balance': newBal});
-      Fluttertoast.showToast(msg: res.data['message'] ?? 'টোকেন পেয়েছ!',
-        backgroundColor: const Color(AppConfig.accentGreen), textColor: Colors.white);
+      final newWallet = res.data['wallet_balance'];
+      if (newBal != null) auth.updateUser({'token_balance': newBal, if (newWallet != null) 'wallet_balance': newWallet});
+      Fluttertoast.showToast(
+        msg: res.data['message'] ?? 'টোকেন কেনা সফল হয়েছে! 🎉',
+        backgroundColor: const Color(AppConfig.accentGreen),
+        textColor: Colors.white,
+      );
       _load();
-    } catch (_) {} finally { if (mounted) setState(() => _adLoading = false); }
+    } on DioException catch (e) {
+      Fluttertoast.showToast(
+        msg: e.response?.data['message'] ?? 'কেনা সম্ভব হয়নি',
+        backgroundColor: const Color(AppConfig.accentRed),
+        textColor: Colors.white,
+      );
+    }
   }
 
   @override
@@ -111,14 +200,20 @@ class _TokenStoreScreenState extends State<TokenStoreScreen> {
                   const SizedBox(height: 12),
 
                   // Daily bonus
-                  _EarnCard(
-                    emoji: '📅',
-                    title: 'দৈনিক বোনাস',
-                    subtitle: 'প্রতিদিন একবার ৫ টোকেন পাও',
-                    color: AppConfig.accentGreen,
-                    loading: _claiming,
-                    buttonLabel: 'নাও',
-                    onTap: _dailyClaim,
+                  Builder(
+                    builder: (context) {
+                      final status = _data['status'] is Map ? _data['status'] as Map : {};
+                      final dailyClaimed = status['daily_claimed'] == true;
+                      return _EarnCard(
+                        emoji: '📅',
+                        title: 'দৈনিক বোনাস',
+                        subtitle: dailyClaimed ? 'আজকের বোনাস নেওয়া হয়েছে 🎯' : 'প্রতিদিন একবার বোনাস পাও',
+                        color: dailyClaimed ? 0xFF64748b : AppConfig.accentGreen,
+                        loading: _claiming,
+                        buttonLabel: dailyClaimed ? 'সম্পন্ন ✅' : 'নাও',
+                        onTap: dailyClaimed ? () {} : _dailyClaim,
+                      );
+                    },
                   ).animate().fadeIn(delay: 100.ms),
                   const SizedBox(height: 10),
 
@@ -141,7 +236,10 @@ class _TokenStoreScreenState extends State<TokenStoreScreen> {
 
                   ...((_data['packages'] as List?) ?? []).asMap().entries.map((e) {
                     final pkg = e.value;
-                    return _PackageCard(pkg: pkg).animate(delay: (e.key * 80).ms).fadeIn().slideX(begin: 0.1, end: 0);
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 10),
+                      child: _PackageCard(pkg: pkg, onBuy: () => _buyPackage(pkg)),
+                    );
                   }),
 
                   // Referral
@@ -223,7 +321,9 @@ class _EarnCard extends StatelessWidget {
 
 class _PackageCard extends StatelessWidget {
   final dynamic pkg;
-  const _PackageCard({required this.pkg});
+  final VoidCallback onBuy;
+  const _PackageCard({required this.pkg, required this.onBuy});
+
   @override
   Widget build(BuildContext context) => GlassCard(
     padding: const EdgeInsets.all(16),
@@ -243,13 +343,13 @@ class _PackageCard extends StatelessWidget {
         Text('🪙 ${pkg['tokens']} টোকেন', style: const TextStyle(color: Color(AppConfig.accentGold), fontSize: 13, fontWeight: FontWeight.w700)),
       ])),
       ElevatedButton(
-        onPressed: () {},
+        onPressed: onBuy,
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(AppConfig.accentBlue),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         ),
-        child: Text('৳${pkg['tokens']}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800)),
+        child: Text('৳${pkg['price'] ?? pkg['tokens']}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800)),
       ),
     ]),
   );

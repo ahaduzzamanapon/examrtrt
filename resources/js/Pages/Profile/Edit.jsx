@@ -275,10 +275,15 @@ export default function Edit({ mustVerifyEmail, status }) {
 
             {/* ── Change Password ───────────────────────────────────────────── */}
             <div style={card}>
-                <SectionLabel icon={Lock} text="পাসওয়ার্ড পরিবর্তন" />
+                <SectionLabel icon={Lock} text={user.has_password !== false ? "পাসওয়ার্ড পরিবর্তন" : "নতুন পাসওয়ার্ড সেট করুন (Google User)"} />
                 <form onSubmit={submitPw}>
+                    {user.has_password === false && (
+                        <div style={{ padding: '8px 12px', borderRadius: 8, background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.25)', color: '#34d399', fontSize: 11, marginBottom: 12 }}>
+                            ✨ Google দিয়ে সাইন-আপ করায় কোনো পুরাতন পাসওয়ার্ড নেই। সরাসরি একটি নতুন পাসওয়ার্ড সেট করুন।
+                        </div>
+                    )}
                     {[
-                        { label: 'বর্তমান পাসওয়ার্ড', field: 'current_password' },
+                        ...(user.has_password !== false ? [{ label: 'বর্তমান পাসওয়ার্ড', field: 'current_password' }] : []),
                         { label: 'নতুন পাসওয়ার্ড', field: 'password' },
                         { label: 'পাসওয়ার্ড নিশ্চিত করো', field: 'password_confirmation' },
                     ].map(({ label, field }) => (

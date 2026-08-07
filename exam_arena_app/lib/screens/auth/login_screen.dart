@@ -5,9 +5,10 @@ import 'package:provider/provider.dart';
 import 'package:dio/dio.dart';
 import '../../config/app_config.dart';
 import '../../providers/auth_provider.dart';
-import '../../widgets/app_button.dart';
 import '../../widgets/app_text_field.dart';
-import '../../widgets/glass_card.dart';
+import '../../widgets/google_sign_in_button.dart';
+import '../../widgets/clay_card.dart';
+import '../../widgets/clay_button.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -62,16 +63,24 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _googleLogin() async {
     setState(() { _googleLoading = true; _error = null; });
     try {
-      final googleSignIn = GoogleSignIn(scopes: ['email', 'profile']);
+      final googleSignIn = GoogleSignIn(
+        scopes: ['email', 'profile'],
+        serverClientId: '165082016850-cfgpm4jfeoloug7fdhf5rrbbl066lnl2.apps.googleusercontent.com',
+      );
       final account = await googleSignIn.signIn();
       if (account == null) { setState(() => _googleLoading = false); return; }
 
-      final auth   = await account.authentication;
+      final auth = await account.authentication;
       final idToken = auth.idToken;
-      if (idToken == null) throw Exception('Google token পাওয়া যায়নি।');
+      final accessToken = auth.accessToken;
+      print('GOOGLE SIGN IN OK: email=${account.email}, idToken=${idToken != null}, accessToken=${accessToken != null}');
+      
+      if (idToken == null && accessToken == null) {
+        throw Exception('Google token পাওয়া যায়নি।');
+      }
 
       if (!mounted) return;
-      await context.read<AuthProvider>().googleLogin(idToken);
+      await context.read<AuthProvider>().googleLogin(idToken ?? '', accessToken: accessToken);
 
       if (!mounted) return;
       final authProv = context.read<AuthProvider>();
@@ -80,8 +89,12 @@ class _LoginScreenState extends State<LoginScreen> {
       } else {
         Navigator.pushReplacementNamed(context, '/home');
       }
+    } on DioException catch (e) {
+      print('GOOGLE API ERROR: ${e.response?.data}');
+      setState(() => _error = e.response?.data['message'] ?? 'Google লগইন ব্যর্থ হয়েছে।');
     } catch (e) {
-      setState(() => _error = 'Google লগইন ব্যর্থ হয়েছে। আবার চেষ্টা করুন।');
+      print('GOOGLE SIGN IN EXCEPTION: $e');
+      setState(() => _error = 'Google লগইন ব্যর্থ: ${e.toString().replaceAll("Exception: ", "")}');
     } finally {
       if (mounted) setState(() => _googleLoading = false);
     }
@@ -102,26 +115,23 @@ class _LoginScreenState extends State<LoginScreen> {
                 children: [
                   const SizedBox(height: 20),
 
-                  // Logo + Title
+                  // Logo + 3D Clay Avatar
                   Center(
                     child: Column(
                       children: [
-                        Container(
-                          width: 72, height: 72,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(20),
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFF1a2a6c), Color(AppConfig.accentPurple)],
+                        ClayCard(
+                          color: const Color(0xFF1e293b),
+                          borderRadius: 32,
+                          depth: 14,
+                          padding: const EdgeInsets.all(12),
+                          child: ClipOval(
+                            child: Image.asset(
+                              'assets/images/clay_student_3d.png',
+                              width: 90,
+                              height: 90,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => const Text('🏆', style: TextStyle(fontSize: 48)),
                             ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(AppConfig.accentBlue).withOpacity(0.4),
-                                blurRadius: 20, spreadRadius: 2,
-                              ),
-                            ],
-                          ),
-                          child: const Center(
-                            child: Text('🏆', style: TextStyle(fontSize: 36)),
                           ),
                         ).animate().scale(duration: 500.ms, curve: Curves.elasticOut),
 
@@ -142,17 +152,21 @@ class _LoginScreenState extends State<LoginScreen> {
 
                         const SizedBox(height: 4),
                         Text(
-                          'আপনার অ্যাকাউন্টে লগইন করুন',
-                          style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 13),
+                          'আপনার অ্যাকাউন্টে লগইন করুন 🚀',
+                          style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 13, fontWeight: FontWeight.w600),
                         ).animate().fadeIn(delay: 300.ms),
                       ],
                     ),
                   ),
 
-                  const SizedBox(height: 36),
+                  const SizedBox(height: 28),
 
-                  // Form
-                  GlassCard(
+                  // 3D Clay Form Card
+                  ClayCard(
+                    color: const Color(0xFF161f33),
+                    borderRadius: 28,
+                    depth: 12,
+                    padding: const EdgeInsets.all(20),
                     child: Form(
                       key: _formKey,
                       child: Column(
@@ -204,13 +218,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
                           const SizedBox(height: 20),
 
-                          AppButton(
-                            label: 'লগইন করুন',
+                          ClayButton(
+                            label: 'লগইন করুন 🚀',
                             loading: _loading,
                             onPressed: _login,
-                            gradient: const LinearGradient(
-                              colors: [Color(AppConfig.accentBlue), Color(AppConfig.accentPurple)],
-                            ),
+                            color: const Color(AppConfig.accentBlue),
                           ),
                         ],
                       ),
@@ -232,8 +244,11 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 16),
 
                   // Google login
-                  _GoogleButton(loading: _googleLoading, onTap: _googleLogin)
-                      .animate().fadeIn(delay: 600.ms).slideY(begin: 0.2, end: 0),
+                  GoogleSignInButton(
+                    loading: _googleLoading,
+                    onTap: _googleLogin,
+                    label: 'Google দিয়ে লগইন করুন',
+                  ).animate().fadeIn(delay: 600.ms).slideY(begin: 0.2, end: 0),
 
                   const SizedBox(height: 24),
 
@@ -266,50 +281,6 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 }
 
-class _GoogleButton extends StatelessWidget {
-  final bool loading;
-  final VoidCallback onTap;
-  const _GoogleButton({required this.loading, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: loading ? null : onTap,
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 14),
-        decoration: BoxDecoration(
-          color: const Color(0xFF111827),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: const Color(0xFF1e293b)),
-        ),
-        child: loading
-            ? const Center(child: SizedBox(
-                width: 20, height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-              ))
-            : Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Google G logo
-                  Container(
-                    width: 24, height: 24,
-                    decoration: const BoxDecoration(shape: BoxShape.circle, color: Colors.white),
-                    child: const Center(
-                      child: Text('G', style: TextStyle(color: Color(0xFF4285F4), fontWeight: FontWeight.w900, fontSize: 14)),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  const Text(
-                    'Google দিয়ে লগইন করুন',
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 15),
-                  ),
-                ],
-              ),
-      ),
-    );
-  }
-}
 
 class _GridBackground extends StatelessWidget {
   @override

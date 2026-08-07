@@ -219,8 +219,15 @@ class TokenService
         $limit        = $this->adDailyLimit();
         $adViewsToday = AdView::where('user_id', $user->id)->where('view_date', $today)->count();
 
+        $cacheClaim = \Cache::get("daily_claim_{$user->id}");
+        $hasCacheClaim = $cacheClaim && now()->isSameDay(\Carbon\Carbon::parse($cacheClaim));
+        $dbClaim = false;
+        try {
+            $dbClaim = DailyTokenClaim::where('user_id', $user->id)->where('claimed_date', $today)->exists();
+        } catch (\Throwable $e) {}
+
         return [
-            'daily_claimed'      => DailyTokenClaim::where('user_id', $user->id)->where('claimed_date', $today)->exists(),
+            'daily_claimed'      => $dbClaim || $hasCacheClaim,
             'daily_amount'       => $this->dailyBonusAmount(),
             'ad_views_today'     => $adViewsToday,
             'ad_views_remaining' => max(0, $limit - $adViewsToday),

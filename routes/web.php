@@ -130,6 +130,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Question Disputes Management
         Route::get('/disputes',             [\App\Http\Controllers\Admin\DisputeController::class, 'index'])->name('disputes.index');
         Route::post('/disputes/{id}',       [\App\Http\Controllers\Admin\DisputeController::class, 'update'])->name('disputes.update');
+
+        // User Feedbacks Management
+        Route::get('/feedbacks',            [\App\Http\Controllers\Admin\FeedbackController::class, 'index'])->name('feedbacks.index');
+        Route::post('/feedbacks/{id}/reply',[\App\Http\Controllers\Admin\FeedbackController::class, 'reply'])->name('feedbacks.reply');
     });
 
     // ── Feature pages ─────────────────────────────────────────────────────────

@@ -9,14 +9,11 @@ use Inertia\Inertia;
 
 class OnboardingController extends Controller
 {
-    private const VALID_GOALS = ['ssc','hsc','bcs','medical','engineering','bank','university','primary','other'];
-
     /** Show onboarding page */
     public function show()
     {
         $user = Auth::user();
 
-        // Skip onboarding if exam_goal already set
         if ($user && !empty($user->exam_goal)) {
             return redirect()->route('dashboard');
         }
@@ -24,28 +21,55 @@ class OnboardingController extends Controller
         return Inertia::render('Auth/Onboarding');
     }
 
-    /** Save exam_goals (array) and optionally FCM token */
+    /** Save exam_goal (multiple comma-separated string or array) and stream/department */
     public function save(Request $request)
     {
-        $request->validate([
-            'exam_goals'  => 'required|array|min:1',
-            'exam_goals.*'=> 'required|string|in:' . implode(',', self::VALID_GOALS),
-            'fcm_token'   => 'nullable|string|max:500',
-        ]);
-
         $user = Auth::user();
 
-        $data = ['exam_goal' => $request->exam_goals]; // model cast → auto JSON encode
+        $rawGoals = $request->input('exam_goals') ?? $request->input('exam_goal');
+        if (is_array($rawGoals)) {
+            $goals = implode(',', array_map('trim', $rawGoals));
+        } else {
+            $goals = trim((string)$rawGoals);
+        }
 
+        $data = [];
+        if (!empty($goals)) {
+            $data['exam_goal'] = strtoupper($goals);
+        }
+
+        if ($request->filled('stream')) {
+            $data['stream'] = trim($request->stream);
+        }
 
         if ($request->filled('fcm_token')) {
             $data['fcm_token'] = $request->fcm_token;
         }
 
-        $user->update($data);
+        if (!empty($data)) {
+            $user->update($data);
+        }
 
-        if ($request->expectsJson()) {
-            return response()->json(['ok' => true]);
+        if ($request->expectsJson() || $request->wantsJson()) {
+            return response()->json([
+                'ok' => true,
+                'message' => 'লক্ষ্য ও বিভাগ সেভ হয়েছে।',
+                'user' => [
+                    'id'             => $user->id,
+                    'name'           => $user->name,
+                    'email'          => $user->email,
+                    'phone'          => $user->phone,
+                    'avatar'         => $user->avatar,
+                    'role'           => $user->role,
+                    'exam_goal'      => $user->exam_goal,
+                    'stream'         => $user->stream,
+                    'token_balance'  => (int)$user->token_balance,
+                    'wallet_balance' => (float)$user->wallet_balance,
+                    'google_id'      => $user->google_id,
+                    'has_password'   => !is_null($user->password),
+                    'referral_code'  => $user->referral_code,
+                ],
+            ]);
         }
 
         return redirect()->route('dashboard');

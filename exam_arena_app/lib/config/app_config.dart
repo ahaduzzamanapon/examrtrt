@@ -1,6 +1,6 @@
 // ── App Configuration ─────────────────────────────────────────────────────────
 class AppConfig {
-  static const String baseUrl = 'https://examarena.info/api/mobile';
+  static const String baseUrl = 'https://exam-arena.lc-synergy.ltd/api/mobile';
   static const String appName = 'ExamArena';
   static const String packageName = 'com.examarena.app';
 

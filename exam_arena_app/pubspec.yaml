@@ -28,8 +28,9 @@ dependencies:
   flutter_secure_storage: ^9.2.4
   shared_preferences: ^2.3.3
 
-  # Google Sign-In
+  # Google Sign-In & WebView
   google_sign_in: ^6.2.2
+  webview_flutter: ^4.10.0
 
   # Firebase
   firebase_core: ^3.15.1
@@ -49,13 +50,14 @@ dependencies:
   smooth_page_indicator: ^1.2.0+3
   liquid_pull_to_refresh: ^3.0.1
 
-  # Utils
+  # Utils & Audio
   intl: ^0.19.0
   timeago: ^3.7.0
   url_launcher: ^6.3.1
   package_info_plus: ^8.3.0
   google_fonts: ^6.2.1
   connectivity_plus: ^6.1.4
+  audioplayers: ^6.1.0
 
 dev_dependencies:
   flutter_test:

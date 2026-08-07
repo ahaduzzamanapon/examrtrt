@@ -8,14 +8,18 @@ import '../../providers/auth_provider.dart';
 import '../../widgets/app_button.dart';
 import '../../widgets/glass_card.dart';
 
+import '../../widgets/subject_selector_sheet.dart';
+
 class PracticeScreen extends StatefulWidget {
-  const PracticeScreen({super.key});
+  final List<String> initialSubjects;
+  const PracticeScreen({super.key, this.initialSubjects = const []});
   @override
-  State<PracticeScreen> createState() => _PracticeScreenState();
+  State<PracticeScreen> createState() => PracticeScreenState();
 }
 
-class _PracticeScreenState extends State<PracticeScreen> {
+class PracticeScreenState extends State<PracticeScreen> {
   int _count = 10;
+  List<String> _selectedSubjects = [];
   bool _loading = false;
   List<Map> _questions = [];
   bool _started = false;
@@ -27,6 +31,18 @@ class _PracticeScreenState extends State<PracticeScreen> {
 
   final _counts = [5, 10, 15, 20];
 
+  @override
+  void initState() {
+    super.initState();
+    _selectedSubjects = List.from(widget.initialSubjects);
+  }
+
+  /// Called by MainShell after subject selection
+  void updateSubjects(List<String> subs) {
+    setState(() => _selectedSubjects = subs);
+  }
+
+
   Future<void> _start() async {
     setState(() => _loading = true);
     final auth = context.read<AuthProvider>();
@@ -35,10 +51,24 @@ class _PracticeScreenState extends State<PracticeScreen> {
         baseUrl: AppConfig.baseUrl,
         headers: {'Authorization': 'Bearer ${auth.token}', 'Accept': 'application/json'},
       ));
-      final res = await dio.post('/practice/start', data: {'count': _count});
+      final payload = <String, dynamic>{'count': _count};
+      if (_selectedSubjects.isNotEmpty) {
+        payload['subjects'] = _selectedSubjects.join(',');
+      }
+      final res = await dio.post('/practice/start', data: payload);
       final qs = List<Map>.from(res.data['questions'] ?? []);
       final newBal = res.data['token_balance'];
       if (newBal != null) auth.updateUser({'token_balance': newBal});
+
+      if (qs.isEmpty) {
+        Fluttertoast.showToast(
+          msg: 'কোনো প্রশ্ন পাওয়া যায়নি! বিষয় পরিবর্তন করে চেষ্টা করুন।',
+          backgroundColor: const Color(AppConfig.accentRed),
+          textColor: Colors.white,
+        );
+        setState(() => _loading = false);
+        return;
+      }
 
       setState(() { _questions = qs; _started = true; _loading = false; _currentQ = 0; _answers = {}; });
     } on DioException catch (e) {
@@ -104,7 +134,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
               const SizedBox(height: 6),
               Text('তোমার goal অনুযায়ী MCQ প্র্যাকটিস করো। ⚡ ২ টোকেন খরচ হবে।',
                 style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 13, height: 1.5)),
-            ])).animate().fadeIn(),
+            ])),
 
             const SizedBox(height: 24),
             const Text('প্রশ্ন সংখ্যা বেছে নাও',
@@ -132,14 +162,49 @@ class _PracticeScreenState extends State<PracticeScreen> {
                   ),
                 ),
               );
-            }).toList()).animate().fadeIn(delay: 200.ms),
+            }).toList()),
+
+            const SizedBox(height: 20),
+            const Text('বিষয় পছন্দ করুন (Subject Filter)',
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13)),
+            const SizedBox(height: 8),
+            GestureDetector(
+              onTap: () {
+                showModalBottomSheet(
+                  context: context,
+                  backgroundColor: Colors.transparent,
+                  isScrollControlled: true,
+                  builder: (_) => SubjectSelectorSheet(
+                    selectedSubjects: _selectedSubjects,
+                    onConfirm: (subs) => setState(() => _selectedSubjects = subs),
+                  ),
+                );
+              },
+              child: GlassCard(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                child: Row(
+                  children: [
+                    const Text('📚', style: TextStyle(fontSize: 22)),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        _selectedSubjects.isEmpty ? 'সকল বিষয় (All Subjects)' : '${_selectedSubjects.length}টি বিষয় সিলেক্ট করা হয়েছে (${_selectedSubjects.join(", ")})',
+                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13),
+                        maxLines: 1, overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const Icon(Icons.tune_rounded, color: Color(AppConfig.accentBlue), size: 20),
+                  ],
+                ),
+              ),
+            ),
 
             const Spacer(),
             AppButton(
               label: '⚡ ২ টোকেন দিয়ে শুরু করো',
               loading: _loading,
               onPressed: _start,
-            ).animate().fadeIn(delay: 300.ms),
+            ),
           ],
         ),
       ),
@@ -149,7 +214,14 @@ class _PracticeScreenState extends State<PracticeScreen> {
   Widget _buildQuiz() {
     if (_questions.isEmpty) return const SizedBox();
     final q = _questions[_currentQ];
-    final options = q['options'] is List ? List<String>.from(q['options']) : <String>[];
+    final rawOpts = q['options'];
+    List<MapEntry<String, String>> options = [];
+    if (rawOpts is Map) {
+      options = rawOpts.entries.map((e) => MapEntry(e.key.toString(), e.value.toString())).toList();
+    } else if (rawOpts is List) {
+      final keys = ['a', 'b', 'c', 'd', 'e'];
+      options = rawOpts.asMap().entries.map((e) => MapEntry(e.key < keys.length ? keys[e.key] : e.key.toString(), e.value.toString())).toList();
+    }
 
     return Scaffold(
       backgroundColor: const Color(AppConfig.bgColor),
@@ -178,6 +250,46 @@ class _PracticeScreenState extends State<PracticeScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Question metadata tag badge
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: const Color(AppConfig.accentPurple).withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: const Color(AppConfig.accentPurple).withOpacity(0.4)),
+                        ),
+                        child: Text(q['subject'] ?? 'সাধারণ জ্ঞান', style: const TextStyle(color: Color(AppConfig.accentPurple), fontSize: 11, fontWeight: FontWeight.w700)),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: const Color(AppConfig.accentGold).withOpacity(0.18),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: const Color(AppConfig.accentGold).withOpacity(0.4)),
+                        ),
+                        child: Builder(
+                          builder: (context) {
+                            final examName = q['exam_name']?.toString();
+                            final year = q['year']?.toString() ?? q['exam_year']?.toString();
+                            final boardYear = q['board_year']?.toString();
+                            final rawTag = q['tag']?.toString() ?? q['exam_tag']?.toString();
+                            final tagStr = (examName != null && examName.isNotEmpty)
+                                ? ((year != null && year.isNotEmpty && !examName.contains(year)) ? '$examName ($year)' : examName)
+                                : (boardYear ?? rawTag ?? (year != null ? 'সাল $year' : '✨ গুরুত্বপূর্ণ প্রশ্ন'));
+                            return Text(
+                              tagStr,
+                              style: const TextStyle(color: Color(AppConfig.accentGold), fontSize: 11, fontWeight: FontWeight.w800),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+
                   GlassCard(
                     child: Text(q['question_text'] ?? '',
                       style: const TextStyle(color: Colors.white, fontSize: 16, height: 1.6, fontWeight: FontWeight.w600)),
@@ -186,12 +298,14 @@ class _PracticeScreenState extends State<PracticeScreen> {
                   const SizedBox(height: 16),
 
                   ...options.asMap().entries.map((e) {
-                    final opt = e.value;
-                    final label = ['ক', 'খ', 'গ', 'ঘ'][e.key < 4 ? e.key : 0];
-                    final selected = _answers[_currentQ] == opt;
+                    final key = e.value.key;
+                    final val = e.value.value;
+                    final labelMap = {'a': 'ক', 'b': 'খ', 'c': 'গ', 'd': 'ঘ', '0': 'ক', '1': 'খ', '2': 'গ', '3': 'ঘ'};
+                    final label = labelMap[key.toLowerCase()] ?? key.toUpperCase();
+                    final selected = _answers[_currentQ] == key;
 
                     return GestureDetector(
-                      onTap: () => setState(() => _answers[_currentQ] = opt),
+                      onTap: () => setState(() => _answers[_currentQ] = key),
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 180),
                         margin: const EdgeInsets.only(bottom: 10),
@@ -216,7 +330,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
                               fontWeight: FontWeight.w800, fontSize: 12))),
                           ),
                           const SizedBox(width: 12),
-                          Expanded(child: Text(opt, style: const TextStyle(color: Colors.white, fontSize: 14))),
+                          Expanded(child: Text(val, style: const TextStyle(color: Colors.white, fontSize: 14))),
                           if (selected) const Icon(Icons.check_circle, color: Color(AppConfig.accentBlue), size: 18),
                         ]),
                       ),

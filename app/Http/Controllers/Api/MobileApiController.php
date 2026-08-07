@@ -159,6 +159,40 @@ class MobileApiController extends Controller
         return response()->json(['subjects' => $subjects]);
     }
 
+    /**
+     * Parse exam_goal whether it's stored as array (JSON cast) or string.
+     * Returns a clean lowercase array of goal slugs e.g. ['bcs','primary','bank']
+     */
+    private function parseGoals($rawGoal): array
+    {
+        if (empty($rawGoal)) return [];
+
+        // If model cast it to array already
+        if (is_array($rawGoal)) {
+            $goals = $rawGoal;
+        } else {
+            // String: strip brackets/quotes then explode by comma
+            $clean = str_replace(['[', ']', '"', "'", '\\'], '', (string)$rawGoal);
+            $goals = explode(',', $clean);
+        }
+
+        return array_values(array_filter(array_map(function($g) {
+            return strtolower(trim(str_replace(['[', ']', '"', "'", '\\'], '', $g)));
+        }, $goals)));
+    }
+
+    private function applyGoalFilter($query, $rawGoal)
+    {
+        $goals = $this->parseGoals($rawGoal);
+        if (empty($goals)) return $query;
+
+        return $query->where(function ($q) use ($goals) {
+            foreach ($goals as $g) {
+                $q->orWhereRaw('LOWER(exam_goal) LIKE ?', ["%{$g}%"]);
+            }
+        });
+    }
+
     private function applySubjectFilter($query, $subjects)
     {
         if (empty($subjects)) {
@@ -180,25 +214,15 @@ class MobileApiController extends Controller
         return $query;
     }
 
+
     // ── MCQ Reel ──────────────────────────────────────────────────────────────
     public function reelQuestions(Request $request)
     {
         $user = $request->user();
-        $goalInput = $user->exam_goal ?? 'bcs';
         $subjects = $request->input('subjects') ?? $request->input('subject');
 
         $query = Question::where('is_active', true);
-        if ($goalInput && $goalInput !== 'all') {
-            $cleanGoal = str_replace(['[', ']', '"', "'", '\\'], '', (string)$goalInput);
-            $goals = array_filter(array_map('trim', explode(',', strtolower($cleanGoal))));
-            if (!empty($goals)) {
-                $query->where(function ($q) use ($goals) {
-                    foreach ($goals as $g) {
-                        $q->orWhereRaw('LOWER(exam_goal) LIKE ?', ["%{$g}%"]);
-                    }
-                });
-            }
-        }
+        $query = $this->applyGoalFilter($query, $user->exam_goal ?? 'bcs');
         $query = $this->applySubjectFilter($query, $subjects);
 
         $questions = $query->inRandomOrder()->limit(30)
@@ -255,19 +279,11 @@ class MobileApiController extends Controller
         }
 
         $goalRaw = $request->input('goal', $user->exam_goal ?? 'bcs');
-        $goalInput = str_replace(['[', ']', '"', "'", '\\'], '', (string)$goalRaw);
         $count = min((int) $request->input('count', 10), 30);
         $subjects = $request->input('subjects') ?? $request->input('subject');
 
         $query = Question::where('is_active', true);
-        if ($goalInput && $goalInput !== 'all') {
-            $goals = array_filter(array_map('trim', explode(',', strtolower($goalInput))));
-            $query->where(function ($q) use ($goals) {
-                foreach ($goals as $g) {
-                    $q->orWhereRaw('LOWER(exam_goal) LIKE ?', ["%{$g}%"]);
-                }
-            });
-        }
+        $query = $this->applyGoalFilter($query, $goalRaw);
         $query = $this->applySubjectFilter($query, $subjects);
 
         $questions = $query->inRandomOrder()->limit($count)
@@ -319,7 +335,7 @@ class MobileApiController extends Controller
 
         PracticeTest::create([
             'user_id'            => $user->id,
-            'goal'               => is_array($goalInput) ? json_encode($goalInput) : (string)$goalInput,
+            'goal'               => is_array($goalRaw) ? implode(',', $goalRaw) : (string)$goalRaw,
             'question_count'     => $count,
             'categories'         => json_encode([]),
             'questions_snapshot' => json_encode($questions),
@@ -364,21 +380,10 @@ class MobileApiController extends Controller
     public function survivalQuestions(Request $request)
     {
         $user = $request->user();
-        $goalInput = $user->exam_goal ?? 'bcs';
-        $cleanGoal = str_replace(['[', ']', '"', "'", '\\'], '', (string)$goalInput);
         $subjects = $request->input('subjects') ?? $request->input('subject');
 
         $query = Question::where('is_active', true);
-        if ($cleanGoal && $cleanGoal !== 'all') {
-            $goals = array_filter(array_map('trim', explode(',', strtolower($cleanGoal))));
-            if (!empty($goals)) {
-                $query->where(function ($q) use ($goals) {
-                    foreach ($goals as $g) {
-                        $q->orWhereRaw('LOWER(exam_goal) LIKE ?', ["%{$g}%"]);
-                    }
-                });
-            }
-        }
+        $query = $this->applyGoalFilter($query, $user->exam_goal ?? 'bcs');
         $query = $this->applySubjectFilter($query, $subjects);
 
         $questions = $query->inRandomOrder()->limit(50)
@@ -443,22 +448,12 @@ class MobileApiController extends Controller
 
     public function modelTestStore(Request $request)
     {
-        $user     = $request->user();
-        $goalRaw  = $request->input('goal', $user->exam_goal ?? 'bcs');
-        $goalClean = str_replace(['[', ']', '"', "'", '\\'], '', (string)$goalRaw);
-        $count    = min((int) $request->input('count', 20), 50);
+        $user    = $request->user();
+        $goalRaw = $request->input('goal', $user->exam_goal ?? 'bcs');
+        $count   = min((int) $request->input('count', 20), 50);
 
         $query = Question::where('is_active', true);
-        if ($goalClean && $goalClean !== 'all') {
-            $goals = array_filter(array_map('trim', explode(',', strtolower($goalClean))));
-            if (!empty($goals)) {
-                $query->where(function ($q) use ($goals) {
-                    foreach ($goals as $g) {
-                        $q->orWhereRaw('LOWER(exam_goal) LIKE ?', ["%{$g}%"]);
-                    }
-                });
-            }
-        }
+        $query = $this->applyGoalFilter($query, $goalRaw);
 
         $questions = $query->inRandomOrder()->limit($count)
             ->get(['id', 'question_text', 'options', 'correct_answer', 'subject'])
@@ -474,7 +469,7 @@ class MobileApiController extends Controller
 
         $test = ModelTest::create([
             'user_id'        => $user->id,
-            'goal'           => $goalClean,
+            'goal'           => is_array($goalRaw) ? implode(',', $goalRaw) : (string)$goalRaw,
             'question_count' => $count,
             'status'         => 'ongoing',
         ]);
@@ -808,6 +803,13 @@ class MobileApiController extends Controller
 
     private function userData(User $user): array
     {
+        $rawGoal = $user->exam_goal;
+        if (is_array($rawGoal)) {
+            $cleanGoal = implode(',', array_filter(array_map('trim', $rawGoal)));
+        } else {
+            $cleanGoal = str_replace(['[', ']', '"', "'", '\\'], '', (string)$rawGoal);
+        }
+
         return [
             'id'             => $user->id,
             'name'           => $user->name,
@@ -815,7 +817,7 @@ class MobileApiController extends Controller
             'phone'          => $user->phone,
             'avatar'         => $user->avatar,
             'role'           => $user->role,
-            'exam_goal'      => $user->exam_goal,
+            'exam_goal'      => $cleanGoal,
             'stream'         => $user->stream,
             'token_balance'  => (int) $user->token_balance,
             'wallet_balance' => (float) $user->wallet_balance,

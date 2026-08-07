@@ -238,7 +238,13 @@ class MobileAuthController extends Controller
     // ── Helper: User data array ───────────────────────────────────────────────
     private function userData(User $user): array
     {
-        $cleanGoal = str_replace(['[', ']', '"', "'", '\\'], '', (string)$user->exam_goal);
+        $rawGoal = $user->exam_goal;
+        if (is_array($rawGoal)) {
+            $cleanGoal = implode(',', array_filter(array_map('trim', $rawGoal)));
+        } else {
+            $cleanGoal = str_replace(['[', ']', '"', "'", '\\'], '', (string)$rawGoal);
+        }
+
         return [
             'id'            => $user->id,
             'name'          => $user->name,

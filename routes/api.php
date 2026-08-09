@@ -24,6 +24,7 @@ Route::prefix('mobile')->group(function () {
 Route::post('questions/bulk-import', [\App\Http\Controllers\Admin\QuestionController::class, 'apiBulkImport']);
 Route::post('questions/cleanup-templates', [\App\Http\Controllers\Admin\QuestionController::class, 'apiCleanupTemplates']);
 Route::post('questions/check-logs', [\App\Http\Controllers\Admin\QuestionController::class, 'apiGetLogs']);
+Route::post('questions/update-domain-env', [\App\Http\Controllers\Admin\QuestionController::class, 'apiUpdateDomainEnv']);
 
 
 // ── Authenticated (Sanctum token required) ────────────────────────────────────

@@ -308,6 +308,54 @@ class QuestionController extends Controller
         ]);
     }
 
+    // ── API Update Production .env Domain ─────────────────────────────────────
+    public function apiUpdateDomainEnv(Request $request)
+    {
+        $secret = $request->header('X-Admin-Secret') ?? $request->input('secret_key');
+        if ($secret !== 'exam_arena_secret_2026') {
+            return response()->json(['error' => 'Unauthorized secret key'], 401);
+        }
+
+        $newDomain = rtrim($request->input('domain', 'https://exam-arena.nxly.online'), '/');
+        $envPath = base_path('.env');
+
+        if (!file_exists($envPath)) {
+            return response()->json(['error' => '.env file not found'], 404);
+        }
+
+        $envContent = file_get_contents($envPath);
+
+        // Update APP_URL
+        if (preg_match('/^APP_URL=/m', $envContent)) {
+            $envContent = preg_replace('/^APP_URL=.*$/m', "APP_URL={$newDomain}", $envContent);
+        } else {
+            $envContent .= "\nAPP_URL={$newDomain}";
+        }
+
+        // Update GOOGLE_REDIRECT_URI
+        $newRedirect = "{$newDomain}/auth/google/callback";
+        if (preg_match('/^GOOGLE_REDIRECT_URI=/m', $envContent)) {
+            $envContent = preg_replace('/^GOOGLE_REDIRECT_URI=.*$/m', "GOOGLE_REDIRECT_URI={$newRedirect}", $envContent);
+        } else {
+            $envContent .= "\nGOOGLE_REDIRECT_URI={$newRedirect}";
+        }
+
+        file_put_contents($envPath, $envContent);
+
+        // Clear and rebuild caches
+        \Illuminate\Support\Facades\Artisan::call('config:clear');
+        \Illuminate\Support\Facades\Artisan::call('route:clear');
+        \Illuminate\Support\Facades\Artisan::call('config:cache');
+        \Illuminate\Support\Facades\Artisan::call('route:cache');
+
+        return response()->json([
+            'success'             => true,
+            'message'             => "Successfully updated production domain to {$newDomain}!",
+            'app_url'             => config('app.url'),
+            'google_redirect_uri' => config('services.google.redirect'),
+        ]);
+    }
+
 
     // ── Gemini AI Generate ────────────────────────────────────────────────────
     public function aiGenerate(Request $request)

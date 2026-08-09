@@ -1,7 +1,7 @@
 <?php
 /**
  * Exam Arena — Deploy Webhook
- * URL: https://exam-arena.lc-synergy.ltd/deploy_hook.php?token=DEPLOY_TOKEN
+ * URL: https://exam-arena.nxly.online/deploy_hook.php?token=DEPLOY_TOKEN
  *
  * GitHub Actions calls this via simple curl — no SSH needed.
  */

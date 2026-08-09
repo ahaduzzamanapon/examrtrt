@@ -244,6 +244,37 @@ class QuestionController extends Controller
         ]);
     }
 
+    // ── API Cleanup Templates ──────────────────────────────────────────────────
+    public function apiCleanupTemplates(Request $request)
+    {
+        $secretKey = $request->input('secret_key');
+        if ($secretKey !== 'exam_arena_secret_2026') {
+            return response()->json(['error' => 'Unauthorized secret key'], 401);
+        }
+
+        $deleted = Question::where('question_text', 'like', '%(ব্যাচ%')
+            ->orWhere('question_text', 'like', '%(Round%')
+            ->orWhere('board_year', 'like', '%R1%')
+            ->orWhere('board_year', 'like', '%R2%')
+            ->orWhere('board_year', 'like', '%R3%')
+            ->orWhere('board_year', 'like', '%R4%')
+            ->orWhere('board_year', 'like', '%R5%')
+            ->orWhere('board_year', 'like', '%R6%')
+            ->orWhere('board_year', 'like', '%R7%')
+            ->orWhere('board_year', 'like', '%R8%')
+            ->orWhere('board_year', 'like', '%R9%')
+            ->orWhere('board_year', 'like', '%R0%')
+            ->delete();
+
+        return response()->json([
+            'success'    => true,
+            'deleted'    => $deleted,
+            'total_in_db' => Question::count(),
+            'message'    => "Successfully cleaned up {$deleted} template test questions!"
+        ]);
+    }
+
+
     // ── Gemini AI Generate ────────────────────────────────────────────────────
     public function aiGenerate(Request $request)
     {

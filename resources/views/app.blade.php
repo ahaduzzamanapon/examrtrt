@@ -10,6 +10,7 @@
         <meta name="mobile-web-app-capable" content="yes">
 
         {{-- SEO Meta Tags --}}
+        <meta name="google-site-verification" content="7ddWAYGCZPORQdN7a9hvQRADLSNwQkTNBKYALoenrzU" />
         <title inertia>{{ config('app.name', 'Exam Arena Bangladesh — BCS, NTRCA, Primary & Academic Model Test') }}</title>
         <meta name="description" content="বাংলাদেশের সেরা অনলাইন পরীক্ষা ও মডেল টেস্ট প্ল্যাটফর্ম Exam Arena। BCS প্রিলিমিনারি, NTRCA শিক্ষক নিবন্ধন, প্রাথমিক শিক্ষক নিয়োগ, ব্যাংক, মেডেল ও ইঞ্জিনিয়ারিং ভর্তি পরীক্ষার ৫০,০০০+ সমাধানসহ প্রশ্ন ও লাইভ ব্যাটেল।">
         <meta name="keywords" content="Exam Arena, ExamArena, BCS model test, NTRCA question bank, Primary teacher exam, Bank exam preparation, HSC SSC MCQ live test, Bangladesh online exam, বিসিএস প্রিলিমিনারি মডেল টেস্ট, শিক্ষক নিবন্ধন প্রশ্ন ব্যাংক, প্রাথমিক সহকারী শিক্ষক নিয়োগ">

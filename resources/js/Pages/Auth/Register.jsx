@@ -17,6 +17,7 @@ const GOALS = [
     { id: 'bank',        emoji: '🏦', label: 'Bank Job',    desc: 'ব্যাংক নিয়োগ' },
     { id: 'university',  emoji: '🎓', label: 'University',  desc: 'ভার্সিটি ভর্তি' },
     { id: 'primary',     emoji: '✏️', label: 'Primary',     desc: 'প্রাথমিক শিক্ষক' },
+    { id: 'ntrca',       emoji: '📜', label: 'NTRCA',       desc: 'শিক্ষক নিবন্ধন' },
     { id: 'other',       emoji: '📋', label: 'Other',       desc: 'অন্যান্য' },
 ];
 

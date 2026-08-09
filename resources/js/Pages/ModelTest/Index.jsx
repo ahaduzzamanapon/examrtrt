@@ -16,6 +16,7 @@ const GOALS = [
     { id: 'bank',        label: 'ব্যাংক জব',       emoji: '🏦' },
     { id: 'university',  label: 'ভার্সিটি ক ইউনিট', emoji: '🎓' },
     { id: 'primary',     label: 'প্রাইমারি শিক্ষক', emoji: '✏️' },
+    { id: 'ntrca',       label: 'NTRCA শিক্ষক নিবন্ধন', emoji: '📜' },
 ];
 
 export default function ModelTestIndex({ history = [], tokenBalance = 0, userGoals = ['bcs'], stream = null }) {

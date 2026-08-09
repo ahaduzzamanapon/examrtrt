@@ -8,7 +8,7 @@ import Swal from 'sweetalert2';
 const GOAL_LABELS = {
     bcs: 'BCS', hsc: 'HSC', ssc: 'SSC', medical: 'Medical',
     engineering: 'Engineering', bank: 'Bank', university: 'University',
-    primary: 'Primary', other: 'Other',
+    primary: 'Primary', ntrca: 'NTRCA', other: 'Other',
 };
 
 function RoleBadge({ role }) {

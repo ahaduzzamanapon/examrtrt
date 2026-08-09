@@ -16,6 +16,7 @@ const _goals = [
   {'id': 'BANK',        'name': 'ব্যাংক জব',          'emoji': '🏦', 'color': 0xFFec4899},
   {'id': 'UNIVERSITY',  'name': 'ভার্সিটি ভর্তি',     'emoji': '🎓', 'color': 0xFF06b6d4},
   {'id': 'PRIMARY',     'name': 'প্রাইমারি শিক্ষক',   'emoji': '✏️', 'color': 0xFF84cc16},
+  {'id': 'NTRCA',       'name': 'NTRCA শিক্ষক নিবন্ধন', 'emoji': '📜', 'color': 0xFFa855f7},
   {'id': 'OTHER',       'name': 'সাধারণ জ্ঞান',       'emoji': '📋', 'color': 0xFF64748b},
 ];
 

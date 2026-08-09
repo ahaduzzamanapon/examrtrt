@@ -13,6 +13,7 @@ const GOAL_DETAILS = {
     bank:        { name: 'ব্যাংক জব',       emoji: '🏦', color: '#ec4899' },
     university:  { name: 'ভার্সিটি ক ইউনিট', emoji: '🎓', color: '#06b6d4' },
     primary:     { name: 'প্রাইমারি শিক্ষক', emoji: '✏️', color: '#84cc16' },
+    ntrca:       { name: 'NTRCA শিক্ষক নিবন্ধন', emoji: '📜', color: '#a855f7' },
     other:       { name: 'সাধারণ জ্ঞান',    emoji: '📋', color: '#64748b' },
 };
 

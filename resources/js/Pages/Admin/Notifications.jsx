@@ -17,6 +17,7 @@ const GOALS = [
     { id: 'bank',        emoji: '🏦', label: 'Bank Job' },
     { id: 'university',  emoji: '🎓', label: 'University' },
     { id: 'primary',     emoji: '✏️', label: 'Primary' },
+    { id: 'ntrca',       emoji: '📜', label: 'NTRCA' },
     { id: 'other',       emoji: '📋', label: 'Other' },
 ];
 

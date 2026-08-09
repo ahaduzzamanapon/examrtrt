@@ -36,7 +36,7 @@ class _SubjectSelectorSheetState extends State<SubjectSelectorSheet> {
     for (final goal in goals) {
       final g = goal.trim().toUpperCase();
 
-      if (g == 'BCS' || g == 'BANK' || g == 'PRIMARY' || g == 'OTHER' || g == 'GOV_JOB') {
+      if (g == 'BCS' || g == 'BANK' || g == 'PRIMARY' || g == 'NTRCA' || g == 'OTHER' || g == 'GOV_JOB') {
         pool['বাংলা']        = {'id': 'বাংলা',        'name': 'বাংলা ভাষা ও সাহিত্য',              'emoji': '📚'};
         pool['English']      = {'id': 'English',      'name': 'English Language & Literature',    'emoji': '🔤'};
         pool['গণিত']         = {'id': 'গণিত',         'name': 'গণিত ও গাণিতিক যুক্তি',             'emoji': '🔢'};

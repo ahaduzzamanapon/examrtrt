@@ -15,6 +15,7 @@ const GOALS = [
     { value: 'bank', label: 'Bank' },
     { value: 'university', label: 'University' },
     { value: 'primary', label: 'Primary' },
+    { value: 'ntrca', label: 'NTRCA' },
 ];
 
 function DiffBadge({ level }) {

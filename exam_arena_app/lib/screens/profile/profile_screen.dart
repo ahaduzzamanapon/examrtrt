@@ -109,6 +109,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       {'id': 'BANK',        'name': 'ব্যাংক জব',          'emoji': '🏦'},
       {'id': 'UNIVERSITY',  'name': 'ভার্সিটি ভর্তি',     'emoji': '🎓'},
       {'id': 'PRIMARY',     'name': 'প্রাইমারি শিক্ষক',   'emoji': '✏️'},
+      {'id': 'NTRCA',       'name': 'NTRCA শিক্ষক নিবন্ধন', 'emoji': '📜'},
       {'id': 'OTHER',       'name': 'সাধারণ জ্ঞান',       'emoji': '📋'},
     ];
 

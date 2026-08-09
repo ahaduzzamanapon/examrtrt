@@ -11,7 +11,8 @@ const GOALS = [
     { value: 'bcs', label: 'BCS' }, { value: 'hsc', label: 'HSC' },
     { value: 'ssc', label: 'SSC' }, { value: 'medical', label: 'Medical' },
     { value: 'bank', label: 'Bank' }, { value: 'university', label: 'University' },
-    { value: 'primary', label: 'Primary' }, { value: 'other', label: 'Other' },
+    { value: 'primary', label: 'Primary' }, { value: 'ntrca', label: 'NTRCA' },
+    { value: 'other', label: 'Other' },
 ];
 const DIFFICULTIES = ['MIXED', 'LOW', 'MEDIUM', 'HIGH'];
 const INP = { width: '100%', padding: '9px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontSize: 13, outline: 'none' };

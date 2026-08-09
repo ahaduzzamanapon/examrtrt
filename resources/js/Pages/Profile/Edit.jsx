@@ -14,6 +14,7 @@ const GOALS = [
     { id: 'bank',        emoji: '🏦', label: 'ব্যাংক জব' },
     { id: 'university',  emoji: '🎓', label: 'ভার্সিটি' },
     { id: 'primary',     emoji: '✏️', label: 'প্রাইমারি' },
+    { id: 'ntrca',       emoji: '📜', label: 'NTRCA' },
     { id: 'other',       emoji: '📋', label: 'অন্যান্য' },
 ];
 

@@ -35,6 +35,7 @@
         <meta name="twitter:image" content="https://exam-arena.nxly.online/logo.png">
 
         {{-- JSON-LD Schema.org Structured Data --}}
+        @verbatim
         <script type="application/ld+json">
         {
           "@context": "https://schema.org",
@@ -48,7 +49,7 @@
               "inLanguage": "bn-BD",
               "potentialAction": {
                 "@type": "SearchAction",
-                "target": "https://exam-arena.nxly.online/?s={{ '{search_term_string}' }}",
+                "target": "https://exam-arena.nxly.online/?s={search_term_string}",
                 "query-input": "required name=search_term_string"
               }
             },
@@ -75,6 +76,7 @@
           ]
         }
         </script>
+        @endverbatim
 
         {{-- Google Fonts: Bengali + Latin --}}
         <link rel="preconnect" href="https://fonts.googleapis.com">

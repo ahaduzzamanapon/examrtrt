@@ -23,6 +23,7 @@ Route::prefix('mobile')->group(function () {
 // ── Admin API (Secret Token Auth) ───────────────────────────────────────────
 Route::post('questions/bulk-import', [\App\Http\Controllers\Admin\QuestionController::class, 'apiBulkImport']);
 Route::post('questions/cleanup-templates', [\App\Http\Controllers\Admin\QuestionController::class, 'apiCleanupTemplates']);
+Route::post('questions/check-logs', [\App\Http\Controllers\Admin\QuestionController::class, 'apiGetLogs']);
 
 
 // ── Authenticated (Sanctum token required) ────────────────────────────────────

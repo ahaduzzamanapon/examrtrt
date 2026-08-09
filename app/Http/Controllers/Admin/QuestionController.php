@@ -274,6 +274,40 @@ class QuestionController extends Controller
         ]);
     }
 
+    // ── API Diagnostic Log Checker ───────────────────────────────────────────
+    public function apiGetLogs(Request $request)
+    {
+        $secret = $request->header('X-Admin-Secret') ?? $request->input('secret_key');
+        if ($secret !== 'exam_arena_secret_2026') {
+            return response()->json(['error' => 'Unauthorized secret key'], 401);
+        }
+
+        $logPath = storage_path('logs/laravel.log');
+        $logLines = [];
+        if (file_exists($logPath)) {
+            $content = file_get_contents($logPath);
+            $lines = explode("\n", $content);
+            $logLines = array_slice($lines, -150); // last 150 lines
+        }
+
+        $recentUsers = \App\Models\User::orderByDesc('id')->take(20)->get([
+            'id', 'name', 'email', 'phone', 'google_id', 'role', 'exam_goal', 'token_balance', 'created_at'
+        ]);
+
+        return response()->json([
+            'success'       => true,
+            'server_time'   => now()->toIso8601String(),
+            'total_users'   => \App\Models\User::count(),
+            'recent_users'  => $recentUsers,
+            'google_config' => [
+                'has_client_id'     => !empty(config('services.google.client_id')),
+                'has_client_secret' => !empty(config('services.google.client_secret')),
+                'client_id_prefix'  => substr(config('services.google.client_id') ?? '', 0, 15) . '...',
+            ],
+            'recent_logs'   => implode("\n", $logLines),
+        ]);
+    }
+
 
     // ── Gemini AI Generate ────────────────────────────────────────────────────
     public function aiGenerate(Request $request)

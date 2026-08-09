@@ -84,77 +84,145 @@ class MobileAuthController extends Controller
         ], 201);
     }
 
-    // ── Google Login (via google id_token) ────────────────────────────────────
+    // ── Google Login (via google id_token / access_token) ────────────────────
     public function googleLogin(Request $request)
     {
-        $request->validate([
-            'id_token' => 'required|string',
-        ]);
+        $idToken = trim($request->input('id_token', ''));
+        $accessToken = trim($request->input('access_token', ''));
+
+        if (empty($idToken) && empty($accessToken)) {
+            return response()->json(['message' => 'Google token প্রয়োজন (id_token অথবা access_token)।'], 422);
+        }
 
         $googleUser = null;
 
-        // Try verifying ID Token via Google oauth2 tokeninfo endpoint
-        try {
-            $resp = \Illuminate\Support\Facades\Http::get('https://oauth2.googleapis.com/tokeninfo', [
-                'id_token' => $request->id_token,
-            ]);
+        // Method 1: Try verifying ID Token via Google oauth2 tokeninfo endpoint
+        if (!empty($idToken)) {
+            try {
+                $resp = \Illuminate\Support\Facades\Http::timeout(10)->get('https://oauth2.googleapis.com/tokeninfo', [
+                    'id_token' => $idToken,
+                ]);
 
-            if ($resp->successful() && !empty($resp->json()['email'])) {
-                $data = $resp->json();
-                $googleUser = (object) [
-                    'id'     => $data['sub'],
-                    'name'   => $data['name'] ?? explode('@', $data['email'])[0],
-                    'email'  => $data['email'],
-                    'avatar' => $data['picture'] ?? null,
-                ];
+                if ($resp->successful() && !empty($resp->json()['email'])) {
+                    $data = $resp->json();
+                    $googleUser = (object) [
+                        'id'     => $data['sub'] ?? ($data['user_id'] ?? null),
+                        'name'   => $data['name'] ?? explode('@', $data['email'])[0],
+                        'email'  => $data['email'],
+                        'avatar' => $data['picture'] ?? null,
+                    ];
+                } else {
+                    \Log::warning('[GoogleAuth] TokenInfo ID Token check failed: ' . $resp->body());
+                }
+            } catch (\Throwable $e) {
+                \Log::warning('[GoogleAuth] ID Token exception: ' . $e->getMessage());
             }
-        } catch (\Exception $e) {}
+        }
 
-        // Fallback: Try Socialite with access_token or id_token
+        // Method 2: Try verifying Access Token via Google oauth2 tokeninfo endpoint
+        if (!$googleUser && !empty($accessToken)) {
+            try {
+                $resp = \Illuminate\Support\Facades\Http::timeout(10)->get('https://oauth2.googleapis.com/tokeninfo', [
+                    'access_token' => $accessToken,
+                ]);
+
+                if ($resp->successful() && !empty($resp->json()['email'])) {
+                    $data = $resp->json();
+                    $googleUser = (object) [
+                        'id'     => $data['sub'] ?? ($data['user_id'] ?? null),
+                        'name'   => $data['name'] ?? explode('@', $data['email'])[0],
+                        'email'  => $data['email'],
+                        'avatar' => $data['picture'] ?? null,
+                    ];
+                }
+            } catch (\Throwable $e) {
+                \Log::warning('[GoogleAuth] Access Token tokeninfo exception: ' . $e->getMessage());
+            }
+        }
+
+        // Method 3: Try Google UserInfo API using Access Token or ID Token
+        if (!$googleUser) {
+            $tokenToUse = !empty($accessToken) ? $accessToken : $idToken;
+            try {
+                $resp = \Illuminate\Support\Facades\Http::timeout(10)
+                    ->withHeaders(['Authorization' => "Bearer {$tokenToUse}"])
+                    ->get('https://www.googleapis.com/oauth2/v3/userinfo');
+
+                if ($resp->successful() && !empty($resp->json()['email'])) {
+                    $data = $resp->json();
+                    $googleUser = (object) [
+                        'id'     => $data['sub'],
+                        'name'   => $data['name'] ?? explode('@', $data['email'])[0],
+                        'email'  => $data['email'],
+                        'avatar' => $data['picture'] ?? null,
+                    ];
+                }
+            } catch (\Throwable $e) {
+                \Log::warning('[GoogleAuth] UserInfo endpoint exception: ' . $e->getMessage());
+            }
+        }
+
+        // Method 4: Fallback to Laravel Socialite stateless
         if (!$googleUser) {
             try {
-                $token = $request->access_token ?? $request->id_token;
-                $socUser = Socialite::driver('google')->stateless()->userFromToken($token);
-                $googleUser = (object) [
-                    'id'     => $socUser->getId(),
-                    'name'   => $socUser->getName() ?? $socUser->getEmail(),
-                    'email'  => $socUser->getEmail(),
-                    'avatar' => $socUser->getAvatar(),
-                ];
-            } catch (\Exception $e) {
-                return response()->json(['message' => 'Google token যাচাই ব্যর্থ হয়েছে।'], 401);
+                $tokenToUse = !empty($accessToken) ? $accessToken : $idToken;
+                $socUser = Socialite::driver('google')->stateless()->userFromToken($tokenToUse);
+                if ($socUser && $socUser->getEmail()) {
+                    $googleUser = (object) [
+                        'id'     => $socUser->getId(),
+                        'name'   => $socUser->getName() ?? $socUser->getEmail(),
+                        'email'  => $socUser->getEmail(),
+                        'avatar' => $socUser->getAvatar(),
+                    ];
+                }
+            } catch (\Throwable $e) {
+                \Log::warning('[GoogleAuth] Socialite fallback failed: ' . $e->getMessage());
             }
         }
 
         if (!$googleUser || empty($googleUser->email)) {
-            return response()->json(['message' => 'Google অ্যাকাউন্ট থেকে ইমেইল পাওয়া যায়নি।'], 422);
+            \Log::error('[GoogleAuth] All Google token verification methods failed.');
+            return response()->json(['message' => 'Google token যাচাই ব্যর্থ হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।'], 401);
         }
 
+        // Find or create user
         $user = User::where('google_id', $googleUser->id)->first()
              ?? User::where('email', $googleUser->email)->first();
 
         if ($user) {
-            if (!$user->google_id) {
-                $user->update([
-                    'google_id' => $googleUser->id,
-                    'avatar'    => $googleUser->avatar ?? $user->avatar,
-                ]);
+            $updates = [];
+            if (!$user->google_id && !empty($googleUser->id)) {
+                $updates['google_id'] = $googleUser->id;
+            }
+            if (!empty($googleUser->avatar) && !$user->avatar) {
+                $updates['avatar'] = $googleUser->avatar;
+            }
+            if (!$user->email_verified_at) {
+                $updates['email_verified_at'] = now();
+            }
+            if (!empty($updates)) {
+                $user->update($updates);
             }
         } else {
+            $referralCode = strtoupper(substr(md5(uniqid(rand(), true)), 0, 8));
             $user = User::create([
-                'name'              => $googleUser->name,
+                'name'              => $googleUser->name ?: explode('@', $googleUser->email)[0],
                 'email'             => $googleUser->email,
                 'google_id'         => $googleUser->id,
                 'avatar'            => $googleUser->avatar,
                 'email_verified_at' => now(),
+                'referral_code'     => $referralCode,
                 'password'          => null,
                 'role'              => 'STUDENT',
             ]);
 
+            // Welcome bonus (50 tokens)
             app(TokenService::class)->transact($user, 'ADMIN_GRANT', 50, 'নিবন্ধন বোনাস — স্বাগতম! 🎉');
         }
 
         $token = $user->createToken('mobile-app')->plainTextToken;
+
+        \Log::info("[GoogleAuth] Successfully authenticated user: {$user->email} (ID: {$user->id})");
 
         return response()->json([
             'token' => $token,

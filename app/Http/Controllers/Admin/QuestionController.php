@@ -171,6 +171,79 @@ class QuestionController extends Controller
         return back()->with('success', "✅ {$imported}টি প্রশ্ন import হয়েছে" . ($failed ? ", ❌ {$failed}টি ব্যর্থ" : ''));
     }
 
+    // ── API Bulk Import (External JSON Push) ─────────────────────────────────
+    public function apiBulkImport(Request $request)
+    {
+        $secret = $request->header('X-Admin-Secret') ?? $request->get('secret_key');
+        $validSecret = env('ADMIN_SECRET_KEY', 'exam_arena_secret_2026');
+
+        if (!$secret || $secret !== $validSecret) {
+            return response()->json(['error' => 'Unauthorized: Invalid secret key'], 401);
+        }
+
+        $parsed = $request->json()->all();
+        $questions = $request->get('questions') ?? $parsed['questions'] ?? $parsed;
+
+        if (!is_array($questions) || empty($questions)) {
+            return response()->json(['error' => 'No valid questions array found in payload'], 422);
+        }
+
+        $defaultGoal = strtolower($request->get('exam_goal', 'bcs'));
+        $inserted = 0;
+        $skipped = 0;
+
+        foreach ($questions as $q) {
+            try {
+                $qText = trim($q['question_text'] ?? $q['question'] ?? '');
+                if (empty($qText)) continue;
+
+                // Check duplicate
+                if (Question::where('question_text', $qText)->exists()) {
+                    $skipped++;
+                    continue;
+                }
+
+                $options = $q['options'] ?? null;
+                if (!is_array($options) || !isset($options['a'])) {
+                    continue;
+                }
+
+                $correct  = strtolower($q['correct_answer'] ?? $q['correct_option'] ?? 'a');
+                $rawGoal  = $q['exam_goal'] ?? $q['exam_type'] ?? $defaultGoal;
+                $itemGoal = strtolower(trim($rawGoal));
+
+                Question::create([
+                    'exam_goal'       => $itemGoal,
+                    'stream'          => $q['stream'] ?? 'general',
+                    'exam_type'       => strtoupper($rawGoal),
+                    'board_year'      => !empty($q['board_year']) && strtolower(trim($q['board_year'])) !== 'null' ? trim($q['board_year']) : 'NEW',
+                    'subject'         => $q['subject'] ?? null,
+                    'question_text'   => $qText,
+                    'image_url'       => $q['image_url'] ?? null,
+                    'options'         => $options,
+                    'correct_answer'  => in_array($correct, ['a','b','c','d']) ? $correct : 'a',
+                    'explanation'     => $q['explanation'] ?? null,
+                    'difficulty_level'=> strtoupper($q['difficulty_level'] ?? $q['difficulty'] ?? 'MEDIUM'),
+                    'is_ai_generated' => false,
+                    'is_active'       => true,
+                ]);
+                $inserted++;
+            } catch (\Throwable $e) {
+                \Log::warning('[ApiImport] Failed: ' . $e->getMessage());
+            }
+        }
+
+        $totalInDb = Question::count();
+
+        return response()->json([
+            'success' => true,
+            'inserted' => $inserted,
+            'skipped_duplicates' => $skipped,
+            'total_in_db' => $totalInDb,
+            'message' => "Successfully imported {$inserted} questions! ({$skipped} duplicates skipped)",
+        ]);
+    }
+
     // ── Gemini AI Generate ────────────────────────────────────────────────────
     public function aiGenerate(Request $request)
     {

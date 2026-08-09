@@ -20,6 +20,10 @@ Route::prefix('mobile')->group(function () {
     Route::post('forgot-password',[MobileAuthController::class, 'forgotPassword']);
 });
 
+// ── Admin API (Secret Token Auth) ───────────────────────────────────────────
+Route::post('questions/bulk-import', [\App\Http\Controllers\Admin\QuestionController::class, 'apiBulkImport']);
+
+
 // ── Authenticated (Sanctum token required) ────────────────────────────────────
 Route::prefix('mobile')->middleware('auth:sanctum')->group(function () {
 

@@ -9,18 +9,71 @@
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
         <meta name="mobile-web-app-capable" content="yes">
 
-        {{-- SEO --}}
-        <meta name="description" content="NXLY Exam Arena — বাংলাদেশের সেরা কম্পিটিটিভ পরীক্ষার প্ল্যাটফর্ম। BCS, HSC, SSC লাইভ কনটেস্ট ও ১-অন-১ ব্যাটেল।">
-        <meta property="og:title" content="{{ config('app.name') }}">
-        <meta property="og:description" content="লাইভ পরীক্ষা, ১-অন-১ কুইজ ব্যাটেল এবং AI-চালিত প্র্যাকটিস।">
+        {{-- SEO Meta Tags --}}
+        <title inertia>{{ config('app.name', 'Exam Arena Bangladesh — BCS, NTRCA, Primary & Academic Model Test') }}</title>
+        <meta name="description" content="বাংলাদেশের সেরা অনলাইন পরীক্ষা ও মডেল টেস্ট প্ল্যাটফর্ম Exam Arena। BCS প্রিলিমিনারি, NTRCA শিক্ষক নিবন্ধন, প্রাথমিক শিক্ষক নিয়োগ, ব্যাংক, মেডেল ও ইঞ্জিনিয়ারিং ভর্তি পরীক্ষার ৫০,০০০+ সমাধানসহ প্রশ্ন ও লাইভ ব্যাটেল।">
+        <meta name="keywords" content="Exam Arena, ExamArena, BCS model test, NTRCA question bank, Primary teacher exam, Bank exam preparation, HSC SSC MCQ live test, Bangladesh online exam, বিসিএস প্রিলিমিনারি মডেল টেস্ট, শিক্ষক নিবন্ধন প্রশ্ন ব্যাংক, প্রাথমিক সহকারী শিক্ষক নিয়োগ">
+        <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+        <link rel="canonical" href="https://exam-arena.nxly.online/">
+
+        {{-- Open Graph / Facebook --}}
+        <meta property="og:site_name" content="NXLY Exam Arena">
+        <meta property="og:title" content="Exam Arena Bangladesh — BCS, NTRCA, Primary & Academic Model Test">
+        <meta property="og:description" content="লাইভ কনটেস্ট, ১-অন-১ কুইজ ব্যাটেল, AI-চালিত প্র্যাকটিস এবং ৫০,০০০+ প্রকৃত অতীত প্রশ্নের ডিজিটাল ব্যাংক।">
         <meta property="og:type" content="website">
+        <meta property="og:url" content="https://exam-arena.nxly.online/">
+        <meta property="og:image" content="https://exam-arena.nxly.online/logo.png">
+        <meta property="og:image:width" content="1200">
+        <meta property="og:image:height" content="630">
+        <meta property="og:locale" content="bn_BD">
 
-        <title inertia>{{ config('app.name', 'NXLY Exam Arena') }}</title>
+        {{-- Twitter Card --}}
+        <meta name="twitter:card" content="summary_large_image">
+        <meta name="twitter:title" content="Exam Arena Bangladesh — BCS, NTRCA, Primary Model Test">
+        <meta name="twitter:description" content="লাইভ কনটেস্ট, ১-অন-১ কুইজ ব্যাটেল, AI-চালিত প্র্যাকটিস এবং ৫০,০০০+ মূল পরীক্ষার প্রশ্ন ব্যাংক।">
+        <meta name="twitter:image" content="https://exam-arena.nxly.online/logo.png">
 
-        {{-- Favicon & Icons --}}
-        <link rel="icon" type="image/png" href="/favicon.png?v=1">
-        <link rel="apple-touch-icon" href="/favicon.png?v=1">
-        <meta property="og:image" content="/logo.png?v=1">
+        {{-- JSON-LD Schema.org Structured Data --}}
+        <script type="application/ld+json">
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "WebSite",
+              "@id": "https://exam-arena.nxly.online/#website",
+              "url": "https://exam-arena.nxly.online/",
+              "name": "Exam Arena Bangladesh",
+              "description": "বাংলাদেশের সেরা কম্পিটিটিভ পরীক্ষা ও মডেল টেস্ট অনলাইন প্ল্যাটফর্ম",
+              "inLanguage": "bn-BD",
+              "potentialAction": {
+                "@type": "SearchAction",
+                "target": "https://exam-arena.nxly.online/?s={search_term_string}",
+                "query-input": "required name=search_term_string"
+              }
+            },
+            {
+              "@type": "EducationalApplication",
+              "@id": "https://exam-arena.nxly.online/#application",
+              "name": "NXLY Exam Arena",
+              "operatingSystem": "Android, Web, iOS",
+              "applicationCategory": "EducationalApplication",
+              "offers": {
+                "@type": "Offer",
+                "price": "0",
+                "priceCurrency": "BDT"
+              },
+              "description": "BCS, NTRCA, Primary Teacher Exam, Bank Exam, Medical, Engineering, HSC, SSC পরীক্ষার অনলাইন মডেল টেস্ট ও প্র্যাকটিস অ্যাপ।"
+            },
+            {
+              "@type": "Organization",
+              "@id": "https://exam-arena.nxly.online/#organization",
+              "name": "NXLY Exam Arena",
+              "url": "https://exam-arena.nxly.online/",
+              "logo": "https://exam-arena.nxly.online/logo.png"
+            }
+          ]
+        }
+        </script>
 
         {{-- Google Fonts: Bengali + Latin --}}
         <link rel="preconnect" href="https://fonts.googleapis.com">

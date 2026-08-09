@@ -1,2 +1,7 @@
 User-agent: *
-Disallow:
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Disallow: /onboarding
+
+Sitemap: https://exam-arena.nxly.online/sitemap.xml

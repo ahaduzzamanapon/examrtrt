@@ -80,7 +80,12 @@ const stats = [
 export default function Welcome() {
     return (
         <>
-            <Head title="NXLY Exam Arena — বাংলাদেশের সেরা পরীক্ষার প্ল্যাটফর্ম" />
+            <Head>
+                <title>Exam Arena Bangladesh — BCS, NTRCA, Primary, Bank & Board Exam Model Test</title>
+                <meta name="description" content="বাংলাদেশের সর্বশ্রেষ্ঠ অনলাইন পরীক্ষা প্ল্যাটফর্ম Exam Arena। BCS ৪৬তম প্রিলিমিনারি, ১৮তম NTRCA শিক্ষক নিবন্ধন, প্রাথমিক শিক্ষক নিয়োগ ২০২৪, ব্যাংক, বুয়েট ভর্তি ও HSC SSC পরীক্ষার ৫০,০০০+ প্রকৃত প্রশ্নের অনলাইন লাইভ ব্যাটেল ও মডেল টেস্ট।" />
+                <meta name="keywords" content="Exam Arena, BCS model test, NTRCA question bank, Primary teacher recruitment exam 2024, Bank job preparation, Medical admission test, BUET engineering admission, HSC SSC MCQ test, বিসিএস প্রিলিমিনারি মডেল টেস্ট, শিক্ষক নিবন্ধন প্রশ্নব্যাংক" />
+                <link rel="canonical" href="https://exam-arena.nxly.online/" />
+            </Head>
 
             <div className="min-h-screen overflow-x-hidden" style={{
                 background: 'linear-gradient(135deg, #05071a 0%, #0a0e23 40%, #0f1a3e 100%)',
@@ -88,203 +93,256 @@ export default function Welcome() {
                 fontFamily: "'Hind Siliguri', 'Inter', sans-serif",
             }}>
 
-                {/* ── NAV ─────────────────────────────────────────────────── */}
-                <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-5 py-3"
-                    style={{ background: 'rgba(5,7,26,0.85)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                    <div className="flex items-center">
-                        <img src="/logo.png?v=1" alt="Exam Arena" style={{ height: 48, width: 'auto', objectFit: 'contain' }} />
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <Link href={route('login')}
-                            className="px-4 py-2 rounded-xl text-sm font-medium text-white/70 hover:text-white transition-colors">
-                            লগইন
-                        </Link>
-                        <Link href={route('register')}
-                            className="px-4 py-2 rounded-xl text-sm font-semibold text-white"
-                            style={{ background: 'linear-gradient(135deg, #4d6fff, #7c3aed)' }}>
-                            শুরু করো
-                        </Link>
-                    </div>
-                </nav>
-
-                {/* ── HERO ────────────────────────────────────────────────── */}
-                <section className="relative pt-28 pb-16 px-5 text-center overflow-hidden">
-                    {/* Glow orbs */}
-                    <div className="absolute top-20 left-1/2 -translate-x-1/2 w-96 h-96 rounded-full opacity-20 pointer-events-none"
-                        style={{ background: 'radial-gradient(circle, #4d6fff 0%, transparent 70%)', filter: 'blur(60px)' }} />
-                    <div className="absolute top-40 right-0 w-64 h-64 rounded-full opacity-15 pointer-events-none"
-                        style={{ background: 'radial-gradient(circle, #7c3aed 0%, transparent 70%)', filter: 'blur(50px)' }} />
-
-                    <motion.div {...fadeUp(0)}>
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold mb-5"
-                            style={{ background: 'rgba(77,111,255,0.18)', border: '1px solid rgba(77,111,255,0.35)', color: '#93b4ff' }}>
-                            <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-                            বাংলাদেশের #১ কম্পিটিটিভ পরীক্ষার প্ল্যাটফর্ম
-                        </span>
-                    </motion.div>
-
-                    <motion.h1 {...fadeUp(0.1)} className="text-4xl sm:text-5xl font-black text-white leading-tight mb-4">
-                        পরীক্ষায় <span style={{ background: 'linear-gradient(90deg,#4d6fff,#a78bfa,#f59e0b)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>জিতো</span>,<br />
-                        র‍্যাংকে <span style={{ background: 'linear-gradient(90deg,#10b981,#4d6fff)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>উঠে আসো</span>
-                    </motion.h1>
-
-                    <motion.p {...fadeUp(0.2)} className="text-white/60 text-base max-w-sm mx-auto mb-8 leading-relaxed">
-                        লাইভ কনটেস্ট, ১-অন-১ ব্যাটেল, AI প্র্যাকটিস এবং টোকেন রিওয়ার্ড — সব একটাই অ্যাপে।
-                    </motion.p>
-
-                    <motion.div {...fadeUp(0.3)} className="flex flex-col sm:flex-row gap-3 justify-center">
-                        <Link href={route('register')}
-                            className="flex items-center justify-center gap-2 px-7 py-4 rounded-2xl text-white font-bold text-base"
-                            style={{ background: 'linear-gradient(135deg, #4d6fff, #7c3aed)', boxShadow: '0 8px 32px rgba(77,111,255,0.4)' }}>
-                            <Play size={18} fill="white" />
-                            বিনামূল্যে শুরু করো
-                        </Link>
-                        <Link href={route('login')}
-                            className="flex items-center justify-center gap-2 px-7 py-4 rounded-2xl font-bold text-base text-white/80"
-                            style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)' }}>
-                            লগইন করো <ChevronRight size={18} />
-                        </Link>
-                    </motion.div>
-
-                    {/* Stats strip */}
-                    <motion.div {...fadeUp(0.4)} className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-12 max-w-xl mx-auto">
-                        {stats.map(s => (
-                            <div key={s.label} className="p-3 rounded-2xl text-center"
-                                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                                <p className="text-xl font-black text-white">{s.value}</p>
-                                <p className="text-white/50 text-xs mt-0.5">{s.label}</p>
-                            </div>
-                        ))}
-                    </motion.div>
-                </section>
-
-                {/* ── FEATURES ─────────────────────────────────────────────── */}
-                <section className="px-5 py-14">
-                    <motion.div {...fadeUp()} className="text-center mb-8">
-                        <h2 className="text-2xl font-black text-white">কী কী করতে পারবে?</h2>
-                        <p className="text-white/50 text-sm mt-2">একটি প্ল্যাটফর্মে সব ধরনের পরীক্ষার প্রস্তুতি</p>
-                    </motion.div>
-
-                    <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }}
-                        className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
-                        {features.map(f => (
-                            <motion.div key={f.title} variants={cardAnim}
-                                className="relative p-5 rounded-2xl"
-                                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                                {/* Badge */}
-                                <span className="absolute top-4 right-4 px-2 py-0.5 rounded-full text-[10px] font-semibold"
-                                    style={{ background: f.bg, color: f.color }}>
-                                    {f.badge}
-                                </span>
-                                <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-3" style={{ background: f.bg }}>
-                                    <f.icon size={22} style={{ color: f.color }} />
-                                </div>
-                                <h3 className="text-white font-bold text-base mb-1">{f.title}</h3>
-                                <p className="text-white/55 text-sm leading-relaxed">{f.desc}</p>
-                            </motion.div>
-                        ))}
-                    </motion.div>
-                </section>
-
-                {/* ── TOKEN SYSTEM ─────────────────────────────────────────── */}
-                <section className="px-5 py-14" style={{ background: 'rgba(255,255,255,0.02)' }}>
-                    <motion.div {...fadeUp()} className="text-center mb-8">
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold mb-4"
-                            style={{ background: 'rgba(251,191,36,0.15)', border: '1px solid rgba(251,191,36,0.3)', color: '#fbbf24' }}>
-                            <Coins size={12} /> টোকেন সিস্টেম
-                        </span>
-                        <h2 className="text-2xl font-black text-white">টোকেন কীভাবে পাবে?</h2>
-                        <p className="text-white/50 text-sm mt-2">৬টি উপায়ে প্রতিদিন টোকেন অর্জন করো — বিনামূল্যে!</p>
-                    </motion.div>
-
-                    <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }}
-                        className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-2xl mx-auto">
-                        {earnMethods.map(m => (
-                            <motion.div key={m.title} variants={cardAnim}
-                                className="flex items-center gap-4 p-4 rounded-2xl"
-                                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                                <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
-                                    style={{ background: m.color + '22' }}>
-                                    <m.icon size={22} style={{ color: m.color }} />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <div className="flex items-center justify-between">
-                                        <p className="text-white font-semibold text-sm">{m.title}</p>
-                                        <span className="font-black text-sm" style={{ color: m.color }}>{m.amount}</span>
-                                    </div>
-                                    <p className="text-white/50 text-xs mt-0.5 leading-snug">{m.desc}</p>
-                                </div>
-                            </motion.div>
-                        ))}
-                    </motion.div>
-
-                    {/* Token use cases */}
-                    <motion.div {...fadeUp(0.2)} className="mt-8 p-5 rounded-2xl max-w-2xl mx-auto"
-                        style={{ background: 'linear-gradient(135deg, rgba(77,111,255,0.12), rgba(124,58,237,0.08))', border: '1px solid rgba(77,111,255,0.2)' }}>
-                        <h3 className="text-white font-bold mb-3 flex items-center gap-2">
-                            <Zap size={16} style={{ color: '#4d6fff' }} /> টোকেন দিয়ে কী করবে?
-                        </h3>
-                        <div className="space-y-2">
-                            {[
-                                ['প্র্যাকটিস টেস্ট দাও', '৫ টোকেন / টেস্ট'],
-                                ['মডেল টেস্ট দাও', '২০ টোকেন / টেস্ট'],
-                                ['লাইভ কনটেস্ট (ফ্রি)', '০ টোকেন — পুরোপুরি বিনামূল্যে'],
-                            ].map(([label, cost]) => (
-                                <div key={label} className="flex items-center justify-between">
-                                    <div className="flex items-center gap-2 text-sm text-white/70">
-                                        <CheckCircle size={14} style={{ color: '#10b981' }} />
-                                        {label}
-                                    </div>
-                                    <span className="text-xs font-semibold" style={{ color: '#fbbf24' }}>{cost}</span>
-                                </div>
-                            ))}
+                {/* ── HEADER & NAV ─────────────────────────────────────────── */}
+                <header>
+                    <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-5 py-3"
+                        style={{ background: 'rgba(5,7,26,0.85)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}
+                        aria-label="Main Navigation">
+                        <div className="flex items-center">
+                            <img src="/logo.png?v=1" alt="NXLY Exam Arena Logo" style={{ height: 48, width: 'auto', objectFit: 'contain' }} />
                         </div>
-                        <p className="text-white/40 text-xs mt-3">* লাইভ কনটেস্টে টাকা লাগে, টোকেন নয়। টোকেন শুধু প্র্যাকটিসে ব্যবহার হয়।</p>
-                    </motion.div>
-                </section>
-
-                {/* ── ANTI-CHEAT GUARANTEE ─────────────────────────────────── */}
-                <section className="px-5 py-14">
-                    <motion.div {...fadeUp()} className="max-w-2xl mx-auto p-6 rounded-3xl text-center"
-                        style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                        <Shield size={36} className="mx-auto mb-3" style={{ color: '#10b981' }} />
-                        <h2 className="text-xl font-black text-white mb-2">সম্পূর্ণ সুরক্ষিত পরীক্ষার পরিবেশ</h2>
-                        <p className="text-white/55 text-sm leading-relaxed mb-5">
-                            ডাইনামিক ওয়াটারমার্ক, ট্যাব-সুইচ ডিটেকশন, কপি-পেস্ট বন্ধ — প্রতিটি পরীক্ষা ১০০% সৎ ও নিরাপদ।
-                        </p>
-                        <div className="grid grid-cols-3 gap-3">
-                            {[
-                                ['🚫', 'কপি-পেস্ট বন্ধ'],
-                                ['👁️', 'ট্যাব মনিটর'],
-                                ['🔒', 'DevTools বন্ধ'],
-                            ].map(([emoji, label]) => (
-                                <div key={label} className="p-3 rounded-xl" style={{ background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.15)' }}>
-                                    <p className="text-xl mb-1">{emoji}</p>
-                                    <p className="text-xs text-white/60">{label}</p>
-                                </div>
-                            ))}
+                        <div className="flex items-center gap-2">
+                            <Link href={route('login')}
+                                className="px-4 py-2 rounded-xl text-sm font-medium text-white/70 hover:text-white transition-colors">
+                                লগইন
+                            </Link>
+                            <Link href={route('register')}
+                                className="px-4 py-2 rounded-xl text-sm font-semibold text-white"
+                                style={{ background: 'linear-gradient(135deg, #4d6fff, #7c3aed)' }}>
+                                শুরু করো
+                            </Link>
                         </div>
-                    </motion.div>
-                </section>
+                    </nav>
+                </header>
 
-                {/* ── CTA ─────────────────────────────────────────────────── */}
-                <section className="px-5 py-16 text-center">
-                    <motion.div {...fadeUp()}>
-                        <h2 className="text-3xl font-black text-white mb-3">
-                            আজই শুরু করো —<br />
-                            <span style={{ background: 'linear-gradient(90deg,#4d6fff,#f59e0b)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                                সম্পূর্ণ বিনামূল্যে
+                <main>
+                    {/* ── HERO ────────────────────────────────────────────────── */}
+                    <section className="relative pt-28 pb-16 px-5 text-center overflow-hidden">
+                        {/* Glow orbs */}
+                        <div className="absolute top-20 left-1/2 -translate-x-1/2 w-96 h-96 rounded-full opacity-20 pointer-events-none"
+                            style={{ background: 'radial-gradient(circle, #4d6fff 0%, transparent 70%)', filter: 'blur(60px)' }} />
+                        <div className="absolute top-40 right-0 w-64 h-64 rounded-full opacity-15 pointer-events-none"
+                            style={{ background: 'radial-gradient(circle, #7c3aed 0%, transparent 70%)', filter: 'blur(50px)' }} />
+
+                        <motion.div {...fadeUp(0)}>
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold mb-5"
+                                style={{ background: 'rgba(77,111,255,0.18)', border: '1px solid rgba(77,111,255,0.35)', color: '#93b4ff' }}>
+                                <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                                বাংলাদেশের #১ কম্পিটিটিভ পরীক্ষার প্ল্যাটফর্ম
                             </span>
-                        </h2>
-                        <p className="text-white/50 text-sm mb-8">নিবন্ধন করলেই পাবে ৫০ বোনাস টোকেন 🎁</p>
-                        <Link href={route('register')}
-                            className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl text-white font-bold text-base"
-                            style={{ background: 'linear-gradient(135deg, #4d6fff, #7c3aed)', boxShadow: '0 8px 40px rgba(77,111,255,0.45)' }}>
-                            ফ্রি একাউন্ট খোলো
-                            <ArrowRight size={18} />
-                        </Link>
-                    </motion.div>
-                </section>
+                        </motion.div>
+
+                        <motion.h1 {...fadeUp(0.1)} className="text-4xl sm:text-5xl font-black text-white leading-tight mb-4">
+                            পরীক্ষায় <span style={{ background: 'linear-gradient(90deg,#4d6fff,#a78bfa,#f59e0b)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>জিতো</span>,<br />
+                            র‍্যাংকে <span style={{ background: 'linear-gradient(90deg,#10b981,#4d6fff)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>উঠে আসো</span>
+                        </motion.h1>
+
+                        <motion.p {...fadeUp(0.2)} className="text-white/60 text-base max-w-lg mx-auto mb-8 leading-relaxed">
+                            BCS প্রিলিমিনারি, NTRCA শিক্ষক নিবন্ধন, প্রাথমিক সহকারী শিক্ষক নিয়োগ, ব্যাংক, মেডেল, ইঞ্জিনিয়ারিং, HSC ও SSC পরীক্ষার ৫০,০০০+ সমাধানসহ প্রশ্নের বিশাল সংগ্রহ।
+                        </motion.p>
+
+                        <motion.div {...fadeUp(0.3)} className="flex flex-col sm:flex-row gap-3 justify-center">
+                            <Link href={route('register')}
+                                className="flex items-center justify-center gap-2 px-7 py-4 rounded-2xl text-white font-bold text-base"
+                                style={{ background: 'linear-gradient(135deg, #4d6fff, #7c3aed)', boxShadow: '0 8px 32px rgba(77,111,255,0.4)' }}>
+                                <Play size={18} fill="white" />
+                                বিনামূল্যে পরীক্ষা শুরু করো
+                            </Link>
+                            <Link href={route('login')}
+                                className="flex items-center justify-center gap-2 px-7 py-4 rounded-2xl font-bold text-base text-white/80"
+                                style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)' }}>
+                                লগইন করো <ChevronRight size={18} />
+                            </Link>
+                        </motion.div>
+
+                        {/* Exam Goals Badges for SEO */}
+                        <motion.div {...fadeUp(0.35)} className="flex flex-wrap items-center justify-center gap-2 mt-8 max-w-xl mx-auto">
+                            {['📜 ৪৬তম-৩৫তম BCS প্রিলি', '📜 ১৮তম-১০তম NTRCA নিবন্ধন', '📜 প্রাথমিক শিক্ষক নিয়োগ ২০২৪', '📜 কম্বাইন্ড ব্যাংক অফিসার', '📜 মেডিকেল ও বুয়েট ভর্তি', '📜 HSC ও SSC সমাধান'].map(tag => (
+                                <span key={tag} className="px-3 py-1.5 rounded-xl text-xs font-semibold" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#e2e8f0' }}>
+                                    {tag}
+                                </span>
+                            ))}
+                        </motion.div>
+
+                        {/* Stats strip */}
+                        <motion.div {...fadeUp(0.4)} className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-10 max-w-xl mx-auto">
+                            {stats.map(s => (
+                                <div key={s.label} className="p-3 rounded-2xl text-center"
+                                    style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                                    <p className="text-xl font-black text-white">{s.value}</p>
+                                    <p className="text-white/50 text-xs mt-0.5">{s.label}</p>
+                                </div>
+                            ))}
+                        </motion.div>
+                    </section>
+
+                    {/* ── FEATURES ─────────────────────────────────────────────── */}
+                    <section className="px-5 py-14" aria-labelledby="features-heading">
+                        <motion.div {...fadeUp()} className="text-center mb-8">
+                            <h2 id="features-heading" className="text-2xl font-black text-white">কী কী ফিচার পাচ্ছো Exam Arena-তে?</h2>
+                            <p className="text-white/50 text-sm mt-2">একটি আধুনিক প্ল্যাটফর্মে সরকারি ও প্রতিযোগিতামূলক সকল পরীক্ষার সেরা প্রস্তুতি</p>
+                        </motion.div>
+
+                        <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }}
+                            className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
+                            {features.map(f => (
+                                <motion.article key={f.title} variants={cardAnim}
+                                    className="relative p-5 rounded-2xl"
+                                    style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                                    {/* Badge */}
+                                    <span className="absolute top-4 right-4 px-2 py-0.5 rounded-full text-[10px] font-semibold"
+                                        style={{ background: f.bg, color: f.color }}>
+                                        {f.badge}
+                                    </span>
+                                    <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-3" style={{ background: f.bg }}>
+                                        <f.icon size={22} style={{ color: f.color }} />
+                                    </div>
+                                    <h3 className="text-white font-bold text-base mb-1">{f.title}</h3>
+                                    <p className="text-white/55 text-sm leading-relaxed">{f.desc}</p>
+                                </motion.article>
+                            ))}
+                        </motion.div>
+                    </section>
+
+                    {/* ── TOKEN SYSTEM ─────────────────────────────────────────── */}
+                    <section className="px-5 py-14" style={{ background: 'rgba(255,255,255,0.02)' }} aria-labelledby="tokens-heading">
+                        <motion.div {...fadeUp()} className="text-center mb-8">
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold mb-4"
+                                style={{ background: 'rgba(251,191,36,0.15)', border: '1px solid rgba(251,191,36,0.3)', color: '#fbbf24' }}>
+                                <Coins size={12} /> টোকেন রিওয়ার্ডস
+                            </span>
+                            <h2 id="tokens-heading" className="text-2xl font-black text-white">ফ্রি টোকেন আর্ন করার উপায়</h2>
+                            <p className="text-white/50 text-sm mt-2">৬টি ভিন্ন উপায়ে প্রতিদিন টোকেন জিতেনিন — ১০০% বিনামূল্যে!</p>
+                        </motion.div>
+
+                        <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }}
+                            className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-2xl mx-auto">
+                            {earnMethods.map(m => (
+                                <motion.div key={m.title} variants={cardAnim}
+                                    className="flex items-center gap-4 p-4 rounded-2xl"
+                                    style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                                    <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+                                        style={{ background: m.color + '22' }}>
+                                        <m.icon size={22} style={{ color: m.color }} />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center justify-between">
+                                            <p className="text-white font-semibold text-sm">{m.title}</p>
+                                            <span className="font-black text-sm" style={{ color: m.color }}>{m.amount}</span>
+                                        </div>
+                                        <p className="text-white/50 text-xs mt-0.5 leading-snug">{m.desc}</p>
+                                    </div>
+                                </motion.div>
+                            ))}
+                        </motion.div>
+
+                        {/* Token use cases */}
+                        <motion.div {...fadeUp(0.2)} className="mt-8 p-5 rounded-2xl max-w-2xl mx-auto"
+                            style={{ background: 'linear-gradient(135deg, rgba(77,111,255,0.12), rgba(124,58,237,0.08))', border: '1px solid rgba(77,111,255,0.2)' }}>
+                            <h3 className="text-white font-bold mb-3 flex items-center gap-2">
+                                <Zap size={16} style={{ color: '#4d6fff' }} /> টোকেন দিয়ে কীভাবে পরীক্ষা দেবে?
+                            </h3>
+                            <div className="space-y-2">
+                                {[
+                                    ['প্র্যাকটিস টেস্ট দাও', '৫ টোকেন / টেস্ট'],
+                                    ['মডেল টেস্ট দাও', '২০ টোকেন / টেস্ট'],
+                                    ['লাইভ কনটেস্ট (ফ্রি)', '০ টোকেন — পুরোপুরি বিনামূল্যে'],
+                                ].map(([label, cost]) => (
+                                    <div key={label} className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2 text-sm text-white/70">
+                                            <CheckCircle size={14} style={{ color: '#10b981' }} />
+                                            {label}
+                                        </div>
+                                        <span className="text-xs font-semibold" style={{ color: '#fbbf24' }}>{cost}</span>
+                                    </div>
+                                ))}
+                            </div>
+                            <p className="text-white/40 text-xs mt-3">* লাইভ কনটেস্টে অংশগ্রহণে বিশেষ প্রাইজ মানি পুরস্কার থাকবে।</p>
+                        </motion.div>
+                    </section>
+
+                    {/* ── FAQ SECTION FOR GOOGLE RANKING ──────────────────────── */}
+                    <section className="px-5 py-14 max-w-2xl mx-auto" aria-labelledby="faq-heading">
+                        <motion.div {...fadeUp()} className="text-center mb-8">
+                            <h2 id="faq-heading" className="text-2xl font-black text-white">সচরাচর জিজ্ঞাসিত প্রশ্নাবলি (FAQ)</h2>
+                            <p className="text-white/50 text-sm mt-2">Exam Arena সম্পর্কে আপনার মনে থাকা সাধারণ কিছু প্রশ্নের উত্তর</p>
+                        </motion.div>
+
+                        <div className="space-y-3">
+                            {[
+                                {
+                                    q: 'Exam Arena তে কোন কোন পরীক্ষার মডেল টেস্ট দেওয়া যায়?',
+                                    a: 'Exam Arena-তে BCS (বিসিএস প্রিলিমিনারি), NTRCA (শিক্ষক নিবন্ধন), প্রাথমিক সহকারী শিক্ষক নিয়োগ, ব্যাংক অফিসার, মেডিকেল ভর্তি, বুয়েট ও ইঞ্জিনিয়ারিং ভর্তি এবং HSC ও SSC পরীক্ষার আসল প্রশ্নের মডেল টেস্ট দেওয়া যায়।'
+                                },
+                                {
+                                    q: 'আমি কি বিনামূল্যে পরীক্ষা দিতে পারব?',
+                                    a: 'হ্যাঁ! অ্যাকাউন্ট খুললেই ৫০ ওয়েলকাম টোকেন ফ্রি দেওয়া হয় এবং প্রতিদিন লগইন ও বিজ্ঞাপন দেখে ফ্রি টোকেন অর্জন করে আনলিমিটেড প্র্যাকটিস টেস্ট দেওয়া সম্ভব।'
+                                },
+                                {
+                                    q: '১ vs ১ কুইজ ব্যাটেল কী?',
+                                    a: 'এটি একটি লাইভ প্রতিযোগিতা যেখানে অন্য যেকোনো পরীক্ষার্থীর সাথে রিয়েল-টাইমে ১০টি প্রশ্নে লড়াই করে পয়েন্ট ও টোকেন জেতা যায়।'
+                                },
+                                {
+                                    q: 'পরীক্ষায় কি কোনো প্রতারণা রোধ ব্যবস্থা রয়েছে?',
+                                    a: 'হ্যাঁ, Exam Arena-তে অ্যান্টি-চিট ওয়াটারমার্কিং, ট্যাব-সুইচ মনিটরিং এবং কপি-পেস্ট বন্ধের অত্যাধুনিক প্রযুক্তি ব্যবহৃত হয়েছে।'
+                                }
+                            ].map((faq, i) => (
+                                <motion.details key={i} {...fadeUp(i * 0.1)} className="group p-4 rounded-2xl cursor-pointer" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                                    <summary className="font-bold text-white text-sm list-none flex items-center justify-between">
+                                        <span>{faq.q}</span>
+                                        <ChevronRight size={16} className="text-white/40 group-open:rotate-90 transition-transform" />
+                                    </summary>
+                                    <p className="text-white/60 text-xs mt-3 leading-relaxed border-t border-white/5 pt-2">
+                                        {faq.a}
+                                    </p>
+                                </motion.details>
+                            ))}
+                        </div>
+                    </section>
+
+                    {/* ── ANTI-CHEAT GUARANTEE ─────────────────────────────────── */}
+                    <section className="px-5 py-14">
+                        <motion.div {...fadeUp()} className="max-w-2xl mx-auto p-6 rounded-3xl text-center"
+                            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                            <Shield size={36} className="mx-auto mb-3" style={{ color: '#10b981' }} />
+                            <h2 className="text-xl font-black text-white mb-2">সম্পূর্ণ সুরক্ষিত পরীক্ষার পরিবেশ</h2>
+                            <p className="text-white/55 text-sm leading-relaxed mb-5">
+                                ডাইনামিক ওয়াটারমার্ক, ট্যাব-সুইচ ডিটেকশন, কপি-পেস্ট বন্ধ — প্রতিটি পরীক্ষা ১০০% সৎ ও নিরাপদ।
+                            </p>
+                            <div className="grid grid-cols-3 gap-3">
+                                {[
+                                    ['🚫', 'কপি-পেস্ট বন্ধ'],
+                                    ['👁️', 'ট্যাব মনিটর'],
+                                    ['🔒', 'DevTools বন্ধ'],
+                                ].map(([emoji, label]) => (
+                                    <div key={label} className="p-3 rounded-xl" style={{ background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.15)' }}>
+                                        <p className="text-xl mb-1">{emoji}</p>
+                                        <p className="text-xs text-white/60">{label}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </motion.div>
+                    </section>
+
+                    {/* ── CTA ─────────────────────────────────────────────────── */}
+                    <section className="px-5 py-16 text-center">
+                        <motion.div {...fadeUp()}>
+                            <h2 className="text-3xl font-black text-white mb-3">
+                                আজই শুরু করো —<br />
+                                <span style={{ background: 'linear-gradient(90deg,#4d6fff,#f59e0b)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                                    সম্পূর্ণ বিনামূল্যে
+                                </span>
+                            </h2>
+                            <p className="text-white/50 text-sm mb-8">নিবন্ধন করলেই পাবে ৫০ বোনাস টোকেন 🎁</p>
+                            <Link href={route('register')}
+                                className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl text-white font-bold text-base"
+                                style={{ background: 'linear-gradient(135deg, #4d6fff, #7c3aed)', boxShadow: '0 8px 40px rgba(77,111,255,0.45)' }}>
+                                ফ্রি অ্যাকাউন্ট খোলো
+                                <ArrowRight size={18} />
+                            </Link>
+                        </motion.div>
+                    </section>
+                </main>
 
                 {/* ── FOOTER ───────────────────────────────────────────────── */}
                 <footer className="px-5 py-8 text-center border-t" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
@@ -294,7 +352,7 @@ export default function Welcome() {
                         <span className="font-bold text-white text-sm">NXLY Exam Arena</span>
                     </div>
                     <p className="text-white/30 text-xs">© ২০২৬ NXLY. সর্বস্বত্ব সংরক্ষিত।</p>
-                    <p className="text-white/20 text-xs mt-1">examarena.nxly.online</p>
+                    <p className="text-white/20 text-xs mt-1">exam-arena.nxly.online</p>
                 </footer>
 
             </div>

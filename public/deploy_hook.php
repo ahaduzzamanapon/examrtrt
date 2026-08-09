@@ -58,9 +58,20 @@ if (is_executable("$NODE_BIN/node")) {
     echo "⚠️  Node.js not found at $NODE_BIN — skipping frontend build.\n\n";
 }
 
-// 4. Artisan
+// 4. Update .env domain to new URL
+echo "🌐 Updating .env domain settings...\n";
+$envFile = "$DIR/.env";
+if (file_exists($envFile)) {
+    $envData = file_get_contents($envFile);
+    $envData = preg_replace('/^APP_URL=.*$/m', 'APP_URL=https://exam-arena.nxly.online', $envData);
+    $envData = preg_replace('/^GOOGLE_REDIRECT_URI=.*$/m', 'GOOGLE_REDIRECT_URI=https://exam-arena.nxly.online/auth/google/callback', $envData);
+    file_put_contents($envFile, $envData);
+    echo "✅ Updated APP_URL & GOOGLE_REDIRECT_URI to https://exam-arena.nxly.online\n";
+}
+
+// 5. Artisan
 echo "🗄️  Migrations & cache...\n";
-foreach (['migrate --force --no-interaction', 'config:cache', 'route:cache', 'view:cache', 'event:cache'] as $cmd) {
+foreach (['config:clear', 'route:clear', 'migrate --force --no-interaction', 'config:cache', 'route:cache', 'view:cache', 'event:cache'] as $cmd) {
     run("cd $DIR && $PHP artisan $cmd");
 }
 
